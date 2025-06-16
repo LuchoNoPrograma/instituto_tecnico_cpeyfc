@@ -13,12 +13,15 @@ import java.util.Collection;
 @Getter
 public class JwtSecurityConfigUserDetails extends User {
 
-    private final Integer idSegUsuario;
+  private final Integer idSegUsuario;
 
-    public JwtSecurityConfigUserDetails(final Integer idSegUsuario, final String username,
-                                        final String hash, final Collection<? extends GrantedAuthority> authorities) {
-        super(username, hash, authorities);
-        this.idSegUsuario = idSegUsuario;
-    }
+  public JwtSecurityConfigUserDetails(final Integer idSegUsuario, final String username, final String hash, final Collection<? extends GrantedAuthority> authorities) {
+    super(username, hash, true, true, true, true, authorities);
+    this.idSegUsuario = idSegUsuario;
+  }
 
+  public JwtSecurityConfigUserDetails(final Integer idSegUsuario, final String username, final String hash, final Collection<? extends GrantedAuthority> authorities, final boolean accountNonExpired, final boolean accountNonLocked, final boolean credentialsNonExpired, final boolean enabled) {
+    super(username, hash, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
+    this.idSegUsuario = idSegUsuario;
+  }
 }
