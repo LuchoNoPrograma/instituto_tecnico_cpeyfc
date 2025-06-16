@@ -1,52 +1,71 @@
-# Cpeyfc
+# Instituto Técnico CPEyFC
 
-This app was created with Bootify.io - tips on working with the code [can be found here](https://bootify.io/next-steps/).
+Este repositorio aloja la aplicación web del Instituto Técnico CPEyFC, institución orientada a la formación profesional y a la educación continua. La solución gestiona diversos procesos internos como planes de estudio, inscripciones, pagos y emisión de certificados. Las entidades del dominio se ubican en `src/main/java/uap/edu/bo/cpeyfc/domain` donde pueden encontrarse módulos como **AcaArea**, **InsMatricula**, **FinTransaccion**, **SegUsuario** o **TgrMonografia**, entre otros.
 
-## Development
+## Tecnologías y dependencias principales
 
-Update your local database connection in `application.properties` or create your own `application-local.properties` file to override
-settings for development.
+- **Spring Boot** con Java 17 como base de la aplicación.
+- **Spring Web** y **Validation** para el manejo de peticiones HTTP y validación de datos.
+- **Spring Security** junto con **JWT** (`com.auth0:java-jwt`) para autenticación.
+- **Spring Data JPA** (Hibernate) con **PostgreSQL** como base de datos.
+- **Flyway** para versionado y migración automática del esquema.
+- **Thymeleaf** y su layout dialect para la capa de vistas.
+- **Bootstrap** y **Htmx** (vía WebJars) para la interfaz de usuario.
+- **Jakarta WebSocket API** para funcionalidades en tiempo real.
+- **Lombok** para reducir código repetitivo.
+- **Spring Boot Actuator** y **error-handling-spring-boot-starter** para monitorización y manejo de errores.
+- **Dependencias de prueba**: `spring-boot-starter-test`, **Rest Assured** y **Testcontainers** con PostgreSQL.
 
-During development it is recommended to use the profile `local`. In IntelliJ `-Dspring.profiles.active=local` can be
-added in the VM options of the Run Configuration after enabling this property in "Modify options".
+## Guía de desarrollo
 
-Lombok must be supported by your IDE. For IntelliJ install the Lombok plugin and enable annotation processing -
-[learn more](https://bootify.io/next-steps/spring-boot-with-lombok.html).
+1. Clonar este repositorio.
+2. Crear una base de datos PostgreSQL local y ajustar la conexión en `application.properties` o definir un `application-local.properties` con tus valores.
+3. Asegurarse de que la IDE soporte Lombok (por ejemplo instalando el plugin en IntelliJ y habilitando *annotation processing*).
+4. Ejecutar el proyecto con el perfil `local`:
 
-After starting the application it is accessible under `localhost:8080`.
+   ```bash
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+   ```
 
-## Testing requirements
+   Al iniciar se ejecutarán las migraciones de Flyway y la aplicación quedará disponible en `http://localhost:8080`.
 
-To run the tests and build, [Docker](https://www.docker.com/get-started/) must be available on the current system. Due
-to the reuse flag, the container will not shut down after the tests. It can be stopped manually if needed.
+## Ejecución de pruebas
 
-## Build
+- Se requiere Docker en el sistema para los tests de integración con Testcontainers.
+- Ejecutar:
 
-The application can be tested and built using the following command:
+  ```bash
+  ./mvnw test
+  ```
 
-```
-mvnw clean package
-```
+  Las pruebas levantarán un contenedor PostgreSQL temporal para validar los repositorios y servicios.
 
-Start your application with the following command - here with the profile `production`:
+## Build de la aplicación
 
-```
-java -Dspring.profiles.active=production -jar ./target/cpeyfc-0.0.1-SNAPSHOT.jar
-```
+1. Empaquetar el proyecto con Maven:
 
-If required, a Docker image can be created with the Spring Boot plugin. Add `SPRING_PROFILES_ACTIVE=production` as
-environment variable when running the container.
+   ```bash
+   ./mvnw clean package
+   ```
 
-```
-mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=uap.edu.bo/cpeyfc
-```
+2. Ejecutar el JAR generado (perfil `production` a modo de ejemplo):
 
-## Further readings
+   ```bash
+   java -Dspring.profiles.active=production -jar ./target/cpeyfc-0.0.1-SNAPSHOT.jar
+   ```
 
-* [Maven docs](https://maven.apache.org/guides/index.html)  
-* [Spring Boot reference](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)  
-* [Spring Data JPA reference](https://docs.spring.io/spring-data/jpa/reference/jpa.html)
-* [Thymeleaf docs](https://www.thymeleaf.org/documentation.html)  
-* [Bootstrap docs](https://getbootstrap.com/docs/5.3/getting-started/introduction/)  
-* [Htmx in a nutshell](https://htmx.org/docs/)  
-* [Learn Spring Boot with Thymeleaf](https://www.wimdeblauwe.com/books/taming-thymeleaf/)  
+3. Opcionalmente es posible construir una imagen Docker utilizando el plugin de Spring Boot:
+
+   ```bash
+   ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=uap.edu.bo/cpeyfc
+   ```
+
+## Enlaces útiles
+
+- [Documentación de Maven](https://maven.apache.org/guides/index.html)
+- [Referencia de Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
+- [Referencia de Spring Data JPA](https://docs.spring.io/spring-data/jpa/reference/jpa.html)
+- [Documentación de Thymeleaf](https://www.thymeleaf.org/documentation.html)
+- [Guía de Bootstrap](https://getbootstrap.com/docs/5.3/getting-started/introduction/)
+- [Introducción a Htmx](https://htmx.org/docs/)
+- [Libro "Taming Thymeleaf"](https://www.wimdeblauwe.com/books/taming-thymeleaf/)
