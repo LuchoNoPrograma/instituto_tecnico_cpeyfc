@@ -1,0 +1,63 @@
+INSERT INTO aca_plan_modulo_detalle (
+    id_aca_plan_modulo_detalle,
+    carga_horaria,
+    creditos,
+    orden,
+    sigla,
+    competencia,
+    estado_plan_modulo_detalle,
+    fecha_reg,
+    fecha_mod,
+    user_reg,
+    user_mod,
+    aca_modulo_id,
+    aca_nivel_id,
+    aca_plan_estudio_id
+) VALUES (
+    1600,
+    10,
+    93.08,
+    46,
+    'Viverra su',
+    'Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum.',
+    'Commodo consequat.',
+    '2024-09-02 14:30:00',
+    '2024-09-02 14:30:00',
+    27,
+    25,
+    1200,
+    1300,
+    1500
+);
+
+INSERT INTO aca_plan_modulo_detalle (
+    id_aca_plan_modulo_detalle,
+    carga_horaria,
+    creditos,
+    orden,
+    sigla,
+    competencia,
+    estado_plan_modulo_detalle,
+    fecha_reg,
+    fecha_mod,
+    user_reg,
+    user_mod,
+    aca_modulo_id,
+    aca_nivel_id,
+    aca_plan_estudio_id
+) VALUES (
+    1601,
+    79,
+    94.08,
+    47,
+    'Nec ullamc',
+    'Donec pretium vulputate sapien nec sagittis aliquam malesuada.',
+    'Nulla facilisis.',
+    '2024-09-03 14:30:00',
+    '2024-09-03 14:30:00',
+    26,
+    24,
+    1201,
+    1301,
+    1501
+);
