@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin-layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title th:fragment="title">Zona de Desarrollo - CPEYFC Admin</title>
+</head>
+<body>
+<div th:fragment="content">
+
+    <!-- 🎯 HEADER PERSONALIZADO PARA DESARROLLO -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i class="fas fa-code text-primary me-2"></i>
+            <span th:text="${titulo}">Zona de Desarrollo</span>
+        </h1>
+    </div>
+
+    <!-- 🚨 ALERT DE BIENVENIDA -->
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-lightbulb me-2"></i>
+        <strong>Zona de Desarrollo</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- 📊 INFORMACIÓN DEL DESARROLLADOR -->
+    <div class="row mb-4">
+        <div class="col-lg-4 mb-3">
+            <div class="card border-left-primary shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Desarrollador
+                            </div>
+                            <div class="h6 mb-0 font-weight-bold text-gray-800" th:text="${desarrollador}">
+                                Tu Nombre Aquí
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-ninja fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <div class="card border-left-success shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Fecha Actual
+                            </div>
+                            <div class="h6 mb-0 font-weight-bold text-gray-800" th:text="${#temporals.format(fechaActual, 'dd/MM/yyyy HH:mm')}">
+                                --/--/----
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-3">
+            <div class="card border-left-warning shadow h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Status
+                            </div>
+                            <div class="h6 mb-0 font-weight-bold text-gray-800">
+                                <span class="badge bg-success">ACTIVO</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-heartbeat fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎨 ESTILOS PERSONALIZADOS -->
+    <style>
+        .border-left-primary {
+            border-left: 0.25rem solid #4e73df !important;
+        }
+        .border-left-success {
+            border-left: 0.25rem solid #1cc88a !important;
+        }
+        .border-left-warning {
+            border-left: 0.25rem solid #f6c23e !important;
+        }
+        .border-left-custom {
+            border-left: 0.25rem solid #e74a3b !important;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .list-group-item-action:hover {
+            background-color: #f8f9fc;
+        }
+
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.875em;
+        }
+    </style>
+
+    <!-- 📱 JAVASCRIPT PARA INTERACTIVIDAD -->
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
+    </script>
+
+</div>
+</body>
+</html>

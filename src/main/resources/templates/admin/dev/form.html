@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin-layout :: layout(~{::title}, ~{::content})}">
+<head>
+    <title th:fragment="title">Formulario de Práctica - CPEYFC Admin</title>
+</head>
+<body>
+<div th:fragment="content">
+
+    <!-- 📝 HEADER DEL FORMULARIO -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">
+            <i class="fas fa-edit text-success me-2"></i>
+            <span th:text="${titulo}">Formulario de Práctica</span>
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="/admin/dev" class="btn btn-sm btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left me-1"></i>Volver
+            </a>
+            <button type="button" class="btn btn-sm btn-info" onclick="mostrarAyuda()">
+                <i class="fas fa-question-circle me-1"></i>Ayuda
+            </button>
+        </div>
+    </div>
+
+    <!-- 🎯 MENSAJES DE FEEDBACK -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row">
+        <!-- 📋 FORMULARIO PRINCIPAL -->
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-user-plus me-2"></i>Registro de Práctica
+                    </h6>
+                </div>
+                <div class="card-body">
+
+                    <!-- 💡 INSTRUCCIONES -->
+                    <div class="alert alert-info" role="alert">
+                        <h6 class="alert-heading">💡 Instrucciones de Práctica:</h6>
+                        <p class="mb-1">
+                            <strong>Objetivo:</strong> Completar el método <code>procesarFormulario()</code>
+                            en <code>DevController.java</code>
+                        </p>
+                        <p class="mb-0">
+                            <strong>Reto:</strong> Hacer que este formulario guarde datos reales en la base de datos
+                        </p>
+                    </div>
+
+                    <!-- 📝 FORMULARIO -->
+                    <form action="/admin/dev/form" method="post" id="formPractica">
+
+                        <!-- INFORMACIÓN PERSONAL -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nombre" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Nombre Completo *
+                                </label>
+                                <input type="text" class="form-control" id="nombre" name="nombre"
+                                       required placeholder="Tu nombre completo">
+                                <div class="form-text">🎯 Campo obligatorio para validación</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>Correo Electrónico *
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       required placeholder="tu@email.com">
+                                <div class="form-text">📧 Será validado en el servidor</div>
+                            </div>
+                        </div>
+
+                        <!-- INFORMACIÓN ACADÉMICA -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="ci" class="form-label">
+                                    <i class="fas fa-id-card me-1"></i>Carnet de Identidad
+                                </label>
+                                <input type="text" class="form-control" id="ci" name="ci"
+                                       placeholder="1234567">
+                                <div class="form-text">🆔 Campo opcional para práctica</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="celular" class="form-label">
+                                    <i class="fas fa-phone me-1"></i>Número de Celular
+                                </label>
+                                <input type="tel" class="form-control" id="celular" name="celular"
+                                       placeholder="70123456">
+                                <div class="form-text">📱 Formato: 8 dígitos</div>
+                            </div>
+                        </div>
+
+                        <!-- SELECCIÓN DE PROGRAMA -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="programa" class="form-label">
+                                    <i class="fas fa-graduation-cap me-1"></i>Programa de Interés
+                                </label>
+                                <select class="form-select" id="programa" name="programa">
+                                    <option value="">Selecciona un programa...</option>
+                                    <option value="SISTEMAS">Sistemas Informáticos</option>
+                                    <option value="ADMINISTRACION">Administración</option>
+                                    <option value="CONTABILIDAD">Contabilidad</option>
+                                    <option value="MARKETING">Marketing Digital</option>
+                                    <!-- 🎯 EJERCICIO: Cargar desde base de datos -->
+                                    <!-- th:each="prog : ${programas}" th:value="${prog.id}" th:text="${prog.nombrePrograma}" -->
+                                </select>
+                                <div class="form-text">🎓 Lista hardcodeada - mejórala con datos reales</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="modalidad" class="form-label">
+                                    <i class="fas fa-clock me-1"></i>Modalidad Preferida
+                                </label>
+                                <select class="form-select" id="modalidad" name="modalidad">
+                                    <option value="">Selecciona modalidad...</option>
+                                    <option value="PRESENCIAL">Presencial</option>
+                                    <option value="VIRTUAL">Virtual</option>
+                                    <option value="SEMIPRESENCIAL">Semipresencial</option>
+                                </select>
+                                <div class="form-text">⏰ Modalidad de estudio</div>
+                            </div>
+                        </div>
+
+                        <!-- INFORMACIÓN ADICIONAL -->
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">
+                                <i class="fas fa-comment me-1"></i>Observaciones
+                            </label>
+                            <textarea class="form-control" id="observaciones" name="observaciones"
+                                      rows="3" placeholder="Comentarios adicionales..."></textarea>
+                            <div class="form-text">💭 Campo opcional para comentarios</div>
+                        </div>
+
+                        <!-- TÉRMINOS Y CONDICIONES -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terminos" name="terminos" required>
+                                <label class="form-check-label" for="terminos">
+                                    Acepto los términos y condiciones de práctica
+                                </label>
+                            </div>
+                            <div class="form-text">✅ Solo para fines educativos</div>
+                        </div>
+
+                        <!-- BOTONES DE ACCIÓN -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-undo me-1"></i>Limpiar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Procesar Formulario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📚 PANEL DE AYUDA Y CÓDIGO -->
+        <div class="col-lg-4">
+
+            <!-- 🔧 PANEL DE DESARROLLO -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-tools me-2"></i>Panel de Desarrollo
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">🎯 Tu Misión:</h6>
+                    <ol class="small">
+                        <li>Abrir <code>DevController.java</code></li>
+                        <li>Localizar el método <code>procesarFormulario()</code></li>
+                        <li>Completar la lógica de guardado</li>
+                        <li>Probar el formulario</li>
+                    </ol>
+
+                    <hr>
+
+                    <h6 class="text-success">✅ Validaciones a Implementar:</h6>
+                    <ul class="small">
+                        <li>Nombre no vacío</li>
+                        <li>Email válido</li>
+                        <li>CI único (si usas BD)</li>
+                        <li>Programa existe</li>
+                    </ul>
+
+                    <hr>
+
+                    <h6 class="text-info">💡 Código de Ejemplo:</h6>
+                    <pre class="bg-light p-2 rounded small"><code>// Validar datos
+if (nombre.trim().isEmpty()) {
+  redirectAttributes.addFlashAttribute(
+    "error", "Nombre requerido");
+  return "redirect:/admin/dev/form";
+}
+
+// Guardar en BD
+PrsPersona persona = new PrsPersona();
+persona.setNombre(nombre);
+persona.setCorreo(email);
+personaService.save(persona);</code></pre>
+                </div>
+            </div>
+
+            <!-- 📊 ESTADÍSTICAS DEL FORMULARIO -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-chart-bar me-2"></i>Estadísticas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-right">
+                                <h5 class="text-primary" id="contadorEnvios">0</h5>
+                                <small class="text-muted">Envíos</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-success" id="contadorCampos">8</h5>
+                            <small class="text-muted">Campos</small>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="text-secondary">🕒 Última Actividad:</h6>
+                    <small class="text-muted" id="ultimaActividad">
+                        Formulario cargado a las <span id="horaActual"></span>
+                    </small>
+                </div>
+            </div>
+
+            <!-- 🚀 ACCIONES RÁPIDAS -->
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="llenarFormularioTest()">
+                            <i class="fas fa-magic me-1"></i>Llenar con Datos de Prueba
+                        </button>
+
+                        <button class="btn btn-outline-success btn-sm" onclick="validarFormulario()">
+                            <i class="fas fa-check me-1"></i>Validar Formulario
+                        </button>
+
+                        <button class="btn btn-outline-warning btn-sm" onclick="mostrarJSON()">
+                            <i class="fas fa-code me-1"></i>Ver como JSON
+                        </button>
+
+                        <button class="btn btn-outline-danger btn-sm" onclick="limpiarTodo()">
+                            <i class="fas fa-trash me-1"></i>Limpiar Todo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎨 ESTILOS PERSONALIZADOS -->
+    <style>
+        .form-control:focus, .form-select:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+
+        .card {
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        pre {
+            font-size: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .border-right {
+            border-right: 1px solid #e3e6f0;
+        }
+
+        .form-text {
+            font-size: 0.75rem;
+        }
+
+        code {
+            background-color: #f8f9fa;
+            padding: 1px 3px;
+            border-radius: 2px;
+            font-size: 0.85em;
+        }
+    </style>
+
+    <!-- 📱 JAVASCRIPT PARA INTERACTIVIDAD -->
+    <script>
+        // 🕒 Actualizar hora actual
+        function actualizarHora() {
+            const ahora = new Date();
+            document.getElementById('horaActual').textContent =
+                ahora.toLocaleTimeString('es-ES');
+        }
+
+        // 🎲 Llenar formulario con datos de prueba
+        function llenarFormularioTest() {
+            const nombres = ['Juan Pérez', 'María González', 'Carlos López', 'Ana Rodríguez'];
+            const emails = ['juan@test.com', 'maria@test.com', 'carlos@test.com', 'ana@test.com'];
+            const programas = ['SISTEMAS', 'ADMINISTRACION', 'CONTABILIDAD', 'MARKETING'];
+
+            const random = Math.floor(Math.random() * nombres.length);
+
+            document.getElementById('nombre').value = nombres[random];
+            document.getElementById('email').value = emails[random];
+            document.getElementById('ci').value = Math.floor(Math.random() * 9000000) + 1000000;
+            document.getElementById('celular').value = '7' + Math.floor(Math.random() * 10000000);
+            document.getElementById('programa').value = programas[random];
+            document.getElementById('modalidad').value = ['PRESENCIAL', 'VIRTUAL'][Math.floor(Math.random() * 2)];
+            document.getElementById('observaciones').value = 'Datos de prueba generados automáticamente';
+            document.getElementById('terminos').checked = true;
+
+            mostrarNotificacion('Formulario llenado con datos de prueba', 'success');
+        }
+
+        // ✅ Validar formulario manualmente
+        function validarFormulario() {
+            const form = document.getElementById('formPractica');
+            const formData = new FormData(form);
+            let errores = [];
+
+            // Validaciones básicas
+            if (!formData.get('nombre').trim()) {
+                errores.push('Nombre es requerido');
+            }
+
+            if (!formData.get('email').trim()) {
+                errores.push('Email es requerido');
+            } else if (!isValidEmail(formData.get('email'))) {
+                errores.push('Email no válido');
+            }
+
+            if (!formData.get('terminos')) {
+                errores.push('Debe aceptar términos y condiciones');
+            }
+
+            // Mostrar resultados
+            if (errores.length > 0) {
+                mostrarNotificacion('Errores encontrados: ' + errores.join(', '), 'error');
+            } else {
+                mostrarNotificacion('¡Formulario válido! ✅', 'success');
+            }
+        }
+
+        // 📄 Mostrar datos del formulario como JSON
+        function mostrarJSON() {
+            const form = document.getElementById('formPractica');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            console.log('📄 Datos del formulario:');
+            console.log(JSON.stringify(data, null, 2));
+
+            // Mostrar en modal o alert
+            const jsonString = JSON.stringify(data, null, 2);
+            const popup = window.open('', '_blank', 'width=600,height=400');
+            popup.document.write(`
+        <html>
+          <head><title>Datos del Formulario - JSON</title></head>
+          <body style="font-family: monospace; padding: 20px;">
+            <h3>📄 Datos del Formulario (JSON)</h3>
+            <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px;">${jsonString}</pre>
+            <button onclick="window.close()" style="margin-top: 10px; padding: 5px 15px;">Cerrar</button>
+          </body>
+        </html>
+      `);
+        }
+
+        // 🗑️ Limpiar todo el formulario
+        function limpiarTodo() {
+            if (confirm('¿Estás seguro de que quieres limpiar todo el formulario?')) {
+                document.getElementById('formPractica').reset();
+                mostrarNotificacion('Formulario limpiado', 'info');
+            }
+        }
+
+        // 🔔 Sistema de notificaciones
+        function mostrarNotificacion(mensaje, tipo) {
+            // Crear elemento de notificación
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${tipo === 'error' ? 'danger' : tipo} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+
+            document.body.appendChild(notification);
+
+            // Auto-remover después de 3 segundos
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // 📧 Validar email
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // 🎯 Mostrar ayuda
+        function mostrarAyuda() {
+            const ayudaHTML = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h4>🔧 Ayuda del Formulario de Práctica</h4>
+          <h5>📋 Pasos para completar el ejercicio:</h5>
+          <ol>
+            <li><strong>Abrir el controlador:</strong> Buscar DevController.java</li>
+            <li><strong>Encontrar el método:</strong> procesarFormulario()</li>
+            <li><strong>Implementar validaciones:</strong> Verificar campos obligatorios</li>
+            <li><strong>Guardar en BD:</strong> Usar los servicios inyectados</li>
+            <li><strong>Probar:</strong> Enviar el formulario y verificar resultados</li>
+          </ol>
+          <h5>💡 Tips importantes:</h5>
+          <ul>
+            <li>Usa RedirectAttributes para mensajes flash</li>
+            <li>Implementa try-catch para manejo de errores</li>
+            <li>Valida datos antes de guardar en BD</li>
+            <li>Usa System.out.println() para debug</li>
+          </ul>
+        </div>
+      `;
+
+            const popup = window.open('', '_blank', 'width=600,height=500');
+            popup.document.write(`
+        <html>
+          <head><title>Ayuda - Formulario de Práctica</title></head>
+          <body style="padding: 20px;">${ayudaHTML}</body>
+        </html>
+      `);
+        }
+
+        // 🚀 Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Actualizar hora cada segundo
+            actualizarHora();
+            setInterval(actualizarHora, 1000);
+
+            // Contador de envíos (simulado)
+            let contadorEnvios = localStorage.getItem('devFormCounter') || 0;
+            document.getElementById('contadorEnvios').textContent = contadorEnvios;
+
+            // Escuchar envío del formulario
+            document.getElementById('formPractica').addEventListener('submit', function() {
+                contadorEnvios++;
+                localStorage.setItem('devFormCounter', contadorEnvios);
+                document.getElementById('contadorEnvios').textContent = contadorEnvios;
+            });
+
+            // Auto-guardar en localStorage (opcional)
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                // Cargar valor guardado
+                const savedValue = localStorage.getItem('devForm_' + input.name);
+                if (savedValue && input.type !== 'checkbox') {
+                    input.value = savedValue;
+                } else if (savedValue && input.type === 'checkbox') {
+                    input.checked = savedValue === 'true';
+                }
+
+                // Guardar cambios
+                input.addEventListener('change', function() {
+                    if (input.type === 'checkbox') {
+                        localStorage.setItem('devForm_' + input.name, input.checked);
+                    } else {
+                        localStorage.setItem('devForm_' + input.name, input.value);
+                    }
+                    document.getElementById('ultimaActividad').innerHTML =
+                        'Último cambio: <span id="horaActual">' + new Date().toLocaleTimeString('es-ES') + '</span>';
+                });
+            });
+
+            console.log('📝 Formulario de práctica cargado');
+            console.log('💡 Usa las funciones: llenarFormularioTest(), validarFormulario(), mostrarJSON()');
+        });
+    </script>
+
+</div>
+</body>
+</html>

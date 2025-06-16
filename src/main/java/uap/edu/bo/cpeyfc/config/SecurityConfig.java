@@ -77,8 +77,9 @@ public class SecurityConfig {
             .requestMatchers("/docente/**").hasRole("DOCENTE")
             .requestMatchers("/estudiante/**").hasRole("MATRICULADO")
             .requestMatchers("/desarrollo/**").hasRole("DESARROLLO")
-
-            // El resto requiere autenticación
+            .requestMatchers("/", "/login", "/dashboard", "/admin/**").permitAll()
+            .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+            .requestMatchers("/api/auth/check", "/api/auth/user-info").authenticated()
             .anyRequest().permitAll()
           )
           .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

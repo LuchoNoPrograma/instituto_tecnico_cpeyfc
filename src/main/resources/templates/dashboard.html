@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin-layout :: layout(~{::title}, ~{::content})}">
+<head>
+  <title th:fragment="title">Dashboard - CPEYFC Admin</title>
+</head>
+<body>
+<div th:fragment="content">
+  <!-- Dashboard Content -->
+  <div class="d-flex justify-content-between flex-wrap f lex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+      <div class="btn-group me-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary">
+          <i class="fas fa-download me-1"></i>Exportar
+        </button>
+      </div>
+      <button type="button" class="btn btn-sm btn-primary">
+        <i class="fas fa-plus me-1"></i>Nuevo
+      </button>
+    </div>
+  </div>
+
+  <!-- Estadísticas Cards -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-primary shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                Estudiantes Activos
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">150</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-success shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                Programas Vigentes
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">12</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-info shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                Docentes
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">25</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-left-warning shadow h-100 py-2">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                Certificados Emitidos
+              </div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">89</div>
+            </div>
+            <div class="col-auto">
+              <i class="fas fa-certificate fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos y Tablas -->
+  <div class="row">
+    <!-- Actividades Recientes -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-clock me-2"></i>Actividades Recientes
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-marker bg-primary"></div>
+              <div class="timeline-content">
+                <h6 class="timeline-title">Nueva matrícula registrada</h6>
+                <p class="timeline-text">Juan Pérez se matriculó en el programa de Tecnología</p>
+                <small class="text-muted">Hace 2 horas</small>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-marker bg-success"></div>
+              <div class="timeline-content">
+                <h6 class="timeline-title">Certificado emitido</h6>
+                <p class="timeline-text">Se emitió certificado para María González</p>
+                <small class="text-muted">Hace 4 horas</small>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-marker bg-info"></div>
+              <div class="timeline-content">
+                <h6 class="timeline-title">Nuevo docente asignado</h6>
+                <p class="timeline-text">Dr. Carlos López asignado al módulo de Bases de Datos</p>
+                <small class="text-muted">Ayer</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Próximos Eventos -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-calendar-alt me-2"></i>Próximos Eventos
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="list-group list-group-flush">
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-1">Inicio de clases - Programación Web</h6>
+                <small class="text-muted">Grupo A - Turno Mañana</small>
+              </div>
+              <small class="text-primary">15 Jun</small>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-1">Evaluación Final - Bases de Datos</h6>
+                <small class="text-muted">Grupo B - Turno Tarde</small>
+              </div>
+              <small class="text-warning">18 Jun</small>
+            </div>
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="mb-1">Cierre de inscripciones</h6>
+                <small class="text-muted">Programa de Administración</small>
+              </div>
+              <small class="text-danger">20 Jun</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información del Usuario -->
+  <div class="row" th:if="${userId}">
+    <div class="col-12">
+      <div class="card shadow mb-4">
+        <div class="card-header py-3">
+          <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-user-circle me-2"></i>Información de Sesión
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <strong>ID Usuario:</strong>
+              <span th:text="${userId}">N/A</span>
+            </div>
+            <div class="col-md-4">
+              <strong>Roles:</strong>
+              <span th:text="${#strings.listJoin(userRoles, ', ')}" th:if="${userRoles}">N/A</span>
+            </div>
+            <div class="col-md-4">
+              <strong>Tareas:</strong>
+              <span th:text="${#strings.listJoin(userTareas, ', ')}" th:if="${userTareas}">N/A</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .border-left-primary {
+      border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+      border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-info {
+      border-left: 0.25rem solid #36b9cc !important;
+    }
+    .border-left-warning {
+      border-left: 0.25rem solid #f6c23e !important;
+    }
+
+    .timeline {
+      position: relative;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 1.5rem;
+      padding-left: 2rem;
+    }
+
+    .timeline-marker {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .timeline-title {
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .timeline-text {
+      font-size: 0.8rem;
+      margin-bottom: 0.25rem;
+    }
+  </style>
+
+  <script>
+    // Verificar autenticación al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+      const token = localStorage.getItem('accessToken');
+
+      if (!token) {
+        // No hay token, redirigir al login
+        window.location.href = '/login';
+        return;
+      }
+
+      // Verificar si el token es válido haciendo una petición a una API protegida
+      checkTokenValidity(token);
+    });
+
+    async function checkTokenValidity(token) {
+      try {
+        // Hacer una petición simple para verificar si el token es válido
+        const response = await fetch('/api/auth/check', {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          // Token inválido o expirado
+          localStorage.removeItem('accessToken');
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('Error verificando token:', error);
+        // En caso de error, redirigir al login por seguridad
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+      }
+    }
+
+    // Función para hacer peticiones autenticadas
+    async function authenticatedFetch(url, options = {}) {
+      const token = localStorage.getItem('accessToken');
+
+      if (!token) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const defaultOptions = {
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      };
+
+      const finalOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+          ...defaultOptions.headers,
+          ...(options.headers || {})
+        }
+      };
+
+      const response = await fetch(url, finalOptions);
+
+      if (response.status === 401) {
+        // Token expirado o inválido
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+        return;
+      }
+
+      return response;
+    }
+  </script>
+</div>
+</body>
+</html>

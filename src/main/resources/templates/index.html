@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::content})}">
+<head>
+  <title th:fragment="title">Inicio - CPEYFC</title>
+</head>
+<body>
+<div th:fragment="content">
+
+  <!-- Hero Section -->
+  <section class="bg-primary text-white py-5">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-6">
+          <h1 class="display-4 fw-bold mb-4">Bienvenido a CPEYFC</h1>
+          <p class="lead mb-4">
+            Centro de Perfeccionamiento y Especialización en Formación Continua de la Universidad Autónoma del Pando
+          </p>
+          <div class="d-flex gap-3">
+            <a href="#programas" class="btn btn-light btn-lg">
+              <i class="fas fa-book me-2"></i>Ver Programas
+            </a>
+            <a href="/login" class="btn btn-outline-light btn-lg">
+              <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-6 text-center">
+          <i class="fas fa-university display-1 opacity-75"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="py-5" id="programas">
+    <div class="container">
+      <div class="row text-center mb-5">
+        <div class="col-lg-8 mx-auto">
+          <h2 class="display-5 fw-bold">Nuestros Programas</h2>
+          <p class="lead text-muted">Ofrecemos una amplia variedad de programas de formación continua</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <i class="fas fa-laptop-code text-primary display-4 mb-3"></i>
+              <h5 class="card-title">Tecnología</h5>
+              <p class="card-text">Programas especializados en tecnologías de la información y desarrollo de software.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <i class="fas fa-chart-line text-success display-4 mb-3"></i>
+              <h5 class="card-title">Administración</h5>
+              <p class="card-text">Cursos de gestión empresarial, liderazgo y administración de recursos.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+              <i class="fas fa-brain text-warning display-4 mb-3"></i>
+              <h5 class="card-title">Especialización</h5>
+              <p class="card-text">Programas de perfeccionamiento en diversas áreas profesionales.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="bg-light py-5" id="contacto">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 mx-auto text-center">
+          <h2 class="display-5 fw-bold mb-4">¿Necesitas más información?</h2>
+          <p class="lead mb-4">Contáctanos para conocer más sobre nuestros programas de formación</p>
+
+          <div class="row g-4">
+            <div class="col-md-4">
+              <div class="d-flex flex-column align-items-center">
+                <i class="fas fa-phone text-primary fs-1 mb-2"></i>
+                <h6>Teléfono</h6>
+                <p class="mb-0">+591 3-842-2400</p>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="d-flex flex-column align-items-center">
+                <i class="fas fa-envelope text-primary fs-1 mb-2"></i>
+                <h6>Email</h6>
+                <p class="mb-0">info@uap.edu.bo</p>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="d-flex flex-column align-items-center">
+                <i class="fas fa-map-marker-alt text-primary fs-1 mb-2"></i>
+                <h6>Ubicación</h6>
+                <p class="mb-0">Cobija, Pando, Bolivia</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

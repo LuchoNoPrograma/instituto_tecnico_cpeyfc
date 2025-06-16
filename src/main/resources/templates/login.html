@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - CPEYFC</title>
+
+    <!-- Bootstrap CSS - Zephyr Theme -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.3.0/zephyr/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-graduation-cap me-2"></i>CPEYFC
+        </a>
+        <a class="nav-link text-white" href="/">
+            <i class="fas fa-arrow-left me-2"></i>Volver al inicio
+        </a>
+    </div>
+</nav>
+
+<!-- Login Form -->
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="row w-100">
+        <div class="col-md-6 col-lg-4 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </h4>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- Mensaje de error -->
+                    <div th:if="${error}" class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span th:text="${error}">Error message</span>
+                    </div>
+
+                    <!-- Mensaje de éxito -->
+                    <div th:if="${message}" class="alert alert-success" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span th:text="${message}">Success message</span>
+                    </div>
+
+                    <form id="loginForm" method="post">
+                        <div class="mb-3">
+                            <label for="nombreUsuario" class="form-label">
+                                <i class="fas fa-user me-2"></i>Usuario
+                            </label>
+                            <input type="text" class="form-control" id="nombreUsuario" name="nombreUsuario"
+                                   placeholder="Ingrese su usuario" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Contraseña
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password"
+                                       placeholder="Ingrese su contraseña" required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer text-center bg-light">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Acceso seguro al sistema administrativo
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const password = document.getElementById('password');
+        const icon = this.querySelector('i');
+
+        if (password.type === 'password') {
+            password.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            password.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+
+    // Handle form submission with JWT
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const loginData = {
+            nombreUsuario: formData.get('nombreUsuario'),
+            password: formData.get('password')
+        };
+
+        try {
+            const response = await fetch('/authenticate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(loginData)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Store JWT token
+                localStorage.setItem('accessToken', data.accessToken);
+
+                // Redirect to dashboard
+                window.location.href = '/dashboard';
+            } else {
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger';
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Credenciales inválidas';
+
+                // Remove existing error messages
+                const existingError = document.querySelector('.alert-danger');
+                if (existingError) {
+                    existingError.remove();
+                }
+
+                // Insert error message
+                const form = document.getElementById('loginForm');
+                form.parentNode.insertBefore(errorDiv, form);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conexión. Intente nuevamente.');
+        }
+    });
+</script>
+</body>
+</html>
