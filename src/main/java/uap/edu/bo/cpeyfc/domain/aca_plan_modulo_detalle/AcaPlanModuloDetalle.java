@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import uap.edu.bo.cpeyfc.config.Auditoria;
@@ -13,6 +14,7 @@ import uap.edu.bo.cpeyfc.domain.aca_nivel.AcaNivel;
 import uap.edu.bo.cpeyfc.domain.aca_plan_estudio.AcaPlanEstudio;
 
 import java.math.BigDecimal;
+import java.sql.Types;
 
 @FieldNameConstants
 @Getter
@@ -53,7 +55,8 @@ public class AcaPlanModuloDetalle extends Auditoria {
   @Column(name = "orden", nullable = false)
   private Integer orden;
 
-  @Column(name = "sigla", nullable = false, length = 10)
+  @JdbcTypeCode(Types.CHAR)
+  @Column(name = "sigla", nullable = false, columnDefinition = "CHAR(10) NOT NULL")
   private String sigla;
 
   @Column(name = "competencia", length = Integer.MAX_VALUE)
