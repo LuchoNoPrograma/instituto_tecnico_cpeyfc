@@ -34,3 +34,33 @@ application-local.properties
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+
+
+# Logs
+src/webapp/logs
+src/webapp/npm-debug.log*
+src/webapp/yarn-debug.log*
+src/webapp/yarn-error.log*
+src/webapp/pnpm-debug.log*
+src/webapp/lerna-debug.log*
+src/webapp/node_modules
+src/webapp/.DS_Store
+src/webapp/dist
+src/webapp/dist-ssr
+src/webapp/coverage
+*.local
+src/webapp/cypress/videos/
+src/webapp/cypress/screenshots/
+
+src/webapp/# Editor directories and files
+src/webapp/.vscode/settings.json
+src/webapp/!.vscode/extensions.json
+src/webapp/.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo

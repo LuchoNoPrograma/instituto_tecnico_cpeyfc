@@ -18,10 +18,13 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigTokenService;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetailsService;
 
-import static org.springframework.security.config.Customizer.withDefaults;
+import java.util.Arrays;
 
 
 @Configuration
@@ -64,7 +67,8 @@ public class SecurityConfig {
 
         log.info("Configurando SecurityFilterChain con autorización basada en roles y tareas de BD");
 
-        return http.cors(withDefaults())
+        return http
+          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
           .csrf(csrf -> csrf.ignoringRequestMatchers("/actuator/**", "/authenticate", "/register"))
           .authorizeHttpRequests(authorize -> authorize
             // Endpoints públicos
@@ -87,4 +91,35 @@ public class SecurityConfig {
           .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
           .build();
     }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Permitir el origen del frontend Vue
+        configuration.setAllowedOrigins(Arrays.asList(
+          "http://localhost:5173",  // Vite dev server
+          "http://localhost:3000",  // Si usas otro puerto
+          "http://127.0.0.1:5173"   // Alternativa localhost
+        ));
+
+        // Métodos HTTP permitidos
+        configuration.setAllowedMethods(Arrays.asList(
+          "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
+
+        // Headers permitidos
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+
+        // Permitir credenciales (importante para JWT)
+        configuration.setAllowCredentials(true);
+
+        // Tiempo de cache para preflight requests
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
 }

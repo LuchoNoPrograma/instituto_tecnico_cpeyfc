@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -31,16 +33,39 @@ public class JwtSecurityConfigTokenService {
 
     public String generateToken(final UserDetails userDetails) {
         final Instant now = Instant.now();
+
+        // Obtener ID del usuario si es JwtSecurityConfigUserDetails
+        Integer userId = null;
+        if (userDetails instanceof JwtSecurityConfigUserDetails) {
+            userId = ((JwtSecurityConfigUserDetails) userDetails).getIdSegUsuario();
+        }
+
+        // Separar roles y tareas de authorities para claims específicos
+        List<String> roles = new ArrayList<>();
+        List<String> tareas = new ArrayList<>();
+
+        for (GrantedAuthority authority : userDetails.getAuthorities()) {
+            String auth = authority.getAuthority();
+            if (auth.startsWith("ROLE_")) {
+                roles.add(auth.replace("ROLE_", ""));
+            } else if (auth.startsWith("PERM_")) {
+                tareas.add(auth.replace("PERM_", ""));
+            }
+        }
+
         return JWT.create()
-                .withSubject(userDetails.getUsername())
-                // only for client information
-                .withArrayClaim("roles", userDetails.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .toArray(String[]::new))
-                .withIssuer("app")
-                .withIssuedAt(now)
-                .withExpiresAt(now.plus(JWT_TOKEN_VALIDITY))
-                .sign(this.hmac512);
+          .withSubject(userDetails.getUsername())
+          .withClaim("userId", userId)
+          .withArrayClaim("roles", roles.toArray(String[]::new))
+          .withArrayClaim("tareas", tareas.toArray(String[]::new))
+          // Mantener authorities para compatibilidad con Spring Security
+          .withArrayClaim("authorities", userDetails.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .toArray(String[]::new))
+          .withIssuer("app")
+          .withIssuedAt(now)
+          .withExpiresAt(now.plus(JWT_TOKEN_VALIDITY))
+          .sign(this.hmac512);
     }
 
     public DecodedJWT validateToken(final String token) {
