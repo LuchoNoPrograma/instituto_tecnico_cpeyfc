@@ -36,7 +36,6 @@ public class JwtSecurityConfigUserDetailsService implements UserDetailsService {
     @Override
     public JwtSecurityConfigUserDetails loadUserByUsername(final String username) {
         log.debug("Cargando usuario: {}", username);
-
         final SegUsuario segUsuario = segUsuarioRepository
           .findByNombreUsuario(username)
           .orElseThrow(() -> {
@@ -52,8 +51,6 @@ public class JwtSecurityConfigUserDetailsService implements UserDetailsService {
 
         // Obtener authorities (roles y tareas)
         final Collection<GrantedAuthority> authorities = getAuthorities(segUsuario.getIdSegUsuario());
-
-        log.debug("Usuario {} cargado con {} authorities", username, authorities.size());
 
         return new JwtSecurityConfigUserDetails(
           segUsuario.getIdSegUsuario(),
@@ -71,14 +68,12 @@ public class JwtSecurityConfigUserDetailsService implements UserDetailsService {
             List<String> roles = segOcupaRepository.findRolesByUsuarioId(usuarioId);
             for (String rol : roles) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase()));
-                log.debug("Agregado rol: ROLE_{}", rol.toUpperCase());
             }
 
             // Obtener tareas/permisos del usuario (directas + por roles)
             List<String> tareas = segDesignaRepository.findAllTareasForUsuario(usuarioId);
             for (String tarea : tareas) {
                 authorities.add(new SimpleGrantedAuthority("PERM_" + tarea.toUpperCase()));
-                log.debug("Agregado permiso: PERM_{}", tarea.toUpperCase());
             }
         } catch (Exception e) {
             log.warn("Error obteniendo authorities para usuario {}, asignando rol por defecto", usuarioId, e);

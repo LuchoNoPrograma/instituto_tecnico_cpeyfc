@@ -8,14 +8,14 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import uap.edu.bo.cpeyfc.config.Auditoria;
-import uap.edu.bo.cpeyfc.domain.eje_cronograma_modulo.EjeCronogramaModulo;
+import uap.edu.bo.cpeyfc.domain.eje_docente.EjeDocente;
 
 @FieldNameConstants
 @Getter
 @Setter
 @Entity
 @Table(name = "eje_criterio_eval", indexes = {
-  @Index(name = "cronograma_modulo_define_criter", columnList = "id_eje_cronograma_modulo")
+  @Index(name = "fk_eje_crit_docente_define_criterio", columnList = "id_eje_docente")
 })
 public class EjeCriterioEval extends Auditoria {
   @Id
@@ -25,8 +25,8 @@ public class EjeCriterioEval extends Auditoria {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @OnDelete(action = OnDeleteAction.RESTRICT)
-  @JoinColumn(name = "id_eje_cronograma_modulo", nullable = false)
-  private EjeCronogramaModulo ejeCronogramaModulo;
+  @JoinColumn(name = "id_eje_docente", nullable = false)
+  private EjeDocente ejeDocente;
 
   @Column(name = "nombre_crit", nullable = false, length = 25)
   private String nombreCrit;

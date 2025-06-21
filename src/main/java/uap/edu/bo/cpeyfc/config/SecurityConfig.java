@@ -69,7 +69,7 @@ public class SecurityConfig {
 
         return http
           .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-          .csrf(csrf -> csrf.ignoringRequestMatchers("/actuator/**", "/authenticate", "/register"))
+          .csrf(csrf -> csrf.ignoringRequestMatchers("/actuator/**", "/authenticate", "/register", "/api/**"))
           .authorizeHttpRequests(authorize -> authorize
             // Endpoints públicos
             .requestMatchers("/authenticate", "/register").permitAll()

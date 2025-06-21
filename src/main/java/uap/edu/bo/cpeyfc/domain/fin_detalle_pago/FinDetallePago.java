@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import uap.edu.bo.cpeyfc.config.Auditoria;
@@ -23,7 +22,7 @@ import java.math.BigDecimal;
 })
 public class FinDetallePago extends Auditoria {
   @Id
-  @ColumnDefault("nextval('fin_detalle_pago_id_fin_detalle_pago_seq')")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id_fin_detalle_pago", nullable = false)
   private Integer idFinDetallePago;
 
@@ -37,8 +36,8 @@ public class FinDetallePago extends Auditoria {
   @JoinColumn(name = "id_fin_obligacion_pago", nullable = false)
   private FinObligacionPago finObligacionPago;
 
-  @Column(name = "monto_aplicado", nullable = false, precision = 8, scale = 2)
-  private BigDecimal montoAplicado;
+  @Column(name = "monto_pagado", nullable = false, precision = 8, scale = 2)
+  private BigDecimal montoPagado;
 
   @Column(name = "estado_detalle_pago", nullable = false, length = 35)
   private String estadoDetallePago;

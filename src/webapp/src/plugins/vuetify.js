@@ -2,6 +2,7 @@ import { createVuetify } from 'vuetify'
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
 import { es } from 'vuetify/locale'
+import { VDateInput } from 'vuetify/labs/VDateInput'
 
 // Paleta de colores CPEYFC
 const colors = {
@@ -19,7 +20,7 @@ const colors = {
   // Colores de superficie
   surface: '#FFFFFF',
   background: '#FAFAFA',
-  'surface-variant': '#F5F5F5',
+  'surface-variant': '#252020',
 
   // Colores de texto
   'on-primary': '#FFFFFF',
@@ -35,6 +36,9 @@ const colors = {
 }
 
 export default createVuetify({
+  components: {
+    VDateInput
+  },
   // Idioma español
   locale: {
     locale: 'es',
@@ -50,9 +54,7 @@ export default createVuetify({
         dark: false,
         colors: {
           ...colors,
-          // Gradientes personalizados (para CSS custom properties)
-          'gradient-primary': 'linear-gradient(45deg, #1976D2 0%, #1565C0 100%)',
-          'gradient-hero': 'linear-gradient(135deg, #1976D2 0%, #1565C0 50%, #0D47A1 100%)',
+
         }
       },
 
@@ -74,6 +76,8 @@ export default createVuetify({
           'on-secondary': '#000000',
           'on-surface': '#FFFFFF',
           'on-background': '#FFFFFF',
+          'tooltip': '#FAFAFA',
+          'on-tooltip': '#000000',
         }
       },
 
@@ -85,6 +89,8 @@ export default createVuetify({
           primary: '#1976D2',
           secondary: '#00BCD4',  // Cyan más amigable para público
           accent: '#FF9800',     // Naranja vibrante
+          'tooltip': '#424242',
+          'on-tooltip': '#FFFFFF',
         }
       }
     }
@@ -92,15 +98,10 @@ export default createVuetify({
 
   // Configuraciones por defecto de componentes
   defaults: {
-    // Botones
-    VBtn: {
-      color: 'primary',
-      variant: 'flat',
-      style: 'text-transform: none; letter-spacing: 0.5px;'
-    },
 
     VDataTable: {
-
+      density: 'compact',
+      itemsPerPage: [100]
     },
 
     // Campos de texto
@@ -134,7 +135,12 @@ export default createVuetify({
     },
 
     VIcon: {
-      size: 24
+      size: 24,
+    },
+
+    // Tooltips
+    VTooltip: {
+      location: 'top'
     }
   },
 

@@ -44,11 +44,11 @@ public class FinObligacionPago extends Auditoria {
   @JoinColumn(name = "id_aca_parametro")
   private AcaParametroPrograma acaParametroPrograma;
 
-  @Column(name = "monto_sin_descuento", nullable = false, precision = 10, scale = 2)
-  private BigDecimal montoSinDescuento;
+  @Column(name = "deuda_sin_descuento", nullable = false, precision = 10, scale = 2)
+  private BigDecimal deudaSinDescuento;
 
-  @Column(name = "monto_con_descuento", nullable = false, precision = 10, scale = 2)
-  private BigDecimal montoConDescuento;
+  @Column(name = "deuda_con_descuento", nullable = false, precision = 10, scale = 2)
+  private BigDecimal deudaConDescuento;
 
   @Column(name = "observacion", length = 500)
   private String observacion;

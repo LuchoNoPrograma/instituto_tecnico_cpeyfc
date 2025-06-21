@@ -86,8 +86,7 @@ createdb -h "$HOST" -p "$PORT" -U "$USER" "$DB_NAME"
 
 # ── RESTAURACIÓN SEGÚN TIPO DE BACKUP ─────────────────────────────────
 echo ""
-echo "🔄 Iniciando restauración..."2025-06-16 00:31:37.301270
-console.
+echo "🔄 Iniciando restauración..."$LATEST_BACKUP
 if file "$LATEST_BACKUP" | grep -qi 'PostgreSQL custom database dump'; then
   echo "🛠 Restaurando (formato custom/binario)..."
   pg_restore --no-owner --role="$USER" -U "$USER" \
