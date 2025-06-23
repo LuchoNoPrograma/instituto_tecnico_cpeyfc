@@ -29,6 +29,12 @@ const menuItems = computed(() => [
     mostrar: hasPermission('VER_PROGRAMAS')
   },
   {
+    titulo: 'Grupos',
+    icono: 'mdi-account-group',
+    ruta: '/grupos',
+    mostrar: hasPermission('VER_PROGRAMAS')
+  },
+  {
     titulo: 'Matrículas',
     icono: 'mdi-account-school',
     ruta: '/matriculas',

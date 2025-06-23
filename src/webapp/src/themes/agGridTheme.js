@@ -1,7 +1,7 @@
-import { themeQuartz, iconSetMaterial } from 'ag-grid-community';
-
 // to use myTheme in an application, pass it to the theme grid option
-const myTheme = themeQuartz
+import {iconSetMaterial, themeQuartz} from 'ag-grid-community';
+
+export default themeQuartz
   .withPart(iconSetMaterial)
   .withParams({
     accentColor: "#2F428C",

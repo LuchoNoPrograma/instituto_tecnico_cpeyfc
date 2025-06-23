@@ -8,7 +8,7 @@ import uap.edu.bo.cpeyfc.crud.RepositorioGenericoCrud;
 @RequiredArgsConstructor
 public class AcaPlanEstudioService {
 
-    private final RepositorioGenericoCrud repositorio;
-    private final AcaPlanEstudioRepository acaPlanEstudioRepository;
+  private final RepositorioGenericoCrud repositorio;
+  private final AcaPlanEstudioRepository acaPlanEstudioRepository;
 
 }

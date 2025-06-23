@@ -5,8 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
+import uap.edu.bo.cpeyfc.util.FechaUtil;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ public class PrsPersonaApi {
       (String) datos.get("ci"),
       (String) datos.get("nro_celular"),
       (String) datos.get("correo"),
-      LocalDate.parse((String) datos.get("fecha_nacimiento")),
+      FechaUtil.toLocalDate(datos.get("fecha_nacimiento")),
       userDetails.getIdSegUsuario()
     );
     return ResponseEntity.ok(resultado);
@@ -44,7 +44,7 @@ public class PrsPersonaApi {
       (String) datos.get("ci"),
       (String) datos.get("nro_celular"),
       (String) datos.get("correo"),
-      LocalDate.parse((String) datos.get("fecha_nacimiento")),
+      FechaUtil.toLocalDate(datos.get("fecha_nacimiento")),
       userDetails.getIdSegUsuario()
     );
     return ResponseEntity.ok(resultado);

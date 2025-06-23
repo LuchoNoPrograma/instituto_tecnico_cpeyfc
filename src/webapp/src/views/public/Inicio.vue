@@ -1,10 +1,16 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import {ref, onMounted, onUnmounted} from 'vue'
+import {useRouter} from 'vue-router'
 
 const router = useRouter()
 
-// Estados reactivos
+const abrirWhatsAppPrograma = (programa) => {
+  const numeroWhatsApp = '+591' // Cambiar por el número real
+  const mensaje = `Hola, me interesa información sobre el programa: ${programa.nombre}`
+  const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`
+  window.open(url, '_blank')
+}
+
 const estadisticas = ref({
   estudiantes: 1250,
   programas: 15,
@@ -12,33 +18,57 @@ const estadisticas = ref({
   egresados: 2340
 })
 
-const programasDestacados = ref([
+const carruselSlides = ref([
   {
     id: 1,
-    nombre: 'Técnico en Sistemas',
-    descripcion: 'Formación integral en desarrollo de software y administración de sistemas.',
-    duracion: '2 años',
-    modalidad: 'Presencial',
-    imagen: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400',
-    color: 'primary'
+    titulo: 'ESCUELA TECNICA UAP',
+    subtitulo: 'Innovación para el desarrollo continuo',
+    descripcion: 'Formamos técnicos especializados para el mundo laboral con educación de calidad y tecnología de vanguardia.',
+    imagen: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200',
+    color: 'rgba(211, 47, 47, 0.8)' // Rojo institucional
   },
   {
     id: 2,
-    nombre: 'Técnico en Enfermería',
-    descripcion: 'Preparación profesional para atención de salud y cuidados especializados.',
-    duracion: '2.5 años',
-    modalidad: 'Presencial',
-    imagen: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400',
-    color: 'success'
+    titulo: 'ESCUELA TECNICA UAP',
+    subtitulo: 'Excelencia educativa y formación integral',
+    descripcion: 'Desarrollamos competencias técnicas y humanas para profesionales del futuro.',
+    imagen: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=1200',
+    color: 'rgba(25, 118, 210, 0.8)' // Azul institucional
   },
   {
     id: 3,
-    nombre: 'Técnico en Administración',
-    descripcion: 'Desarrollo de competencias empresariales y gestión organizacional.',
+    titulo: 'ESCUELA TECNICA UAP',
+    subtitulo: 'Preparando líderes técnicos',
+    descripcion: 'Tu futuro profesional comienza aquí, con la mejor formación técnica especializada.',
+    imagen: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1200',
+    color: 'rgba(211, 47, 47, 0.8)' // Rojo institucional
+  }
+])
+
+const programasDestacados = ref([
+  {
+    id: 1,
+    nombre: 'Técnico en Sistemas Informáticos',
+    duracion: '2 años',
+    modalidad: 'Presencial',
+    imagen: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400',
+    fechaInscripcion: '25-07-2025'
+  },
+  {
+    id: 2,
+    nombre: 'Técnico en Enfermería Especializada',
+    duracion: '2.5 años',
+    modalidad: 'Presencial',
+    imagen: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400',
+    fechaInscripcion: '25-07-2025'
+  },
+  {
+    id: 3,
+    nombre: 'Técnico en Administración Empresarial',
     duracion: '2 años',
     modalidad: 'Semipresencial',
     imagen: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-    color: 'info'
+    fechaInscripcion: '25-07-2025'
   }
 ])
 
@@ -94,77 +124,170 @@ const testimonios = ref([
 ])
 
 const irInscripcion = () => {
-  router.push('/inscripcion')
+  router.push('/inscripciones')
 }
 
 const verPrograma = (programa) => {
-  router.push(`/programas/${programa.id}`)
+  router.push(`/inscripciones?programa=${programa.id}`)
 }
 
 const verNoticia = (noticia) => {
   router.push(`/noticias/${noticia.id}`)
 }
 
+const scrollToProgramas = () => {
+  document.querySelector('.programas-section').scrollIntoView({
+    behavior: 'smooth'
+  })
+}
+
+const whatsappPosition = ref(0)
+
+const abrirWhatsApp = () => {
+  const numeroWhatsApp = '+591'
+  const mensaje = 'Hola, me interesa información sobre la Escuela Técnica UAP'
+  const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`
+  window.open(url, '_blank')
+}
+
+const handleScroll = () => {
+  const scrollTop = document.documentElement.scrollTop
+  whatsappPosition.value = scrollTop * 0.00
+}
+
 onMounted(() => {
-  // Animaciones de contadores
   animarContadores()
+
+  if (window.AOS) {
+    window.AOS.init({
+      duration: 1000,
+      once: true
+    })
+  }
+
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 
 const animarContadores = () => {
-  // Animación simple de contadores (puedes usar una librería como CountUp.js)
   console.log('Animando contadores...')
 }
 </script>
 
 <template>
-  <div class="inicio-publico">
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-background">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
+  <div class="inicio-publico ma-0 pa-0">
+    <!-- Hero Carousel Section -->
+    <section class="hero-carousel-section">
+      <v-carousel
+        height="100vh"
+        :show-arrows="false"
+        hide-delimiter-background
+        hide-delimiters
+        cycle
+        interval="5000"
+        class="hero-carousel ma-0"
+      >
+        <v-carousel-item
+          v-for="slide in carruselSlides"
+          :key="slide.id"
+          class="carousel-slide"
+        >
+          <div class="slide-background">
+            <v-img
+              :src="slide.imagen"
+              height="100vh"
+              cover
+              class="slide-image"
+            >
+              <div class="slide-overlay" :style="{ background: slide.color }"></div>
+            </v-img>
+          </div>
+
+          <div class="slide-content">
+            <v-container>
+              <v-row align="center" justify="center" class="fill-height">
+                <v-col cols="12" md="10" class="text-center">
+                  <!-- Título principal -->
+                  <h1 class="hero-title" data-aos="fade-up">
+                    {{ slide.titulo }}
+                  </h1>
+
+                  <!-- Subtítulo -->
+                  <h2 class="hero-subtitle" data-aos="fade-up" data-aos-delay="200">
+                    {{ slide.subtitulo }}
+                  </h2>
+
+                  <!-- Descripción -->
+                  <p class="hero-description" data-aos="fade-up" data-aos-delay="400">
+                    {{ slide.descripcion }}
+                  </p>
+
+                  <!-- Botones de acción -->
+                  <div class="hero-actions" data-aos="fade-up" data-aos-delay="600">
+                    <v-btn
+                      color="white"
+                      size="x-large"
+                      variant="flat"
+                      prepend-icon="mdi-school"
+                      @click="irInscripcion"
+                      class="me-4 mb-4 action-btn"
+                    >
+                      Inscríbete Ahora
+                    </v-btn>
+
+                    <v-btn
+                      color="transparent"
+                      size="x-large"
+                      variant="outlined"
+                      prepend-icon="mdi-play"
+                      class="mb-4 action-btn-outline"
+                    >
+                      Ver Video
+                    </v-btn>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-container>
+          </div>
+        </v-carousel-item>
+      </v-carousel>
+
+      <!-- Botón flotante chevron -->
+      <v-btn
+        fab
+        color="white"
+        size="large"
+        class="scroll-down-btn"
+        @click="scrollToProgramas"
+        elevation="4"
+      >
+        <v-icon size="24" color="primary">mdi-chevron-down</v-icon>
+      </v-btn>
+
+      <!-- Indicadores personalizados -->
+      <div class="carousel-indicators">
+        <div class="indicators-container">
           <v-container>
-            <v-row align="center" justify="center">
-              <v-col cols="12" md="8" class="text-center">
-                <h1 class="hero-title">
-                  Forma tu Futuro Profesional
-                </h1>
-                <p class="hero-subtitle">
-                  En el Centro Profesional de Enseñanza y Formación Continua preparamos
-                  técnicos especializados para el mundo laboral con educación de calidad.
-                </p>
-
-                <div class="hero-actions">
-                  <v-btn
-                    color="primary"
-                    size="x-large"
-                    variant="flat"
-                    prepend-icon="mdi-school"
-                    @click="irInscripcion"
-                    class="me-4 mb-4"
-                  >
-                    Inscríbete Ahora
-                  </v-btn>
-
-                  <v-btn
-                    color="white"
-                    size="x-large"
-                    variant="outlined"
-                    prepend-icon="mdi-play"
-                    class="mb-4"
-                  >
-                    Ver Video
-                  </v-btn>
-                </div>
-              </v-col>
-            </v-row>
+            <div class="d-flex justify-center">
+              <div class="custom-indicators">
+                <span
+                  v-for="(slide, index) in carruselSlides"
+                  :key="index"
+                  class="indicator-dot"
+                  :class="{ active: index === 0 }"
+                ></span>
+              </div>
+            </div>
           </v-container>
         </div>
       </div>
     </section>
 
     <!-- Estadísticas -->
-    <section class="estadisticas-section">
+    <section class="estadisticas-section" data-aos="fade-up">
       <v-container>
         <v-row>
           <v-col
@@ -172,6 +295,8 @@ const animarContadores = () => {
             :key="key"
             cols="6"
             md="3"
+            data-aos="zoom-in"
+            :data-aos-delay="100 * Object.keys(estadisticas).indexOf(key)"
           >
             <div class="estadistica-item">
               <div class="estadistica-numero">
@@ -189,7 +314,7 @@ const animarContadores = () => {
     <!-- Programas Destacados -->
     <section class="programas-section">
       <v-container>
-        <div class="section-header">
+        <div class="section-header" data-aos="fade-up">
           <h2 class="section-title">Nuestros Programas</h2>
           <p class="section-subtitle">
             Descubre las carreras técnicas que te prepararán para el éxito profesional
@@ -198,54 +323,112 @@ const animarContadores = () => {
 
         <v-row>
           <v-col
-            v-for="programa in programasDestacados"
+            v-for="(programa, index) in programasDestacados"
             :key="programa.id"
             cols="12"
             md="4"
+            data-aos="fade-up"
+            :data-aos-delay="200 * index"
           >
             <v-card
-              class="programa-card"
-              :color="programa.color"
-              dark
-              @click="verPrograma(programa)"
+              class="programa-card-nueva elevation-8"
+              height="100%"
             >
-              <v-img
-                :src="programa.imagen"
-                height="200"
-                cover
-              >
-                <div class="programa-overlay">
-                  <v-chip
-                    :color="programa.color"
-                    variant="elevated"
-                    size="small"
-                  >
-                    {{ programa.modalidad }}
-                  </v-chip>
-                </div>
-              </v-img>
+              <!-- Imagen del programa arriba -->
+              <div class="programa-imagen-container">
+                <v-img
+                  :src="programa.imagen"
+                  height="200"
+                  cover
+                  class="programa-imagen-nueva"
+                >
+                </v-img>
+              </div>
 
-              <v-card-title>{{ programa.nombre }}</v-card-title>
+              <!-- Contenido principal -->
+              <v-card-text class="programa-contenido">
+                <!-- Título del programa -->
+                <h3 class="programa-titulo-nuevo">
+                  {{ programa.nombre }}
+                </h3>
 
-              <v-card-text>
-                <p class="mb-3">{{ programa.descripcion }}</p>
+                <!-- Información del programa -->
+                <v-list class="programa-info-list bg-grey-lighten-4 rounded-lg ma-0" density="compact">
+                  <!-- Inscripción hasta -->
+                  <v-list-item class="px-4 py-2">
+                    <template v-slot:prepend>
+                      <v-icon>mdi-calendar</v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium text-grey-darken-2">
+                      Inscripción hasta:
+                    </v-list-item-title>
+                    <template v-slot:append>
+                      <v-chip color="red" variant="elevated" size="small" class="font-weight-bold">
+                        25-07-2025
+                      </v-chip>
+                    </template>
+                  </v-list-item>
 
-                <div class="programa-meta">
-                  <v-chip
-                    variant="outlined"
-                    size="small"
-                    prepend-icon="mdi-clock"
-                    class="me-2"
-                  >
-                    {{ programa.duracion }}
-                  </v-chip>
-                </div>
+                  <v-divider class="mx-4"></v-divider>
+
+                  <!-- Modalidad -->
+                  <v-list-item class="px-4 py-2">
+                    <template v-slot:prepend>
+                      <v-icon>mdi-laptop</v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium text-grey-darken-2">
+                      Modalidad:
+                    </v-list-item-title>
+                    <template v-slot:append>
+                      <v-chip color="blue" variant="elevated" size="small" class="font-weight-bold">
+                        {{ programa.modalidad }}
+                      </v-chip>
+                    </template>
+                  </v-list-item>
+
+                  <v-divider class="mx-4"></v-divider>
+
+                  <!-- Duración -->
+                  <v-list-item class="px-4 py-2">
+                    <template v-slot:prepend>
+                      <v-icon>mdi-clock-outline</v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium text-grey-darken-2">
+                      Duración:
+                    </v-list-item-title>
+                    <template v-slot:append>
+                      <span class="text-body-2 font-weight-bold">{{ programa.duracion }}</span>
+                    </template>
+                  </v-list-item>
+                  <v-list-item class="px-4 py-2">
+                    <v-btn
+                      color="primary"
+                      variant="elevated"
+                      @click="verPrograma(programa)"
+                      block
+                      size="large"
+                      class="inscripcion-btn"
+                      prepend-icon="mdi-account-plus"
+                    >
+                      Inscribirme
+                    </v-btn>
+                  </v-list-item>
+                </v-list>
               </v-card-text>
 
-              <v-card-actions>
-                <v-btn variant="text" @click="verPrograma(programa)">
-                  Más Información
-                  <v-icon end>mdi-arrow-right</v-icon>
+              <!-- Botones de acción -->
+              <v-card-actions class="programa-acciones">
+                <!-- Botón secundario de información -->
+                <v-btn
+                  color="success"
+                  variant="outlined"
+                  @click="abrirWhatsAppPrograma(programa)"
+                  block
+                  size="large"
+                  class="info-btn mt-2"
+                  prepend-icon="mdi-whatsapp"
+                >
+                  Solicitar info
                 </v-btn>
               </v-card-actions>
             </v-card>
@@ -257,7 +440,7 @@ const animarContadores = () => {
     <!-- Testimonios -->
     <section class="testimonios-section">
       <v-container>
-        <div class="section-header">
+        <div class="section-header" data-aos="fade-up">
           <h2 class="section-title">Lo Que Dicen Nuestros Egresados</h2>
           <p class="section-subtitle">
             Historias de éxito que nos inspiran a seguir formando profesionales
@@ -266,10 +449,12 @@ const animarContadores = () => {
 
         <v-row>
           <v-col
-            v-for="testimonio in testimonios"
+            v-for="(testimonio, index) in testimonios"
             :key="testimonio.id"
             cols="12"
             md="4"
+            data-aos="fade-up"
+            :data-aos-delay="200 * index"
           >
             <v-card class="testimonio-card" elevation="2">
               <v-card-text>
@@ -304,7 +489,7 @@ const animarContadores = () => {
     <!-- Noticias -->
     <section class="noticias-section">
       <v-container>
-        <div class="section-header">
+        <div class="section-header" data-aos="fade-up">
           <h2 class="section-title">Últimas Noticias</h2>
           <p class="section-subtitle">
             Mantente al día con las novedades de nuestra institución
@@ -313,10 +498,12 @@ const animarContadores = () => {
 
         <v-row>
           <v-col
-            v-for="noticia in noticias"
+            v-for="(noticia, index) in noticias"
             :key="noticia.id"
             cols="12"
             md="4"
+            data-aos="fade-up"
+            :data-aos-delay="200 * index"
           >
             <v-card
               class="noticia-card"
@@ -351,7 +538,7 @@ const animarContadores = () => {
     </section>
 
     <!-- Call to Action -->
-    <section class="cta-section">
+    <section class="cta-section" data-aos="fade-up">
       <v-container>
         <v-row justify="center">
           <v-col cols="12" md="8" class="text-center">
@@ -363,21 +550,22 @@ const animarContadores = () => {
 
             <div class="cta-actions">
               <v-btn
-                color="primary"
+                color="white"
                 size="large"
                 variant="flat"
                 prepend-icon="mdi-account-plus"
                 @click="irInscripcion"
-                class="me-4"
+                class="me-4 cta-btn"
               >
                 Inscríbete Ahora
               </v-btn>
 
               <v-btn
-                color="primary"
+                color="white"
                 size="large"
                 variant="outlined"
                 prepend-icon="mdi-phone"
+                class="cta-btn-outline"
               >
                 Contáctanos
               </v-btn>
@@ -386,66 +574,179 @@ const animarContadores = () => {
         </v-row>
       </v-container>
     </section>
+
+    <!-- Botón Flotante WhatsApp que sigue el scroll -->
+    <v-btn
+      fab
+      color="#25D366"
+      size="large"
+      class="whatsapp-btn"
+      :style="{ transform: `translateY(${whatsappPosition}px)` }"
+      @click="abrirWhatsApp"
+      elevation="8"
+    >
+      <v-icon size="32" color="white">mdi-whatsapp</v-icon>
+    </v-btn>
   </div>
 </template>
 
 <style lang="scss" scoped>
 .inicio-publico {
-  // Hero Section
-  .hero-section {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+
+  // Hero Carousel Section
+  .hero-carousel-section {
     position: relative;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
+    height: 100vh;
+    overflow: hidden;
 
-    .hero-background {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #1976D2 0%, #1565C0 50%, #0D47A1 100%);
+    .hero-carousel {
+      height: 100vh !important;
+      margin: 0 !important;
+      width: 100% !important;
 
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      .carousel-slide {
+        position: relative;
+        height: 100vh;
+
+        .slide-background {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 1;
+
+          .slide-image {
+            width: 100%;
+            height: 100vh;
+          }
+
+          .slide-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+          }
+        }
+
+        .slide-content {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 3;
+          color: white;
+          display: flex;
+          align-items: center;
+
+          .hero-title {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            line-height: 1.1;
+            letter-spacing: 2px;
+          }
+
+          .hero-subtitle {
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            opacity: 0.95;
+          }
+
+          .hero-description {
+            font-size: 1.2rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          }
+
+          .hero-actions {
+            .action-btn {
+              background: white !important;
+              color: #D32F2F !important;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+              transition: all 0.3s ease;
+
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+              }
+            }
+
+            .action-btn-outline {
+              border: 2px solid white !important;
+              color: white !important;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+              transition: all 0.3s ease;
+
+              &:hover {
+                background: white !important;
+                color: #D32F2F !important;
+                transform: translateY(-2px);
+              }
+            }
+          }
+        }
       }
     }
 
-    .hero-overlay {
+    .scroll-down-btn {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.3);
+      bottom: 6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      animation: bounce 2s infinite;
     }
 
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      color: white;
+    .carousel-indicators {
+      position: absolute;
+      bottom: 2rem;
+      left: 0;
+      right: 0;
+      z-index: 4;
 
-      .hero-title {
-        font-size: 3.5rem;
-        font-weight: 700;
-        margin-bottom: 1.5rem;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        line-height: 1.2;
-      }
+      .indicators-container {
+        .custom-indicators {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
 
-      .hero-subtitle {
-        font-size: 1.3rem;
-        margin-bottom: 2.5rem;
-        opacity: 0.95;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
+          .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+
+            &.active {
+              background: white;
+              transform: scale(1.2);
+            }
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.8);
+            }
+          }
+        }
       }
     }
   }
@@ -453,24 +754,32 @@ const animarContadores = () => {
   // Estadísticas
   .estadisticas-section {
     background: white;
-    padding: 3rem 0;
+    padding: 4rem 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 
     .estadistica-item {
       text-align: center;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: translateY(-5px);
+      }
 
       .estadistica-numero {
-        font-size: 3rem;
+        font-size: 3.5rem;
         font-weight: 900;
-        color: #1976D2;
+        color: #D32F2F;
         line-height: 1;
         margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
       .estadistica-label {
         font-size: 1.1rem;
         color: #666;
-        font-weight: 500;
-        text-transform: capitalize;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
       }
     }
   }
@@ -479,7 +788,7 @@ const animarContadores = () => {
   .programas-section,
   .testimonios-section,
   .noticias-section {
-    padding: 4rem 0;
+    padding: 5rem 0;
 
     &:nth-child(even) {
       background: #FAFAFA;
@@ -488,54 +797,170 @@ const animarContadores = () => {
 
   .section-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: 4rem;
 
     .section-title {
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: 700;
-      color: #1976D2;
+      color: #D32F2F;
       margin-bottom: 1rem;
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: #1976D2;
+        border-radius: 2px;
+      }
     }
 
     .section-subtitle {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
       color: #666;
       max-width: 600px;
       margin: 0 auto;
+      line-height: 1.6;
     }
   }
 
-  // Programas
-  .programa-card {
-    height: 100%;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
+  .programas-section {
+    padding: 5rem 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 
-    &:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
-    }
+    .programa-card-nueva {
+      border-radius: 20px !important;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      background: white;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
 
-    .programa-overlay {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-    }
+      &:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+      }
 
-    .programa-meta {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+      .programa-imagen-container {
+        position: relative;
+        overflow: hidden;
+
+        .programa-imagen-nueva {
+          transition: transform 0.4s ease;
+        }
+
+        .imagen-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%);
+          display: flex;
+          align-items: flex-start;
+          justify-content: flex-end;
+          padding: 1rem;
+
+          .programa-categoria {
+            background: rgba(25, 118, 210, 0.9);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(10px);
+          }
+        }
+
+        &:hover .programa-imagen-nueva {
+          transform: scale(1.05);
+        }
+      }
+
+      .programa-contenido {
+        padding: 1.5rem;
+
+        .programa-titulo-nuevo {
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: #1976D2;
+          margin-bottom: 1.5rem;
+          line-height: 1.3;
+          text-align: center;
+          border-bottom: 2px solid #e3f2fd;
+          padding-bottom: 1rem;
+        }
+
+        .programa-info-list {
+          border-left: 4px solid rgb(var(--v-theme-primary)) !important;
+          margin-bottom: 1.5rem;
+        }
+      }
+
+      .programa-acciones {
+        padding: 0 1.5rem 1.5rem;
+        flex-direction: column;
+
+        .inscripcion-btn {
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          background: linear-gradient(45deg, #1976D2, #1565C0) !important;
+          color: white !important;
+          box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3) !important;
+          transition: all 0.3s ease;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4) !important;
+          }
+
+          .v-icon {
+            margin-right: 8px;
+          }
+        }
+
+        .info-btn {
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          border: 2px solid #25D366 !important;
+          color: #25D366 !important;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: #25D366 !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+          }
+
+          .v-icon {
+            margin-right: 8px;
+          }
+        }
+      }
     }
   }
+
 
   // Testimonios
   .testimonio-card {
     height: 100%;
-    transition: transform 0.2s ease;
+    transition: all 0.3s ease;
+    border-radius: 16px !important;
+    border: 2px solid transparent;
 
     &:hover {
-      transform: translateY(-4px);
+      transform: translateY(-8px);
+      border-color: #D32F2F;
+      box-shadow: 0 12px 24px rgba(211, 47, 47, 0.15) !important;
     }
 
     .testimonio-content {
@@ -548,6 +973,7 @@ const animarContadores = () => {
         margin-bottom: 1.5rem;
         color: #444;
         line-height: 1.6;
+        font-size: 1.1rem;
       }
 
       .testimonio-autor {
@@ -556,7 +982,8 @@ const animarContadores = () => {
 
         .autor-nombre {
           font-weight: 600;
-          color: #1976D2;
+          color: #D32F2F;
+          font-size: 1.1rem;
         }
 
         .autor-programa {
@@ -575,86 +1002,134 @@ const animarContadores = () => {
   // Noticias
   .noticia-card {
     height: 100%;
-    transition: transform 0.2s ease;
+    transition: all 0.3s ease;
     cursor: pointer;
+    border-radius: 16px !important;
 
     &:hover {
-      transform: translateY(-4px);
+      transform: translateY(-8px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
     }
 
     .noticia-resumen {
       margin-bottom: 1rem;
       color: #444;
+      line-height: 1.6;
     }
 
     .noticia-fecha {
       font-size: 0.9rem;
       color: #999;
+      font-weight: 500;
     }
   }
 
   // Call to Action
   .cta-section {
-    background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+    background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
     color: white;
-    padding: 4rem 0;
+    padding: 5rem 0;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+    }
 
     .cta-title {
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: 700;
       margin-bottom: 1rem;
+      position: relative;
+      z-index: 2;
     }
 
     .cta-subtitle {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
+      font-size: 1.3rem;
+      margin-bottom: 2.5rem;
       opacity: 0.9;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cta-actions {
+      position: relative;
+      z-index: 2;
+
+      .cta-btn {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+      }
+
+      .cta-btn-outline {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: white !important;
+          color: #D32F2F !important;
+          transform: translateY(-2px);
+        }
+      }
     }
   }
-}
 
-// Responsive
-@media (max-width: 960px) {
-  .inicio-publico {
-    .hero-content .hero-title {
-      font-size: 2.5rem;
-    }
+  // Botón WhatsApp que sigue el scroll
+  .whatsapp-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    animation: pulse 2s infinite;
+    transition: transform 0.1s ease-out;
 
-    .estadistica-item .estadistica-numero {
-      font-size: 2.5rem;
-    }
-
-    .section-title {
-      font-size: 2rem !important;
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .inicio-publico {
-    .hero-content {
-      .hero-title {
-        font-size: 2rem;
-      }
-
-      .hero-subtitle {
-        font-size: 1.1rem;
-      }
-
-      .hero-actions .v-btn {
-        width: 100%;
-        margin: 0.5rem 0;
-      }
-    }
-
-    .cta-actions .v-btn {
-      width: 100%;
-      margin: 0.5rem 0;
+    &:hover {
+      transform: scale(1.1) !important;
+      animation-play-state: paused;
     }
   }
 }
 
 // Animaciones
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  40% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+  60% {
+    transform: translateX(-50%) translateY(-5px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(37, 211, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -666,7 +1141,86 @@ const animarContadores = () => {
   }
 }
 
-.hero-content {
-  animation: fadeInUp 1s ease-out;
+// Responsive
+@media (max-width: 960px) {
+  .inicio-publico {
+    .hero-carousel-section .hero-carousel .carousel-slide .slide-content {
+      .hero-title {
+        font-size: 2.5rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.4rem;
+      }
+
+      .hero-description {
+        font-size: 1.1rem;
+      }
+    }
+
+    .estadistica-item .estadistica-numero {
+      font-size: 2.5rem;
+    }
+
+    .section-title {
+      font-size: 2.2rem !important;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .inicio-publico {
+    .hero-carousel-section .hero-carousel .carousel-slide .slide-content {
+      .hero-title {
+        font-size: 2rem;
+        letter-spacing: 1px;
+      }
+
+      .hero-subtitle {
+        font-size: 1.2rem;
+      }
+
+      .hero-description {
+        font-size: 1rem;
+      }
+
+      .hero-actions {
+        .v-btn {
+          width: 100%;
+          margin: 0.5rem 0;
+        }
+      }
+    }
+
+    .cta-actions .v-btn {
+      width: 100%;
+      margin: 0.5rem 0;
+    }
+
+    .whatsapp-btn {
+      margin-bottom: 1rem !important;
+      margin-right: 1rem !important;
+    }
+  }
+}
+
+@media (max-width: 960px) {
+  .programa-card-nueva {
+    .programa-contenido {
+      .programa-titulo-nuevo {
+        font-size: 1.2rem;
+      }
+
+      .programa-info .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+
+        .info-valor {
+          align-self: flex-end;
+        }
+      }
+    }
+  }
 }
 </style>

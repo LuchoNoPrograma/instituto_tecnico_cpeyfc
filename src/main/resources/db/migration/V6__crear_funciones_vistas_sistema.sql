@@ -621,10 +621,19 @@ $$;
 
 -- Vista: Programas académicos activos para creación de grupos
 -- Uso: Formularios de programas aprobados y gestión de grupos/cohortes
-CREATE OR REPLACE VIEW vista_aca_programa_activas AS
-SELECT id_aca_programa, id_aca_area, nombre_programa, sigla, estado_programa
-FROM aca_programa
-WHERE estado_programa != 'ELIMINADO';
+CREATE OR REPLACE VIEW vista_aca_programas_activos AS
+SELECT
+  p.id_aca_programa,
+  p.nombre_programa,
+  p.sigla,
+  p.estado_programa,
+  a.id_aca_area,
+  a.nombre_area as area_nombre
+FROM aca_programa p
+       JOIN aca_area a ON p.id_aca_area = a.id_aca_area
+WHERE p.estado_programa = 'ACTIVO'
+  AND a.estado_area = 'ACTIVO'
+ORDER BY p.nombre_programa;
 
 /*==============================================================*/
 /* MÓDULO FINANCIERO - FIN_CONCEPTO_PAGO                       */
