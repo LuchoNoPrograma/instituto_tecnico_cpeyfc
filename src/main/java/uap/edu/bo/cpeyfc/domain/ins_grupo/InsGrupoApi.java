@@ -83,4 +83,9 @@ public class InsGrupoApi {
 
     return ResponseEntity.ok(resultado);
   }
+
+  @GetMapping("/api/publico/programas-ofertados")
+  public ResponseEntity<?> vistaProgramasPublicos(){
+    return ResponseEntity.ok(insGrupoRepository.vistaProgramasOfertadosAPublico());
+  }
 }

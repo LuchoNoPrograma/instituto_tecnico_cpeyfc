@@ -1,6 +1,8 @@
 <script setup>
 import {ref, onMounted, onUnmounted} from 'vue'
 import {useRouter} from 'vue-router'
+import { api } from '@/services/api'
+import formatoFecha from '@/helpers/formatos.js'
 
 const router = useRouter()
 
@@ -45,32 +47,9 @@ const carruselSlides = ref([
   }
 ])
 
-const programasDestacados = ref([
-  {
-    id: 1,
-    nombre: 'Técnico en Sistemas Informáticos',
-    duracion: '2 años',
-    modalidad: 'Presencial',
-    imagen: 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400',
-    fechaInscripcion: '25-07-2025'
-  },
-  {
-    id: 2,
-    nombre: 'Técnico en Enfermería Especializada',
-    duracion: '2.5 años',
-    modalidad: 'Presencial',
-    imagen: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400',
-    fechaInscripcion: '25-07-2025'
-  },
-  {
-    id: 3,
-    nombre: 'Técnico en Administración Empresarial',
-    duracion: '2 años',
-    modalidad: 'Semipresencial',
-    imagen: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-    fechaInscripcion: '25-07-2025'
-  }
-])
+// Programas desde API
+const programasDestacados = ref([])
+const cargandoProgramas = ref(false)
 
 const noticias = ref([
   {
@@ -123,6 +102,77 @@ const testimonios = ref([
   }
 ])
 
+// Obtener programas de la API
+const obtenerProgramasOfertados = async () => {
+  cargandoProgramas.value = true
+  try {
+    const response = await api.get('/api/publico/programas-ofertados')
+
+    // Mapear datos de la vista a la estructura del componente
+    programasDestacados.value = response.data.map(programa => ({
+      id: programa.id_aca_programa_aprobado,
+      nombre: programa.nombre_programa,
+      duracion: calcularDuracion(programa.carga_horaria, programa.plan_anho),
+      modalidad: programa.nombre_modalidad,
+      imagen: programa.imagen_url || obtenerImagenPorDefecto(programa.nombre_area),
+      fechaInscripcion: formatoFecha.ddMMaaaa(programa.fecha_fin_inscripcion),
+      area: programa.nombre_area,
+      estado: programa.estado_inscripcion,
+      diasRestantes: programa.dias_restantes_inscripcion,
+      preinscritos: programa.total_preinscritos,
+      matriculados: programa.total_matriculados,
+      precioMatricula: programa.precio_matricula,
+      precioColegiatura: programa.precio_colegiatura,
+      grupo: programa.nombre_grupo
+    }))
+  } catch (error) {
+    console.error('Error al obtener programas ofertados:', error)
+    // Fallback a programas de ejemplo si falla la API
+    programasDestacados.value = []
+  } finally {
+    cargandoProgramas.value = false
+  }
+}
+
+const calcularDuracion = (cargaHoraria, planAnho) => {
+  if (planAnho) return `Plan ${planAnho}`
+  if (cargaHoraria) {
+    if (cargaHoraria <= 800) return '1 año'
+    if (cargaHoraria <= 1600) return '2 años'
+    return '2.5 años'
+  }
+  return '2 años'
+}
+
+const obtenerImagenPorDefecto = (area) => {
+  const imagenesPorArea = {
+    'Sistemas': 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400',
+    'Informática': 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400',
+    'Enfermería': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400',
+    'Salud': 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400',
+    'Administración': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+    'Empresa': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+    'Idiomas': 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400'
+  }
+
+  for (const [key, imagen] of Object.entries(imagenesPorArea)) {
+    if (area && area.toLowerCase().includes(key.toLowerCase())) {
+      return imagen
+    }
+  }
+
+  return 'https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=400'
+}
+
+const obtenerColorEstado = (estado) => {
+  const colores = {
+    'INSCRIPCIONES ABIERTAS': 'success',
+    'PROXIMAMENTE': 'info',
+    'INSCRIPCIONES CERRADAS': 'error'
+  }
+  return colores[estado] || 'info'
+}
+
 const irInscripcion = () => {
   router.push('/inscripciones')
 }
@@ -157,6 +207,7 @@ const handleScroll = () => {
 
 onMounted(() => {
   animarContadores()
+  obtenerProgramasOfertados()
 
   if (window.AOS) {
     window.AOS.init({
@@ -244,8 +295,9 @@ const animarContadores = () => {
                       variant="outlined"
                       prepend-icon="mdi-play"
                       class="mb-4 action-btn-outline"
+                      to="/login"
                     >
-                      Ver Video
+                      Iniciar sesion
                     </v-btn>
                   </div>
                 </v-col>
@@ -321,7 +373,20 @@ const animarContadores = () => {
           </p>
         </div>
 
-        <v-row>
+        <!-- Loading state -->
+        <div v-if="cargandoProgramas" class="text-center my-8">
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          <p class="mt-4">Cargando programas disponibles...</p>
+        </div>
+
+        <!-- No hay programas -->
+        <div v-else-if="programasDestacados.length === 0" class="text-center my-8">
+          <v-icon size="64" color="grey-lighten-1">mdi-school-outline</v-icon>
+          <p class="text-h6 mt-4 text-grey">No hay programas disponibles en este momento</p>
+        </div>
+
+        <!-- Lista de programas -->
+        <v-row v-else>
           <v-col
             v-for="(programa, index) in programasDestacados"
             :key="programa.id"
@@ -343,6 +408,16 @@ const animarContadores = () => {
                   class="programa-imagen-nueva"
                 >
                 </v-img>
+
+                <!-- Badge de estado -->
+                <v-chip
+                  :color="obtenerColorEstado(programa.estado)"
+                  variant="elevated"
+                  class="estado-chip"
+                  size="small"
+                >
+                  {{ programa.estado }}
+                </v-chip>
               </div>
 
               <!-- Contenido principal -->
@@ -364,7 +439,7 @@ const animarContadores = () => {
                     </v-list-item-title>
                     <template v-slot:append>
                       <v-chip color="red" variant="elevated" size="small" class="font-weight-bold">
-                        25-07-2025
+                        {{ programa.fechaInscripcion }}
                       </v-chip>
                     </template>
                   </v-list-item>
@@ -400,9 +475,26 @@ const animarContadores = () => {
                       <span class="text-body-2 font-weight-bold">{{ programa.duracion }}</span>
                     </template>
                   </v-list-item>
+
+                  <!-- Días restantes (solo si están abiertas) -->
+                  <v-list-item v-if="programa.estado === 'INSCRIPCIONES ABIERTAS' && programa.diasRestantes > 0" class="px-4 py-2">
+                    <template v-slot:prepend>
+                      <v-icon color="warning">mdi-timer-sand</v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2 font-weight-medium text-grey-darken-2">
+                      Días restantes:
+                    </v-list-item-title>
+                    <template v-slot:append>
+                      <v-chip color="warning" variant="elevated" size="small" class="font-weight-bold">
+                        {{ programa.diasRestantes }} días
+                      </v-chip>
+                    </template>
+                  </v-list-item>
+
                   <v-list-item class="px-4 py-2">
                     <v-btn
-                      color="primary"
+                      :color="programa.estado === 'INSCRIPCIONES ABIERTAS' ? 'primary' : 'grey'"
+                      :disabled="programa.estado !== 'INSCRIPCIONES ABIERTAS'"
                       variant="elevated"
                       @click="verPrograma(programa)"
                       block
@@ -410,7 +502,7 @@ const animarContadores = () => {
                       class="inscripcion-btn"
                       prepend-icon="mdi-account-plus"
                     >
-                      Inscribirme
+                      {{ programa.estado === 'INSCRIPCIONES ABIERTAS' ? 'Inscribirme' : 'Inscripciones Cerradas' }}
                     </v-btn>
                   </v-list-item>
                 </v-list>
@@ -788,7 +880,7 @@ const animarContadores = () => {
   .programas-section,
   .testimonios-section,
   .noticias-section {
-    padding: 5rem 0;
+    padding: 2rem 0;
 
     &:nth-child(even) {
       background: #FAFAFA;
@@ -829,7 +921,7 @@ const animarContadores = () => {
   }
 
   .programas-section {
-    padding: 5rem 0;
+    padding: 3rem 0;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 
     .programa-card-nueva {
@@ -853,29 +945,13 @@ const animarContadores = () => {
           transition: transform 0.4s ease;
         }
 
-        .imagen-overlay {
+        .estado-chip {
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%);
-          display: flex;
-          align-items: flex-start;
-          justify-content: flex-end;
-          padding: 1rem;
-
-          .programa-categoria {
-            background: rgba(25, 118, 210, 0.9);
-            color: white;
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            backdrop-filter: blur(10px);
-          }
+          top: 12px;
+          right: 12px;
+          z-index: 2;
+          font-weight: 600;
+          text-transform: uppercase;
         }
 
         &:hover .programa-imagen-nueva {
@@ -916,9 +992,15 @@ const animarContadores = () => {
           box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3) !important;
           transition: all 0.3s ease;
 
-          &:hover {
+          &:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4) !important;
+          }
+
+          &:disabled {
+            background: #ccc !important;
+            color: #666 !important;
+            box-shadow: none !important;
           }
 
           .v-icon {
@@ -948,7 +1030,6 @@ const animarContadores = () => {
       }
     }
   }
-
 
   // Testimonios
   .testimonio-card {

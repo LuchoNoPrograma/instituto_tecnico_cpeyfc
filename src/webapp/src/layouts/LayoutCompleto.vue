@@ -41,6 +41,12 @@ const menuItems = computed(() => [
     mostrar: hasPermission('VER_MATRICULAS')
   },
   {
+    titulo: 'Ver perfil',
+    icono: 'mdi-account-school',
+    ruta: '/perfil-estudiante',
+    mostrar: hasPermission('VER_MATRICULAS')
+  },
+  {
     titulo: 'Ejecución Académica',
     icono: 'mdi-clipboard-play',
     ruta: '/ejecucion',

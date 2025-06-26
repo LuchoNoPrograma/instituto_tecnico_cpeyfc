@@ -1,11 +1,4 @@
-const duplicarPrograma = (programa) => {
-const programaDuplicado = {
-...programa,
-gestion: new Date().getFullYear(),
-estado_programa_aprobado: 'SIN INICIAR'
-}
-abrirDialogEditar(programaDuplicado)
-}<script setup>
+<script setup>
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/services/api'
@@ -17,7 +10,6 @@ const router = useRouter()
 const programas = ref([])
 const cargando = ref(false)
 const busqueda = ref('')
-const estadisticas = ref({})
 
 // Estados de dialog unificado
 const dialogFormulario = ref(false)
@@ -35,11 +27,26 @@ const headers = [
   { title: 'Acciones', key: 'acciones', sortable: false, width: '10%' }
 ]
 
+// Computed para estadísticas calculadas desde los datos
+const estadisticasCalculadas = computed(() => {
+  const total = programas.value.length
+  const sinIniciar = programas.value.filter(p => p.estado_programa_aprobado === 'SIN INICIAR').length
+  const enEjecucion = programas.value.filter(p => p.estado_programa_aprobado === 'EN EJECUCION').length
+  const finalizados = programas.value.filter(p => p.estado_programa_aprobado === 'FINALIZADO').length
+
+  return {
+    total,
+    sinIniciar,
+    enEjecucion,
+    finalizados
+  }
+})
+
 // Computed para estadísticas con colores
 const tarjetasEstadisticas = computed(() => [
   {
     titulo: 'Total Programas',
-    valor: estadisticas.value.total || 0,
+    valor: estadisticasCalculadas.value.total,
     icono: 'mdi-school',
     color: 'primary',
     colorFondo: 'primary',
@@ -47,7 +54,7 @@ const tarjetasEstadisticas = computed(() => [
   },
   {
     titulo: 'Sin Iniciar',
-    valor: estadisticas.value.sinIniciar || 0,
+    valor: estadisticasCalculadas.value.sinIniciar,
     icono: 'mdi-clock-outline',
     color: 'info',
     colorFondo: 'info',
@@ -55,7 +62,7 @@ const tarjetasEstadisticas = computed(() => [
   },
   {
     titulo: 'En Ejecución',
-    valor: estadisticas.value.enEjecucion || 0,
+    valor: estadisticasCalculadas.value.enEjecucion,
     icono: 'mdi-play-circle',
     color: 'success',
     colorFondo: 'success',
@@ -63,7 +70,7 @@ const tarjetasEstadisticas = computed(() => [
   },
   {
     titulo: 'Finalizados',
-    valor: estadisticas.value.finalizados || 0,
+    valor: estadisticasCalculadas.value.finalizados,
     icono: 'mdi-check-circle',
     color: 'warning',
     colorFondo: 'warning',
@@ -92,20 +99,11 @@ const obtenerProgramas = async () => {
   try {
     const response = await api.get('/api/programas-aprobados/vista/programas-aprobados')
     programas.value = response.data
-    await obtenerEstadisticas()
+    // Ya no necesitamos obtenerEstadisticas() porque se calculan automáticamente
   } catch (error) {
     console.error('Error al obtener programas:', error)
   } finally {
     cargando.value = false
-  }
-}
-
-const obtenerEstadisticas = async () => {
-  try {
-    const response = await api.get('/api/programa-aprobado/estadisticas-operativas')
-    estadisticas.value = response.data
-  } catch (error) {
-    console.error('Error al obtener estadísticas:', error)
   }
 }
 
@@ -116,6 +114,15 @@ const obtenerColorEstado = (estado) => {
     'FINALIZADO': 'warning'
   }
   return colores[estado] || 'grey'
+}
+
+const duplicarPrograma = (programa) => {
+  const programaDuplicado = {
+    ...programa,
+    gestion: new Date().getFullYear(),
+    estado_programa_aprobado: 'SIN INICIAR'
+  }
+  abrirDialogEditar(programaDuplicado)
 }
 
 // Funciones de exportación
@@ -420,6 +427,13 @@ onMounted(() => {
                     <v-icon>mdi-account-group</v-icon>
                   </template>
                   <v-list-item-title>Ver Grupos</v-list-item-title>
+                </v-list-item>
+
+                <v-list-item @click="duplicarPrograma(item)">
+                  <template #prepend>
+                    <v-icon>mdi-content-copy</v-icon>
+                  </template>
+                  <v-list-item-title>Duplicar Programa</v-list-item-title>
                 </v-list-item>
               </v-list>
             </v-menu>
