@@ -32,7 +32,6 @@ const formularioInscripcion = ref({
   nombre: '',
   ap_paterno: '',
   ap_materno: '',
-  genero: '',
   fecha_nacimiento: '',
   celular: '',
   correo: '',
@@ -60,9 +59,6 @@ const reglasValidacion = computed(() => ({
   ap_materno: {
     longitudMaxima: longitudMaxima(55),
     soloLetras
-  },
-  genero: {
-    esRequerido
   },
   fecha_nacimiento: {
     esRequerido,
@@ -110,11 +106,6 @@ const competenciasPrograma = ref([
   'Archivo Digital',
   'Atención al Cliente'
 ])
-
-const generoOpciones = [
-  { value: 'M', title: 'Masculino' },
-  { value: 'F', title: 'Femenino' }
-]
 
 const headersModulos = [
   { title: '#', key: 'orden', width: '80px', sortable: false },
@@ -178,12 +169,35 @@ const abrirFormulario = () => {
   pasoFormulario.value = 1
 }
 
+const buscandoPersona = ref(false)
 const continuarConDatos = async () => {
-  // Validar solo el CI para el paso 1
   $v.value.ci.$touch()
 
   if ($v.value.ci.$invalid) {
     return
+  }
+
+  buscandoPersona.value = true
+
+  try {
+    const response = await api.get(`/api/publico/persona/ci?ci=${formularioInscripcion.value.ci}`)
+
+    if (response.data && Object.keys(response.data).length > 0) {
+      // Poblar formulario...
+      formularioInscripcion.value.nombre = response.data.nombre || ''
+      formularioInscripcion.value.ap_paterno = response.data.ap_paterno || ''
+      formularioInscripcion.value.ap_materno = response.data.ap_materno || ''
+      formularioInscripcion.value.celular = response.data.nro_celular || ''
+      formularioInscripcion.value.correo = response.data.correo || ''
+      formularioInscripcion.value.fecha_nacimiento = response.data.fecha_nacimiento || ''
+
+      $v.value.$reset()
+      $v.value.ci.$touch()
+    }
+  } catch (error) {
+    console.log('Error al buscar persona:', error)
+  } finally {
+    buscandoPersona.value = false
   }
 
   pasoFormulario.value = 2
@@ -220,7 +234,6 @@ const limpiarFormulario = () => {
     nombre: '',
     ap_paterno: '',
     ap_materno: '',
-    genero: '',
     fecha_nacimiento: '',
     celular: '',
     correo: '',
@@ -564,12 +577,12 @@ onMounted(() => {
     <!-- Dialog de Formulario de Inscripción -->
     <v-dialog
       v-model="mostrarFormulario"
-      max-width="800"
+      max-width="1080"
       persistent
       scrollable
       class="mx-2"
     >
-      <v-card class="formulario-inscripcion">
+      <v-card class="formulario-inscripcion" :loading="buscandoPersona">
         <!-- Header del formulario -->
         <v-card-title class="bg-primary text-white d-flex align-center pa-3 pa-md-4">
           <v-icon start size="24" class="d-none d-md-inline">mdi-account-plus</v-icon>
@@ -672,8 +685,9 @@ onMounted(() => {
                     @click="continuarConDatos"
                     prepend-icon="mdi-arrow-right"
                     :disabled="$v.ci.$invalid"
+                    :loading="buscandoPersona"
                   >
-                    Continuar
+                    {{ buscandoPersona ? 'Buscando...' : 'Continuar' }}
                   </v-btn>
                 </div>
               </v-col>
@@ -748,20 +762,8 @@ onMounted(() => {
                 </v-col>
               </v-row>
 
-              <!-- Género, fecha nacimiento y celular -->
+              <!-- fecha nacimiento y celular -->
               <v-row>
-                <v-col cols="12" md="4">
-                  <v-select
-                    v-model="formularioInscripcion.genero"
-                    :items="generoOpciones"
-                    label="Género *"
-                    variant="outlined"
-                    density="comfortable"
-                    :error-messages="obtenerErroresCampo($v.genero)"
-                    @blur="$v.genero.$touch"
-                  ></v-select>
-                </v-col>
-
                 <v-col cols="12" md="4">
                   <v-date-input
                     v-model="formularioInscripcion.fecha_nacimiento"
@@ -786,11 +788,8 @@ onMounted(() => {
                     @blur="$v.celular.$touch"
                   ></v-text-field>
                 </v-col>
-              </v-row>
 
-              <!-- Correo -->
-              <v-row>
-                <v-col cols="12">
+                <v-col cols="12" md="4">
                   <v-text-field
                     v-model="formularioInscripcion.correo"
                     label="Correo Electrónico *"

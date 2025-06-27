@@ -2,12 +2,13 @@ package uap.edu.bo.cpeyfc.domain.ins_preinscripcion;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.bind.annotation.*;
 import uap.edu.bo.cpeyfc.util.FechaUtil;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,5 +30,11 @@ public class InsPreinscripcionApi {
             1 // user_reg fijo para público
     );
     return ResponseEntity.ok(resultado);
+  }
+
+  @GetMapping("/api/preinscripcion/pendiente/{idProgramaAprobado}")
+  public ResponseEntity<List<Map<String, Object>>> obtenerPreinscritosPorProgramaAprobado(
+          @PathVariable Integer idProgramaAprobado) {
+    return ResponseEntity.ok(insPreinscripcionRepository.obtenerPreinscripcionPorProgramaAprobado(idProgramaAprobado));
   }
 }

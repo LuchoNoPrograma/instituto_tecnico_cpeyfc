@@ -16,6 +16,23 @@ const dialogFormulario = ref(false)
 const programaSeleccionado = ref(null)
 const esEdicion = computed(() => !!programaSeleccionado.value)
 
+// Estados para dialog de parámetros
+const dialogParametros = ref(false)
+const parametrosPrograma = ref([])
+const cargandoParametros = ref(false)
+const dialogFormularioParametro = ref(false)
+const parametroSeleccionado = ref(null)
+const esEdicionParametro = computed(() => !!parametroSeleccionado.value)
+
+// Formulario de parámetro
+const formularioParametro = ref({
+  nombre_param: '',
+  valor: '',
+  fecha_inicio_vigencia: null,
+  fecha_fin_vigencia: null,
+  orden: 1
+})
+
 // Headers actualizados
 const headers = [
   { title: 'Programa', key: 'programa_nombre', sortable: true, width: '25%' },
@@ -25,6 +42,16 @@ const headers = [
   { title: 'Gestión', key: 'gestion', sortable: true, width: '8%' },
   { title: 'Estado', key: 'estado_programa_aprobado', sortable: true, width: '12%' },
   { title: 'Acciones', key: 'acciones', sortable: false, width: '10%' }
+]
+
+// Headers para tabla de parámetros
+const headersParametros = [
+  { title: 'Parámetro', key: 'nombre_param', sortable: true },
+  { title: 'Valor', key: 'valor', sortable: false },
+  { title: 'Tipo', key: 'tipo_dato_param', sortable: true },
+  { title: 'Vigencia', key: 'vigencia', sortable: false },
+  { title: 'Estado', key: 'vigente', sortable: true },
+  { title: 'Acciones', key: 'acciones', sortable: false }
 ]
 
 // Computed para estadísticas calculadas desde los datos
@@ -87,6 +114,15 @@ const programasFormateados = computed(() => {
   }))
 })
 
+// Computed para formatear parámetros
+const parametrosFormateados = computed(() => {
+  return parametrosPrograma.value.map(param => ({
+    ...param,
+    vigencia: formatearVigencia(param.fecha_inicio_vigencia, param.fecha_fin_vigencia),
+    valor_display: formatearValor(param.valor, param.tipo_dato_param)
+  }))
+})
+
 const formatearVigencia = (inicio, fin) => {
   if (!inicio && !fin) return 'Sin definir'
   if (!fin) return `Desde ${formatoFecha.ddMMaaaa(inicio)}`
@@ -94,16 +130,38 @@ const formatearVigencia = (inicio, fin) => {
   return `${formatoFecha.ddMMaaaa(inicio)} - ${formatoFecha.ddMMaaaa(fin)}`
 }
 
+const formatearValor = (valor, tipo) => {
+  if (tipo === 'DECIMAL' && !isNaN(valor)) {
+    return parseFloat(valor) + '%'
+  }
+  if (tipo === 'BOOLEAN') {
+    return valor === 'true' ? 'Sí' : 'No'
+  }
+  return valor
+}
+
 const obtenerProgramas = async () => {
   cargando.value = true
   try {
-    const response = await api.get('/api/programas-aprobados/vista/programas-aprobados')
+    const response = await api.get('/api/programa-aprobado/vista/programas-aprobados')
     programas.value = response.data
-    // Ya no necesitamos obtenerEstadisticas() porque se calculan automáticamente
   } catch (error) {
     console.error('Error al obtener programas:', error)
   } finally {
     cargando.value = false
+  }
+}
+
+const obtenerParametros = async (idPrograma) => {
+  cargandoParametros.value = true
+  try {
+    const response = await api.get(`/api/parametro-programa/programa/${idPrograma}`)
+    parametrosPrograma.value = response.data
+  } catch (error) {
+    console.error('Error al obtener parámetros:', error)
+    parametrosPrograma.value = []
+  } finally {
+    cargandoParametros.value = false
   }
 }
 
@@ -125,13 +183,84 @@ const duplicarPrograma = (programa) => {
   abrirDialogEditar(programaDuplicado)
 }
 
+// Funciones de parámetros
+const abrirParametros = async (programa) => {
+  programaSeleccionado.value = programa
+  dialogParametros.value = true
+  await obtenerParametros(programa.id_aca_programa_aprobado)
+}
+
+const abrirFormularioParametro = (parametro = null) => {
+  if (parametro) {
+    parametroSeleccionado.value = parametro
+    formularioParametro.value = {
+      nombre_param: parametro.nombre_param,
+      valor: parametro.valor,
+      fecha_inicio_vigencia: parametro.fecha_inicio_vigencia,
+      fecha_fin_vigencia: parametro.fecha_fin_vigencia,
+      orden: parametro.orden
+    }
+  } else {
+    parametroSeleccionado.value = null
+    formularioParametro.value = {
+      nombre_param: '',
+      valor: '',
+      fecha_inicio_vigencia: null,
+      fecha_fin_vigencia: null,
+      orden: 1
+    }
+  }
+  dialogFormularioParametro.value = true
+}
+
+const guardarParametro = async () => {
+  try {
+    const datos = {
+      ...formularioParametro.value,
+      id_programa_aprobado: programaSeleccionado.value.id_aca_programa_aprobado
+    }
+
+    if (esEdicionParametro.value) {
+      await api.put(`/api/parametro-programa/${parametroSeleccionado.value.id_parametro}`, datos)
+    } else {
+      await api.post('/api/parametro-programa', datos)
+    }
+
+    await obtenerParametros(programaSeleccionado.value.id_aca_programa_aprobado)
+    cerrarFormularioParametro()
+  } catch (error) {
+    console.error('Error al guardar parámetro:', error)
+  }
+}
+
+const eliminarParametro = async (parametro) => {
+  if (confirm('¿Está seguro de eliminar este parámetro?')) {
+    try {
+      await api.delete(`/api/parametro-programa/${parametro.id_parametro}`)
+      await obtenerParametros(programaSeleccionado.value.id_aca_programa_aprobado)
+    } catch (error) {
+      console.error('Error al eliminar parámetro:', error)
+    }
+  }
+}
+
+const cerrarFormularioParametro = () => {
+  dialogFormularioParametro.value = false
+  parametroSeleccionado.value = null
+}
+
+const cerrarParametros = () => {
+  dialogParametros.value = false
+  programaSeleccionado.value = null
+  parametrosPrograma.value = []
+}
+
 // Funciones de exportación
 const exportarExcel = async () => {
   try {
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Programas Aprobados')
 
-    // Configurar columnas
     worksheet.columns = [
       { header: 'Programa', key: 'programa', width: 40 },
       { header: 'Modalidad', key: 'modalidad', width: 15 },
@@ -147,7 +276,6 @@ const exportarExcel = async () => {
       { header: 'Certificado CEUB', key: 'certificado', width: 18 }
     ]
 
-    // Estilo del header
     worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } }
     worksheet.getRow(1).fill = {
       type: 'pattern',
@@ -155,7 +283,6 @@ const exportarExcel = async () => {
       fgColor: { argb: '1976D2' }
     }
 
-    // Agregar datos
     programas.value.forEach(programa => {
       worksheet.addRow({
         programa: programa.programa_nombre,
@@ -173,23 +300,19 @@ const exportarExcel = async () => {
       })
     })
 
-    // Formato de moneda para columnas de precios
     worksheet.getColumn('matricula').numFmt = '"Bs" #,##0.00'
     worksheet.getColumn('colegiatura').numFmt = '"Bs" #,##0.00'
     worksheet.getColumn('titulacion').numFmt = '"Bs" #,##0.00'
 
-    // Autoajustar filas
     worksheet.eachRow({ includeEmpty: false }, (row) => {
       row.height = 20
     })
 
-    // Agregar filtros
     worksheet.autoFilter = {
       from: 'A1',
       to: 'L1'
     }
 
-    // Generar archivo
     const buffer = await workbook.xlsx.writeBuffer()
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = window.URL.createObjectURL(blob)
@@ -429,6 +552,13 @@ onMounted(() => {
                   <v-list-item-title>Ver Grupos</v-list-item-title>
                 </v-list-item>
 
+                <v-list-item @click="abrirParametros(item)">
+                  <template #prepend>
+                    <v-icon>mdi-percent</v-icon>
+                  </template>
+                  <v-list-item-title>Configurar Descuentos</v-list-item-title>
+                </v-list-item>
+
                 <v-list-item @click="duplicarPrograma(item)">
                   <template #prepend>
                     <v-icon>mdi-content-copy</v-icon>
@@ -462,6 +592,198 @@ onMounted(() => {
           @guardar="guardarPrograma"
         />
 
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog de parámetros/descuentos -->
+    <v-dialog
+      v-model="dialogParametros"
+      max-width="1000px"
+      persistent
+      class="ma-2"
+    >
+      <v-card class="rounded-lg">
+        <v-card-title class="bg-primary d-flex align-center pa-4">
+          <v-icon start>mdi-percent</v-icon>
+          Configurar Parámetros - {{ programaSeleccionado?.programa_nombre }}
+        </v-card-title>
+
+        <v-card-text class="pa-4">
+          <div class="d-flex justify-space-between align-center mb-4">
+            <div class="text-h6">Lista de Parámetros</div>
+            <v-btn
+              color="primary"
+              variant="elevated"
+              @click="abrirFormularioParametro()"
+            >
+              <v-icon start>mdi-plus</v-icon>
+              Agregar Parámetro
+            </v-btn>
+          </div>
+
+          <v-data-table
+            :headers="headersParametros"
+            :items="parametrosFormateados"
+            :loading="cargandoParametros"
+            loading-text="Cargando parámetros..."
+            no-data-text="No hay parámetros configurados"
+            density="compact"
+          >
+            <template #item.valor_display="{ item }">
+              <v-chip
+                :color="item.tipo_dato_param === 'DECIMAL' ? 'success' : 'info'"
+                size="small"
+                variant="tonal"
+              >
+                {{ item.valor_display }}
+              </v-chip>
+            </template>
+
+            <template #item.tipo_dato_param="{ item }">
+              <v-chip size="x-small" variant="outlined">
+                {{ item.tipo_dato_param }}
+              </v-chip>
+            </template>
+
+            <template #item.vigente="{ item }">
+              <v-chip
+                :color="item.vigente ? 'success' : 'warning'"
+                size="small"
+                variant="flat"
+              >
+                {{ item.vigente ? 'Vigente' : 'No vigente' }}
+              </v-chip>
+            </template>
+
+            <template #item.acciones="{ item }">
+              <div class="d-flex ga-1">
+                <v-btn
+                  icon="mdi-pencil"
+                  size="small"
+                  color="primary"
+                  variant="text"
+                  @click="abrirFormularioParametro(item)"
+                >
+                  <v-icon>mdi-pencil</v-icon>
+                  <v-tooltip activator="parent">Editar</v-tooltip>
+                </v-btn>
+
+                <v-btn
+                  icon="mdi-delete"
+                  size="small"
+                  color="error"
+                  variant="text"
+                  @click="eliminarParametro(item)"
+                >
+                  <v-icon>mdi-delete</v-icon>
+                  <v-tooltip activator="parent">Eliminar</v-tooltip>
+                </v-btn>
+              </div>
+            </template>
+          </v-data-table>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn
+            color="grey"
+            variant="text"
+            @click="cerrarParametros"
+          >
+            Cerrar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialog formulario de parámetro -->
+    <v-dialog
+      v-model="dialogFormularioParametro"
+      max-width="600px"
+      persistent
+    >
+      <v-card class="rounded-lg">
+        <v-card-title class="bg-primary d-flex align-center pa-4">
+          <v-icon start>{{ esEdicionParametro ? 'mdi-pencil' : 'mdi-plus' }}</v-icon>
+          {{ esEdicionParametro ? 'Editar Parámetro' : 'Nuevo Parámetro' }}
+        </v-card-title>
+
+        <v-card-text class="pa-4">
+          <v-form>
+            <v-row>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="formularioParametro.nombre_param"
+                  label="Nombre del Parámetro"
+                  variant="outlined"
+                  placeholder="Ej: DESCUENTO UNIVERSITARIO, OFERTA ESPECIAL"
+                  required
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="formularioParametro.valor"
+                  label="Valor"
+                  variant="outlined"
+                  placeholder="Ej: 20, 50%, true, Texto"
+                  required
+                  hint="Se detectará automáticamente el tipo de dato"
+                  persistent-hint
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="formularioParametro.orden"
+                  label="Orden"
+                  type="number"
+                  variant="outlined"
+                  min="1"
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-date-input
+                  v-model="formularioParametro.fecha_inicio_vigencia"
+                  label="Fecha Inicio Vigencia"
+                  variant="outlined"
+                  hint="Opcional - Sin fecha = desde siempre"
+                  persistent-hint
+                ></v-date-input>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-date-input
+                  v-model="formularioParametro.fecha_fin_vigencia"
+                  label="Fecha Fin Vigencia"
+                  type="date"
+                  variant="outlined"
+                  hint="Opcional - Sin fecha = permanente"
+                  persistent-hint
+                ></v-date-input>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn
+            color="grey"
+            variant="text"
+            @click="cerrarFormularioParametro"
+          >
+            Cancelar
+          </v-btn>
+          <v-btn
+            color="success"
+            variant="elevated"
+            @click="guardarParametro"
+          >
+            {{ esEdicionParametro ? 'Actualizar' : 'Guardar' }}
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
   </div>

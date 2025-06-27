@@ -16,5 +16,13 @@ export default [
       requiresAuth: true,
       /*requiredPermissions: ['VER_GRUPOS']*/
     }
-  }
+  },
+  {
+    path: '/matriculas/preinscrito',
+    name: 'MatricularPreinscrito',
+    component: () => import('@/views/matriculas/MatricularPreinscrito.vue'),
+    meta: {
+      requiresAuth: true,
+    }
+  },
 ]

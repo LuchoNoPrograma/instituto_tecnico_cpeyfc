@@ -1,15 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import {api} from "@/services/api.js";
 
 const router = useRouter()
-
-const props = defineProps({
-  grupoId: {
-    type: [Number, String],
-    required: true
-  }
-})
 
 const loading = ref(false)
 const busqueda = ref('')
@@ -448,6 +442,10 @@ const cargarDatos = async () => {
     // matriculados.value = response.data.matriculados
     // grupoInfo.value = response.data.grupo_info
 
+    const [grupoInfo] = await Promise.all([
+      api.get('/')
+    ])
+
     await new Promise(resolve => setTimeout(resolve, 1000))
   } catch (error) {
     console.error('Error cargando datos:', error)
@@ -548,7 +546,7 @@ onMounted(() => {
               density="compact"
             />
           </v-col>
-          <v-col cols="12" md="3">
+          <v-col cols="12" md="2">
             <v-select
               v-model="filtroSituacion"
               :items="opcionesSituacion"
@@ -558,7 +556,7 @@ onMounted(() => {
               density="compact"
             />
           </v-col>
-          <v-col cols="12" md="3">
+          <v-col cols="12" md="2">
             <v-select
               v-model="filtroEstadoFinanciero"
               :items="opcionesEstadoFinanciero"
@@ -568,14 +566,21 @@ onMounted(() => {
               density="compact"
             />
           </v-col>
-          <v-col cols="12" md="2">
+          <v-col cols="12" md="4">
             <v-btn
               @click="limpiarFiltros"
               variant="outlined"
-              block
               prepend-icon="mdi-filter-off"
             >
               Limpiar
+            </v-btn>
+            <v-btn
+              color="success"
+              variant="elevated"
+              @click="router.push('/matriculas/preinscrito')"
+            >
+              <v-icon start>mdi-account-plus</v-icon>
+              Matricular
             </v-btn>
           </v-col>
         </v-row>

@@ -147,7 +147,7 @@ const cargarDatos = async () => {
 
     const [cronogramasRes, programasRes, statsRes] = await Promise.all([
       api.get(endpoint),
-      api.get('/api/programas-aprobados/vista/programas-aprobados'),
+      api.get('/api/programa-aprobado/vista/programas-aprobados'),
       api.get('/api/grupos/estadisticas')
     ])
 

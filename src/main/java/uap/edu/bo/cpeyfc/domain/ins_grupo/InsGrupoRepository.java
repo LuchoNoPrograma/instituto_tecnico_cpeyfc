@@ -12,14 +12,17 @@ public interface InsGrupoRepository extends JpaRepository<InsGrupo, Integer> {
   @Query(value = "SELECT * FROM vista_grupos_completos ORDER BY gestion_inicio DESC, nombre_grupo", nativeQuery = true)
   List<Map<String, Object>> vistaGruposCompletos();
 
-  @Query(value = "SELECT * FROM vista_grupos_completos WHERE id_aca_programa_aprobado = :id_programa ORDER BY gestion_inicio DESC, nombre_grupo", nativeQuery = true)
-  List<Map<String, Object>> vistaGruposCompletosPorIdPrograma(Integer id_programa);
+  @Query(value = "SELECT * FROM vista_grupos_completos WHERE id_aca_programa_aprobado = :id_programa_aprobado ORDER BY gestion_inicio DESC, nombre_grupo", nativeQuery = true)
+  List<Map<String, Object>> vistaGruposCompletosPorIdProgramaAprobado(Integer id_programa_aprobado);
 
   @Query(value = "SELECT * FROM vista_grupos_con_cronogramas", nativeQuery = true)
   List<Map<String, Object>> vistaGruposConCronogramas();
 
   @Query(value = "SELECT * FROM vista_grupos_con_cronogramas where id_aca_programa_aprobado = :id_programa", nativeQuery = true)
   List<Map<String, Object>> vistaGruposConCronogramasPorIdPrograma(Integer id_programa);
+
+  @Query(value = "SELECT * FROM vista_grupos_matriculacion where id_aca_programa_aprobado = ?1", nativeQuery = true)
+  List<Map<String, Object>> vistaGruposActivosPorProgramaAprobado(Long idProgramaAprobado);
 
   @Query(value = """
         SELECT 

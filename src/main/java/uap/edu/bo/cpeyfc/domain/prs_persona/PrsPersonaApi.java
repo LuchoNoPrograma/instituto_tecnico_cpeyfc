@@ -8,11 +8,13 @@ import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
 import uap.edu.bo.cpeyfc.util.FechaUtil;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
 public class PrsPersonaApi {
   private final PrsPersonaService prsPersonaService;
+  private final PrsPersonaRepository prsPersonaRepository;
 
   @GetMapping("/api/persona/vista/personas-activas")
   public ResponseEntity<?> vistaPersonasActivas(){
@@ -48,5 +50,10 @@ public class PrsPersonaApi {
       userDetails.getIdSegUsuario()
     );
     return ResponseEntity.ok(resultado);
+  }
+
+  @GetMapping("/api/publico/persona/ci")
+  public ResponseEntity<Map<String, Object>> buscarPersonaCi(@RequestParam String ci){
+    return ResponseEntity.ok(prsPersonaRepository.buscarPersonaPorCi(ci));
   }
 }

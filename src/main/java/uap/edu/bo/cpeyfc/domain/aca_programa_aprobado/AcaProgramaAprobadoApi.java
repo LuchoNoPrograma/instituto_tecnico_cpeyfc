@@ -18,16 +18,20 @@ public class AcaProgramaAprobadoApi {
   private final AcaProgramaAprobadoService acaProgramaAprobadoService;
   private final AcaProgramaAprobadoRepository acaProgramaAprobadoRepository;
 
-  @GetMapping("/api/programas-aprobados/vista/programas-aprobados")
+  @GetMapping("/api/programa-aprobado/vista/programas-aprobados")
   public ResponseEntity<?> vistaProgramasAprobados() {
     return ResponseEntity.ok(acaProgramaAprobadoRepository.vistaProgramasAprobados());
+  }
+
+  @GetMapping("/api/programa-aprobado/vista/programas-aprobados/{idProgramaAprobado}")
+  public ResponseEntity<?> vistaProgramasAprobados(@PathVariable Long idProgramaAprobado) {
+    return ResponseEntity.ok(acaProgramaAprobadoRepository.vistaProgramasAprobadosPorIdProgramaAprobado(idProgramaAprobado));
   }
 
   @GetMapping("/api/programa-aprobado/plan-estudio/{idAcaProgramaAprobado}")
   public ResponseEntity<?> obtenerPlanEstudioProgramaAprobado(@PathVariable Integer idAcaProgramaAprobado) {
     return ResponseEntity.ok(acaProgramaAprobadoRepository.obtenerPlanEstudioProgramaAprobado(idAcaProgramaAprobado));
   }
-
 
   @PostMapping("/api/programa-aprobado")
   public ResponseEntity<?> registrarProgramaAprobado(@RequestBody Map<String, Object> datos, @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails) {

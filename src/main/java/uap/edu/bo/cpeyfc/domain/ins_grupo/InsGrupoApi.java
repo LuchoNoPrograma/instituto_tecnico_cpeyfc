@@ -17,12 +17,12 @@ public class InsGrupoApi {
 
   @GetMapping("/api/grupos/vista/grupos-completos")
   public ResponseEntity<List<Map<String, Object>>> obtenerGruposCompletos(
-    @RequestParam(required = false) Integer programa) {
+    @RequestParam(required = false) Integer idProgramaAprobado) {
 
     List<Map<String, Object>> grupos;
 
-    if (programa != null) {
-      grupos = insGrupoRepository.vistaGruposCompletosPorIdPrograma(programa);
+    if (idProgramaAprobado != null) {
+      grupos = insGrupoRepository.vistaGruposCompletosPorIdProgramaAprobado(idProgramaAprobado);
     } else {
       grupos = insGrupoRepository.vistaGruposCompletos();
     }
@@ -49,6 +49,11 @@ public class InsGrupoApi {
   public ResponseEntity<List<Map<String, Object>>> obtenerEstudiantesPorGrupo(@PathVariable Integer id) {
     List<Map<String, Object>> estudiantes = insGrupoRepository.obtenerEstudiantesPorGrupo(id);
     return ResponseEntity.ok(estudiantes);
+  }
+
+  @GetMapping("/api/grupo/activo-por-programa/{idProgramaAprobado}")
+  public ResponseEntity<?> obtenerGruposActivosPorProgramaAprobado(@PathVariable Long idProgramaAprobado){
+    return ResponseEntity.ok(insGrupoRepository.vistaGruposActivosPorProgramaAprobado(idProgramaAprobado));
   }
 
   @PostMapping("/api/grupos")
