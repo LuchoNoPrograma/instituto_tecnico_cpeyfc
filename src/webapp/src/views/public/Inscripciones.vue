@@ -3,17 +3,32 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
+import { useVuelidate } from '@vuelidate/core'
+import {
+  esRequerido,
+  longitudMinima,
+  longitudMaxima,
+  esEmail,
+  soloLetras,
+  ciBoliviano,
+  celularBoliviano,
+  edadMinima,
+  noFuturo,
+  obtenerErroresCampo,
+  validarFormulario as validarFormularioHelper
+} from '@/helpers/validations'
 
 const route = useRoute()
 const router = useRouter()
 
 const programa = ref(null)
+const planEstudios = ref([])
+const cargandoPlan = ref(false)
 const cargando = ref(false)
 const mostrarFormulario = ref(false)
 const pasoFormulario = ref(1)
 const formularioInscripcion = ref({
   ci: '',
-  expedido: 'LP',
   nombre: '',
   ap_paterno: '',
   ap_materno: '',
@@ -21,11 +36,50 @@ const formularioInscripcion = ref({
   fecha_nacimiento: '',
   celular: '',
   correo: '',
-  direccion: '',
-  ciudad: ''
 })
 
-const validationErrors = ref({})
+const reglasValidacion = computed(() => ({
+  ci: {
+    esRequerido,
+    longitudMinima: longitudMinima(5),
+    longitudMaxima: longitudMaxima(20),
+    ciBoliviano
+  },
+  nombre: {
+    esRequerido,
+    longitudMinima: longitudMinima(2),
+    longitudMaxima: longitudMaxima(35),
+    soloLetras
+  },
+  ap_paterno: {
+    esRequerido,
+    longitudMinima: longitudMinima(2),
+    longitudMaxima: longitudMaxima(55),
+    soloLetras
+  },
+  ap_materno: {
+    longitudMaxima: longitudMaxima(55),
+    soloLetras
+  },
+  genero: {
+    esRequerido
+  },
+  fecha_nacimiento: {
+    esRequerido,
+    edadMinima: edadMinima(4),
+    noFuturo
+  },
+  celular: {
+    esRequerido,
+    celularBoliviano
+  },
+  correo: {
+    esEmail,
+    longitudMaxima: longitudMaxima(55)
+  }
+}))
+
+const $v = useVuelidate(reglasValidacion, formularioInscripcion)
 const enviandoFormulario = ref(false)
 
 const programaId = computed(() => route.query.programa)
@@ -37,23 +91,15 @@ const requisitosPrograma = ref([
   },
   {
     icono: 'mdi-camera',
-    texto: '4 fotografías 4x4 fondo azul y 4 fotografías 2.5x2.5 fondo plomo'
+    texto: '2 fotografías 4x4 fondo rojo'
   },
   {
     icono: 'mdi-school',
-    texto: 'Hoja de Inscripción y Formulario de Matriculación debidamente llenados'
+    texto: 'Hoja de Inscripción debidamente llenados'
   },
   {
     icono: 'mdi-card-account-details',
     texto: 'Dos fotocopias simples de Cédula de Identidad'
-  },
-  {
-    icono: 'mdi-certificate',
-    texto: 'Fotocopia legalizada de Título Académico o en Provisión Nacional'
-  },
-  {
-    icono: 'mdi-file-outline',
-    texto: 'Hoja de vida profesional'
   }
 ])
 
@@ -65,21 +111,18 @@ const competenciasPrograma = ref([
   'Atención al Cliente'
 ])
 
-const expedidoOpciones = [
-  { value: 'LP', title: 'La Paz' },
-  { value: 'CB', title: 'Cochabamba' },
-  { value: 'SC', title: 'Santa Cruz' },
-  { value: 'OR', title: 'Oruro' },
-  { value: 'PT', title: 'Potosí' },
-  { value: 'TJ', title: 'Tarija' },
-  { value: 'CH', title: 'Chuquisaca' },
-  { value: 'BE', title: 'Beni' },
-  { value: 'PD', title: 'Pando' }
-]
-
 const generoOpciones = [
   { value: 'M', title: 'Masculino' },
   { value: 'F', title: 'Femenino' }
+]
+
+const headersModulos = [
+  { title: '#', key: 'orden', width: '80px', sortable: false },
+  { title: 'Sigla', key: 'sigla', width: '120px', sortable: false },
+  { title: 'Nombre del Módulo', key: 'nombre_modulo', sortable: false },
+  { title: 'Horas', key: 'carga_horaria', width: '100px', sortable: false },
+  { title: 'Créditos', key: 'creditos', width: '100px', sortable: false },
+  { title: 'Competencia', key: 'competencia', sortable: false }
 ]
 
 const obtenerDetallePrograma = async () => {
@@ -93,6 +136,8 @@ const obtenerDetallePrograma = async () => {
 
     if (!programa.value) {
       router.push('/')
+    } else {
+      await obtenerPlanEstudios()
     }
   } catch (error) {
     console.error('Error al obtener programa:', error)
@@ -102,23 +147,52 @@ const obtenerDetallePrograma = async () => {
   }
 }
 
+const obtenerPlanEstudios = async () => {
+  if (!programaId.value) return
+
+  cargandoPlan.value = true
+  try {
+    const response = await api.get(`/api/programa-aprobado/plan-estudio/${programaId.value}`)
+    planEstudios.value = response.data
+  } catch (error) {
+    console.error('Error al obtener plan de estudios:', error)
+    planEstudios.value = []
+  } finally {
+    cargandoPlan.value = false
+  }
+}
+
+const agruparPorNivel = (modulos) => {
+  return modulos.reduce((grupos, modulo) => {
+    const nivel = modulo.nivel
+    if (!grupos[nivel]) {
+      grupos[nivel] = []
+    }
+    grupos[nivel].push(modulo)
+    return grupos
+  }, {})
+}
+
 const abrirFormulario = () => {
   mostrarFormulario.value = true
   pasoFormulario.value = 1
 }
 
-const continuarConDatos = () => {
-  if (!formularioInscripcion.value.ci) {
-    validationErrors.value.ci = 'El número de cédula es requerido'
+const continuarConDatos = async () => {
+  // Validar solo el CI para el paso 1
+  $v.value.ci.$touch()
+
+  if ($v.value.ci.$invalid) {
     return
   }
 
   pasoFormulario.value = 2
-  validationErrors.value = {}
 }
 
 const enviarInscripcion = async () => {
-  if (!validarFormulario()) return
+  // Validar todo el formulario con Vuelidate
+  const esValido = await validarFormularioHelper($v.value)
+  if (!esValido) return
 
   enviandoFormulario.value = true
   try {
@@ -127,9 +201,10 @@ const enviarInscripcion = async () => {
       id_aca_programa_aprobado: programaId.value
     }
 
-    const response = await api.post('/api/publico/preinscripciones', datosInscripcion)
+    const response = await api.post('/api/publico/preinscripcion', datosInscripcion)
     alert('¡Preinscripción exitosa! Te contactaremos pronto.')
     mostrarFormulario.value = false
+    limpiarFormulario()
 
   } catch (error) {
     console.error('Error en inscripción:', error)
@@ -139,18 +214,18 @@ const enviarInscripcion = async () => {
   }
 }
 
-const validarFormulario = () => {
-  const errores = {}
-
-  if (!formularioInscripcion.value.ci) errores.ci = 'Requerido'
-  if (!formularioInscripcion.value.nombre) errores.nombre = 'Requerido'
-  if (!formularioInscripcion.value.ap_paterno) errores.ap_paterno = 'Requerido'
-  if (!formularioInscripcion.value.fecha_nacimiento) errores.fecha_nacimiento = 'Requerido'
-  if (!formularioInscripcion.value.celular) errores.celular = 'Requerido'
-  if (!formularioInscripcion.value.correo) errores.correo = 'Requerido'
-
-  validationErrors.value = errores
-  return Object.keys(errores).length === 0
+const limpiarFormulario = () => {
+  Object.assign(formularioInscripcion.value, {
+    ci: '',
+    nombre: '',
+    ap_paterno: '',
+    ap_materno: '',
+    genero: '',
+    fecha_nacimiento: '',
+    celular: '',
+    correo: '',
+  })
+  $v.value.$reset()
 }
 
 const abrirWhatsApp = () => {
@@ -251,10 +326,9 @@ onMounted(() => {
                 </div>
 
                 <!-- Botones de Acción -->
-                <div class="botones-accion mt-4 mt-md-6">
+                <div class="d-flex gap-4">
                   <v-btn
                     v-if="programa.estado_inscripcion === 'INSCRIPCIONES ABIERTAS'"
-                    class="mb-2 d-block d-md-inline-block"
                     color="white"
                     size="large"
                     variant="elevated"
@@ -270,7 +344,6 @@ onMounted(() => {
                     variant="elevated"
                     @click="abrirWhatsApp"
                     prepend-icon="mdi-whatsapp"
-                    class="d-block d-md-inline-block ml-md-2"
                   >
                     Solicitar Información
                   </v-btn>
@@ -309,7 +382,7 @@ onMounted(() => {
               <v-card class="info-card h-100" elevation="3">
                 <v-card-title class="bg-indigo-darken-2 text-white">
                   <v-icon start>mdi-clipboard-list</v-icon>
-                  Requisitos del Programa
+                  Requisitos del Curso
                 </v-card-title>
                 <v-card-text>
                   <v-list density="compact">
@@ -367,54 +440,106 @@ onMounted(() => {
               <v-card class="info-card" elevation="3">
                 <v-card-title class="bg-orange-darken-2 text-white">
                   <v-icon start>mdi-book-multiple</v-icon>
-                  Módulos del Programa
+                  Plan de Estudios
                 </v-card-title>
                 <v-card-text>
-                  <v-alert type="info" variant="tonal" class="mb-4">
-                    El programa está estructurado en módulos especializados que te permitirán desarrollar competencias específicas.
-                  </v-alert>
 
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-list density="compact">
-                        <v-list-item>
-                          <template #prepend>
-                            <v-icon color="orange">mdi-numeric-1-circle</v-icon>
-                          </template>
-                          <v-list-item-title>Fundamentos de Administración</v-list-item-title>
-                          <v-list-item-subtitle>Base teórica y práctica</v-list-item-subtitle>
-                        </v-list-item>
+                  <!-- Loading del plan -->
+                  <div v-if="cargandoPlan" class="text-center py-4">
+                    <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
+                    <p class="mt-2">Cargando plan de estudios...</p>
+                  </div>
 
-                        <v-list-item>
-                          <template #prepend>
-                            <v-icon color="orange">mdi-numeric-2-circle</v-icon>
-                          </template>
-                          <v-list-item-title>Herramientas Digitales Avanzadas</v-list-item-title>
-                          <v-list-item-subtitle>Office, Google Workspace</v-list-item-subtitle>
-                        </v-list-item>
-                      </v-list>
-                    </v-col>
+                  <!-- Plan de estudios -->
+                  <div v-else-if="planEstudios.length > 0">
 
-                    <v-col cols="12" md="6">
-                      <v-list density="compact">
-                        <v-list-item>
-                          <template #prepend>
-                            <v-icon color="orange">mdi-numeric-3-circle</v-icon>
-                          </template>
-                          <v-list-item-title>Gestión Documental Digital</v-list-item-title>
-                          <v-list-item-subtitle>Archivo y organización</v-list-item-subtitle>
-                        </v-list-item>
+                    <!-- Tabla de módulos -->
+                    <v-data-table
+                      :headers="headersModulos"
+                      :items="planEstudios"
+                      :group-by="[{ key: 'nivel', order: 'asc' }]"
+                      class="elevation-1"
+                      density="compact"
+                      :items-per-page="-1"
+                      hide-default-footer
+                    >
+                      <template v-slot:top>
+                        <v-row class="bg-orange-lighten-5 ma-0 pa-0">
+                          <v-col cols="4">
+                            <div class="text-center">
+                              <div class="text-h6 text-primary">{{ planEstudios.length }}</div>
+                              <div class="text-caption">Módulos</div>
+                            </div>
+                          </v-col>
+                          <v-col cols="4">
+                            <div class="text-center">
+                              <div class="text-h6 text-primary">{{ planEstudios.reduce((sum, m) => sum + m.carga_horaria, 0) }}</div>
+                              <div class="text-caption">Horas Total</div>
+                            </div>
+                          </v-col>
+                          <v-col cols="4">
+                            <div class="text-center">
+                              <div class="text-h6 text-primary">{{ planEstudios.reduce((sum, m) => sum + parseFloat(m.creditos), 0) }}</div>
+                              <div class="text-caption">Créditos</div>
+                            </div>
+                          </v-col>
+                        </v-row>
+                      </template>
+                      <!-- Header de grupo -->
+                      <template v-slot:group-header="{ item, columns, toggleGroup, isGroupOpen }">
+                        <tr class="grupo-nivel">
+                          <td :colspan="columns.length" class="pa-3 bg-orange-lighten-5">
+                            <v-btn
+                              variant="elevated"
+                              size="small"
+                              color="orange-darken-2"
+                              :icon="isGroupOpen(item) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
+                              @click="toggleGroup(item)"
+                            ></v-btn>
+                            <strong class="text-orange-darken-2 ml-4">
+                              <v-icon class="me-1">mdi-book-open-page-variant</v-icon>
+                              Nivel {{ item.value }} - ({{ planEstudios.filter(m => m.nivel === item.value).length }} módulos)
+                            </strong>
+                          </td>
+                        </tr>
+                      </template>
 
-                        <v-list-item>
-                          <template #prepend>
-                            <v-icon color="orange">mdi-numeric-4-circle</v-icon>
-                          </template>
-                          <v-list-item-title>Atención y Servicio al Cliente</v-list-item-title>
-                          <v-list-item-subtitle>Comunicación efectiva</v-list-item-subtitle>
-                        </v-list-item>
-                      </v-list>
-                    </v-col>
-                  </v-row>
+                      <!-- Columna de orden -->
+                      <template v-slot:item.orden="{ item }">
+                        {{ item.orden }}
+                      </template>
+
+                      <!-- Columna de sigla -->
+                      <template v-slot:item.sigla="{ item }">
+                        <v-chip size="small" color="orange" variant="elevated">
+                          {{ item.sigla }}
+                        </v-chip>
+                      </template>
+
+                      <!-- Columna de carga horaria -->
+                      <template v-slot:item.carga_horaria="{ item }">
+                        <span class="text-body-2">{{ item.carga_horaria }}h</span>
+                      </template>
+
+                      <!-- Columna de créditos -->
+                      <template v-slot:item.creditos="{ item }">
+                        <span class="text-body-2">{{ item.creditos }}</span>
+                      </template>
+
+                      <!-- Columna de competencia -->
+                      <template v-slot:item.competencia="{ item }">
+                        <div class="text-caption text-grey" style="max-width: 300px;">
+                          {{ item.competencia || 'No especificada' }}
+                        </div>
+                      </template>
+                    </v-data-table>
+                  </div>
+
+                  <!-- Sin plan de estudios -->
+                  <div v-else class="text-center py-6">
+                    <v-icon size="48" color="grey-lighten-1">mdi-book-outline</v-icon>
+                    <p class="mt-2 text-grey">Plan de estudios no disponible</p>
+                  </div>
 
                   <v-divider class="my-4"></v-divider>
 
@@ -526,26 +651,18 @@ onMounted(() => {
             </div>
 
             <v-row justify="center">
-              <v-col cols="12" sm="10" md="8">
+              <v-col cols="12" sm="12" md="12">
                 <v-text-field
                   v-model="formularioInscripcion.ci"
-                  label="Cédula de Identidad"
+                  label="Cédula de Identidad *"
                   placeholder="Escriba su número de identidad"
                   variant="outlined"
                   density="comfortable"
-                  :error-messages="validationErrors.ci"
+                  :error-messages="obtenerErroresCampo($v.ci)"
                   prepend-inner-icon="mdi-card-account-details"
                   class="mb-4"
+                  @blur="$v.ci.$touch"
                 ></v-text-field>
-
-                <v-select
-                  v-model="formularioInscripcion.expedido"
-                  :items="expedidoOpciones"
-                  label="Expedido en"
-                  variant="outlined"
-                  density="comfortable"
-                  prepend-inner-icon="mdi-map-marker"
-                ></v-select>
 
                 <div class="text-center mt-4 mt-md-6">
                   <v-btn
@@ -554,7 +671,7 @@ onMounted(() => {
                     variant="elevated"
                     @click="continuarConDatos"
                     prepend-icon="mdi-arrow-right"
-                    :disabled="!formularioInscripcion.ci"
+                    :disabled="$v.ci.$invalid"
                   >
                     Continuar
                   </v-btn>
@@ -579,12 +696,12 @@ onMounted(() => {
               Por favor complete y verifique detalladamente sus datos personales
             </v-alert>
 
-            <v-form>
+            <v-form @submit.prevent="enviarInscripcion">
               <!-- Cédula (readonly) -->
               <v-row>
-                <v-col cols="12" md="8">
+                <v-col cols="12">
                   <v-text-field
-                    :model-value="`${formularioInscripcion.ci} ${formularioInscripcion.expedido}`"
+                    :model-value="formularioInscripcion.ci"
                     label="Cédula de Identidad"
                     variant="outlined"
                     readonly
@@ -592,27 +709,30 @@ onMounted(() => {
                     prepend-inner-icon="mdi-card-account-details"
                   ></v-text-field>
                 </v-col>
-
-                <v-col cols="12" md="4">
-                  <v-select
-                    v-model="formularioInscripcion.expedido"
-                    :items="expedidoOpciones"
-                    label="Expedido en"
-                    variant="outlined"
-                    density="comfortable"
-                  ></v-select>
-                </v-col>
               </v-row>
 
               <!-- Nombres y apellidos -->
               <v-row>
+
+                <v-col cols="12" md="4">
+                  <v-text-field
+                    v-model="formularioInscripcion.nombre"
+                    label="Nombre(s) *"
+                    variant="outlined"
+                    density="comfortable"
+                    :error-messages="obtenerErroresCampo($v.nombre)"
+                    @blur="$v.nombre.$touch"
+                  ></v-text-field>
+                </v-col>
+
                 <v-col cols="12" md="4">
                   <v-text-field
                     v-model="formularioInscripcion.ap_paterno"
                     label="Apellido Paterno *"
                     variant="outlined"
                     density="comfortable"
-                    :error-messages="validationErrors.ap_paterno"
+                    :error-messages="obtenerErroresCampo($v.ap_paterno)"
+                    @blur="$v.ap_paterno.$touch"
                   ></v-text-field>
                 </v-col>
 
@@ -622,16 +742,8 @@ onMounted(() => {
                     label="Apellido Materno"
                     variant="outlined"
                     density="comfortable"
-                  ></v-text-field>
-                </v-col>
-
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="formularioInscripcion.nombre"
-                    label="Nombre(s) *"
-                    variant="outlined"
-                    density="comfortable"
-                    :error-messages="validationErrors.nombre"
+                    :error-messages="obtenerErroresCampo($v.ap_materno)"
+                    @blur="$v.ap_materno.$touch"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -645,7 +757,8 @@ onMounted(() => {
                     label="Género *"
                     variant="outlined"
                     density="comfortable"
-                    :error-messages="validationErrors.genero"
+                    :error-messages="obtenerErroresCampo($v.genero)"
+                    @blur="$v.genero.$touch"
                   ></v-select>
                 </v-col>
 
@@ -655,7 +768,9 @@ onMounted(() => {
                     label="Fecha Nacimiento *"
                     variant="outlined"
                     density="comfortable"
-                    :error-messages="validationErrors.fecha_nacimiento"
+                    :error-messages="obtenerErroresCampo($v.fecha_nacimiento)"
+                    :max="new Date().toISOString().split('T')[0]"
+                    @blur="$v.fecha_nacimiento.$touch"
                   ></v-date-input>
                 </v-col>
 
@@ -665,8 +780,10 @@ onMounted(() => {
                     label="Celular *"
                     variant="outlined"
                     density="comfortable"
-                    :error-messages="validationErrors.celular"
+                    :error-messages="obtenerErroresCampo($v.celular)"
                     prepend-inner-icon="mdi-phone"
+                    placeholder="7xxxxxxx"
+                    @blur="$v.celular.$touch"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -680,34 +797,31 @@ onMounted(() => {
                     type="email"
                     variant="outlined"
                     density="comfortable"
-                    :error-messages="validationErrors.correo"
+                    :error-messages="obtenerErroresCampo($v.correo)"
                     prepend-inner-icon="mdi-email"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-
-              <!-- Dirección y ciudad -->
-              <v-row>
-                <v-col cols="12" md="8">
-                  <v-text-field
-                    v-model="formularioInscripcion.direccion"
-                    label="Dirección donde vive"
-                    variant="outlined"
-                    density="comfortable"
-                    prepend-inner-icon="mdi-map-marker"
-                  ></v-text-field>
-                </v-col>
-
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="formularioInscripcion.ciudad"
-                    label="Ciudad donde vive"
-                    variant="outlined"
-                    density="comfortable"
+                    placeholder="usuario@ejemplo.com"
+                    @blur="$v.correo.$touch"
                   ></v-text-field>
                 </v-col>
               </v-row>
             </v-form>
+
+            <!-- Información adicional -->
+            <v-row>
+              <v-col cols="12">
+                <v-alert
+                  type="info"
+                  variant="tonal"
+                  density="compact"
+                  class="mb-2"
+                >
+                  <template #prepend>
+                    <v-icon>mdi-information</v-icon>
+                  </template>
+                  <strong>Campos obligatorios:</strong> Los marcados con (*) son requeridos
+                </v-alert>
+              </v-col>
+            </v-row>
 
             <!-- Botones en card-text -->
             <div class="d-flex flex-column flex-sm-row justify-end ga-2 mt-6">
@@ -716,6 +830,7 @@ onMounted(() => {
                 @click="pasoFormulario = 1"
                 prepend-icon="mdi-arrow-left"
                 class="order-2 order-sm-1"
+                :disabled="enviandoFormulario"
               >
                 Anterior
               </v-btn>
@@ -724,6 +839,7 @@ onMounted(() => {
                 variant="outlined"
                 @click="mostrarFormulario = false"
                 class="order-3 order-sm-2"
+                :disabled="enviandoFormulario"
               >
                 Cancelar
               </v-btn>
@@ -733,10 +849,11 @@ onMounted(() => {
                 variant="elevated"
                 @click="enviarInscripcion"
                 :loading="enviandoFormulario"
+                :disabled="$v.$invalid"
                 prepend-icon="mdi-send"
                 class="order-1 order-sm-3"
               >
-                Enviar
+                Enviar Inscripción
               </v-btn>
             </div>
           </div>
@@ -769,6 +886,14 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.v-data-table {
+  border-radius: 8px;
+
+  .v-data-table__tr:hover {
+    background-color: rgba(255, 152, 0, 0.04) !important;
+  }
+}
+
 .detalle-programa {
   min-height: 100vh;
   background: #f8f9fa;
@@ -844,6 +969,10 @@ onMounted(() => {
       line-height: 1.2;
       word-wrap: break-word;
     }
+
+    .v-alert {
+      border-radius: 8px;
+    }
   }
 
   .whatsapp-flotante {
@@ -869,6 +998,15 @@ onMounted(() => {
   }
   100% {
     box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .formulario-inscripcion {
+    .v-card-text {
+      padding: 16px !important;
+    }
   }
 }
 </style>

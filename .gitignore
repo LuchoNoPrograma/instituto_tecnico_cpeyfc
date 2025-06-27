@@ -57,6 +57,7 @@ src/webapp/# Editor directories and files
 src/webapp/.vscode/settings.json
 src/webapp/!.vscode/extensions.json
 src/webapp/.idea
+src/webapp/node_modules/*
 *.suo
 *.ntvs*
 *.njsproj

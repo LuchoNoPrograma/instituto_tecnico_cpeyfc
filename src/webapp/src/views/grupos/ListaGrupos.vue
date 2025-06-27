@@ -767,7 +767,7 @@ onMounted(cargarDatos)
             size="large"
             class="mb-2"
             block
-            @click="router.push(`/inscripciones?grupo=${grupoSeleccionado?.id_ins_grupo}`)"
+            @click="router.push(`/inscripciones?programa=${grupoSeleccionado?.id_ins_grupo}`)"
           >
             <v-icon start>mdi-account-plus</v-icon>
             Inscribir Estudiantes

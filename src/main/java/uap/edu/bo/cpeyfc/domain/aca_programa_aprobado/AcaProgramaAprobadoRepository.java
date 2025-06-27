@@ -12,6 +12,9 @@ public interface AcaProgramaAprobadoRepository extends JpaRepository<AcaPrograma
   @Query(value = "SELECT * FROM vista_programas_aprobados", nativeQuery = true)
   List<Map<String, Object>> vistaProgramasAprobados();
 
+  @Query(value = "SELECT * FROM fn_obtener_plan_estudio_programa_aprobado(?1)", nativeQuery = true)
+  List<Map<String, Object>> obtenerPlanEstudioProgramaAprobado(Integer idAcaProgramaAprobado);
+
   @Query(value = """
         SELECT fn_registrar_programa_aprobado(
             :id_aca_programa, :id_aca_modalidad, :gestion, :id_aca_plan_estudio,
