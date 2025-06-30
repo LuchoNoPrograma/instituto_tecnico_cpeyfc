@@ -24,7 +24,7 @@ public class AcaProgramaAprobadoApi {
   }
 
   @GetMapping("/api/programa-aprobado/vista/programas-aprobados/{idProgramaAprobado}")
-  public ResponseEntity<?> vistaProgramasAprobados(@PathVariable Long idProgramaAprobado) {
+  public ResponseEntity<Map<String, Object>> vistaProgramasAprobados(@PathVariable Long idProgramaAprobado) {
     return ResponseEntity.ok(acaProgramaAprobadoRepository.vistaProgramasAprobadosPorIdProgramaAprobado(idProgramaAprobado));
   }
 

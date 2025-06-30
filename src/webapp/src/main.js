@@ -4,6 +4,9 @@
  * Bootstraps Vuetify and other plugins then mounts the App`
  */
 
+import 'sweetalert2/dist/sweetalert2.min.css'
+import '@/assets/styles/sweetalert.css'
+
 // Plugins
 import { registerPlugins } from '@/plugins'
 import { AgGridVue } from "ag-grid-vue3";
@@ -14,6 +17,7 @@ import App from './App.vue'
 // Composables
 import { createApp } from 'vue'
 
+
 // Styles
 import 'unfonts.css'
 import {AllCommunityModule, ModuleRegistry} from 'ag-grid-community';
@@ -23,5 +27,6 @@ const app = createApp(App)
 app.component('AgGridVue', AgGridVue)
 
 registerPlugins(app)
+
 
 app.mount('#app')

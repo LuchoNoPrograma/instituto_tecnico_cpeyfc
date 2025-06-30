@@ -600,10 +600,9 @@ onMounted(() => {
       v-model="dialogParametros"
       max-width="1000px"
       persistent
-      class="ma-2"
     >
-      <v-card class="rounded-lg">
-        <v-card-title class="bg-primary d-flex align-center pa-4">
+      <v-card>
+        <v-card-title class="bg-primary text-white d-flex align-center pa-4">
           <v-icon start>mdi-percent</v-icon>
           Configurar Parámetros - {{ programaSeleccionado?.programa_nombre }}
         </v-card-title>
@@ -613,7 +612,6 @@ onMounted(() => {
             <div class="text-h6">Lista de Parámetros</div>
             <v-btn
               color="primary"
-              variant="elevated"
               @click="abrirFormularioParametro()"
             >
               <v-icon start>mdi-plus</v-icon>
@@ -661,7 +659,6 @@ onMounted(() => {
                   icon="mdi-pencil"
                   size="small"
                   color="primary"
-                  variant="text"
                   @click="abrirFormularioParametro(item)"
                 >
                   <v-icon>mdi-pencil</v-icon>
@@ -672,7 +669,6 @@ onMounted(() => {
                   icon="mdi-delete"
                   size="small"
                   color="error"
-                  variant="text"
                   @click="eliminarParametro(item)"
                 >
                   <v-icon>mdi-delete</v-icon>
@@ -686,8 +682,6 @@ onMounted(() => {
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
           <v-btn
-            color="grey"
-            variant="text"
             @click="cerrarParametros"
           >
             Cerrar
@@ -702,8 +696,8 @@ onMounted(() => {
       max-width="600px"
       persistent
     >
-      <v-card class="rounded-lg">
-        <v-card-title class="bg-primary d-flex align-center pa-4">
+      <v-card>
+        <v-card-title class="bg-primary text-white d-flex align-center pa-4">
           <v-icon start>{{ esEdicionParametro ? 'mdi-pencil' : 'mdi-plus' }}</v-icon>
           {{ esEdicionParametro ? 'Editar Parámetro' : 'Nuevo Parámetro' }}
         </v-card-title>
@@ -757,7 +751,6 @@ onMounted(() => {
                 <v-date-input
                   v-model="formularioParametro.fecha_fin_vigencia"
                   label="Fecha Fin Vigencia"
-                  type="date"
                   variant="outlined"
                   hint="Opcional - Sin fecha = permanente"
                   persistent-hint
@@ -770,18 +763,15 @@ onMounted(() => {
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
           <v-btn
-            color="grey"
-            variant="text"
             @click="cerrarFormularioParametro"
           >
             Cancelar
           </v-btn>
           <v-btn
-            color="success"
-            variant="elevated"
+            color="primary"
             @click="guardarParametro"
           >
-            {{ esEdicionParametro ? 'Actualizar' : 'Guardar' }}
+            Enviar
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -800,7 +790,6 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-// Responsive
 @media (max-width: 960px) {
   .v-toolbar {
     .d-flex.align-center.ga-3 {

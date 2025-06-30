@@ -41,10 +41,10 @@ const formularioPrograma = reactive({
   estado_programa_aprobado: 'SIN INICIAR',
   cod_certificado_ceub: '',
 
-  // Paso 3: Precios y vigencia
+  // Paso 3: Costos del programa
   precio_matricula: 0,
   precio_colegiatura: 0,
-  precio_titulacion: 0, // Cambiado de null a 0
+  precio_titulacion: 0,
   fecha_inicio_vigencia: null,
   fecha_fin_vigencia: null,
 
@@ -173,6 +173,7 @@ const datosConfirmacion = computed(() => {
   const planEstudio = planesEstudio.value.find(p => p.id_aca_plan_estudio === formularioPrograma.id_aca_plan_estudio)
   const version = versiones.value.find(v => v.id_aca_version === formularioPrograma.id_aca_version)
   const area = areas.value.find(a => a.id_aca_area === programa?.id_aca_area)
+  const concepto = conceptoSeleccionado.value
 
   return {
     programa: programa?.nombre_programa || 'No seleccionado',
@@ -320,7 +321,7 @@ const cancelarNuevoPlan = () => {
   })
 }
 
-// Guardar
+// Preparar datos para envío
 const guardar = async () => {
   cargandoFormulario.value = true
 
@@ -349,7 +350,7 @@ const limpiarFormulario = () => {
     cod_certificado_ceub: '',
     precio_matricula: 0,
     precio_colegiatura: 0,
-    precio_titulacion: 0, // Cambiado de null a 0
+    precio_titulacion: 0,
     fecha_inicio_vigencia: null,
     fecha_fin_vigencia: null,
     programaNuevo: {
@@ -372,8 +373,40 @@ const cancelar = () => {
   emit('cancelar')
 }
 
+// Cargar datos al editar
+const cargarDatosPrograma = (programa) => {
+  if (!programa) return
+
+  Object.assign(formularioPrograma, programa)
+
+  // Detectar concepto basado en precios
+  if (programa.precio_matricula > 0) {
+    const conceptoMatricula = conceptosPago.value.find(c =>
+      c.nombre_concepto.includes('MATRICULA')
+    )
+    if (conceptoMatricula) {
+      formularioPrograma.id_concepto_principal = conceptoMatricula.id_fin_concepto_pago
+      formularioPrograma.monto_principal = programa.precio_matricula
+    }
+  } else if (programa.precio_colegiatura > 0) {
+    const conceptoColegiatura = conceptosPago.value.find(c =>
+      c.nombre_concepto.includes('COLEGIATURA')
+    )
+    if (conceptoColegiatura) {
+      formularioPrograma.id_concepto_principal = conceptoColegiatura.id_fin_concepto_pago
+      formularioPrograma.monto_principal = programa.precio_colegiatura
+    }
+  }
+}
+
 // Watchers
 watch(() => formularioPrograma.id_aca_programa, cargarPlanesEstudio)
+
+watch(() => props.programa, (programa) => {
+  if (programa && props.esEdicion) {
+    cargarDatosPrograma(programa)
+  }
+}, { immediate: true })
 
 // Actualizar código certificado cuando cambie la gestión
 watch(() => formularioPrograma.gestion, (newGestion) => {
@@ -415,8 +448,8 @@ onMounted(() => {
           <v-stepper-item
             :complete="pasoActual > 3"
             :value="3"
-            title="Precios"
-            subtitle="Costos y vigencia"
+            title="Costos"
+            subtitle="Precios del programa"
           ></v-stepper-item>
 
           <v-divider></v-divider>
@@ -609,9 +642,9 @@ onMounted(() => {
         </v-row>
       </div>
 
-      <!-- Paso 3: Precios -->
+      <!-- Paso 3: Costos del Programa -->
       <div v-if="pasoActual === 3">
-        <h3 class="text-h6 mb-4">Precios</h3>
+        <h3 class="text-h6 mb-4">Costos del Programa</h3>
 
         <v-row>
           <v-col cols="12" md="4">
@@ -625,6 +658,8 @@ onMounted(() => {
               min="0"
               step="0.01"
               :disabled="cargandoFormulario"
+              hint="Costo por matrícula del programa"
+              persistent-hint
             ></v-text-field>
           </v-col>
 
@@ -639,20 +674,46 @@ onMounted(() => {
               min="0"
               step="0.01"
               :disabled="cargandoFormulario"
+              hint="Costo total del programa completo"
+              persistent-hint
             ></v-text-field>
           </v-col>
 
           <v-col cols="12" md="4">
             <v-text-field
               v-model.number="formularioPrograma.precio_titulacion"
-              label="Precio Titulación *"
+              label="Precio Titulación"
               variant="outlined"
               prepend-inner-icon="mdi-currency-usd"
               type="number"
               min="0"
               step="0.01"
               :disabled="cargandoFormulario"
+              hint="Costo adicional por obtener el título"
+              persistent-hint
             ></v-text-field>
+          </v-col>
+
+          <v-col cols="12">
+            <v-alert
+              color="info"
+              variant="tonal"
+              class="mt-2"
+            >
+              <template #prepend>
+                <v-icon>mdi-information</v-icon>
+              </template>
+
+              <div class="text-subtitle-2 font-weight-bold mb-2">
+                Configuración de Costos:
+              </div>
+
+              <div class="text-body-2">
+                • <strong>Matrícula:</strong> Para programas con pago por semestre o único<br>
+                • <strong>Colegiatura:</strong> Para programas con pago completo<br>
+                • <strong>Titulación:</strong> Costo adicional para obtener el título (opcional)
+              </div>
+            </v-alert>
           </v-col>
         </v-row>
       </div>
@@ -762,28 +823,28 @@ onMounted(() => {
             </v-card>
           </v-col>
 
-          <!-- Información Financiera -->
+          <!-- Plan de Pago -->
           <v-col cols="12">
             <v-card variant="outlined">
               <v-card-title class="bg-warning text-white">
-                <v-icon start>mdi-currency-usd</v-icon>
-                Información Financiera
+                <v-icon start>mdi-cash-multiple</v-icon>
+                Plan de Pago
               </v-card-title>
               <v-card-text class="pa-4">
                 <v-row>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12">
                     <div class="info-item">
-                      <span class="label">Precio Matrícula:</span>
-                      <span class="value text-success font-weight-bold">{{ datosConfirmacion.precioMatricula }}</span>
+                      <span class="label">Concepto de Pago:</span>
+                      <span class="value">{{ datosConfirmacion.conceptoPago }}</span>
                     </div>
                   </v-col>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="6">
                     <div class="info-item">
-                      <span class="label">Precio Colegiatura:</span>
-                      <span class="value text-success font-weight-bold">{{ datosConfirmacion.precioColegiatura }}</span>
+                      <span class="label">Monto Principal:</span>
+                      <span class="value text-success font-weight-bold">{{ datosConfirmacion.montoPrincipal }}</span>
                     </div>
                   </v-col>
-                  <v-col cols="12" md="4">
+                  <v-col cols="12" md="6">
                     <div class="info-item">
                       <span class="label">Precio Titulación:</span>
                       <span class="value text-success font-weight-bold">{{ datosConfirmacion.precioTitulacion }}</span>
