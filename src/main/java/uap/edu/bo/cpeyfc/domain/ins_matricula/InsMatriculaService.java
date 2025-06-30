@@ -1,10 +1,14 @@
 package uap.edu.bo.cpeyfc.domain.ins_matricula;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uap.edu.bo.cpeyfc.crud.RepositorioGenericoCrud;
 
+import java.util.Map;
+
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class InsMatriculaService {
@@ -13,22 +17,22 @@ public class InsMatriculaService {
     private final InsMatriculaRepository insMatriculaRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public String matricularPreinscrito(Integer idPreinscripcion, Integer idGrupo,
-                                        String ci, String tipoMatricula, Integer userReg) {
-        // Generar credenciales
-        String nombreUsuario = ci; // CI como nombre de usuario
-        String passwordTemporal = ci + "2025"; // Password temporal
-        String passwordEncriptado = passwordEncoder.encode(passwordTemporal);
+    public String matricularPreinscrito(Integer idPreinscripcion, Integer idGrupo, Integer userReg) {
+        Map<String, Object> resultado = insMatriculaRepository.matricularPreinscritoCompleto(idPreinscripcion, idGrupo, userReg);
 
-        String resultado = insMatriculaRepository.matricularPreinscritoCompleto(
-                idPreinscripcion,
-                idGrupo,
-                nombreUsuario,
-                passwordEncriptado,
-                userReg,
-                tipoMatricula
-        );
+        Boolean usuarioExistia = (Boolean) resultado.get("usuario_existia");
+        String mensaje = (String) resultado.get("mensaje");
 
-        return resultado + " - Password temporal: " + passwordTemporal;
+        if (!usuarioExistia) {
+            String passwordTemporal = (String) resultado.get("password_temporal");
+            Integer idUsuario = (Integer) resultado.get("id_usuario");
+
+            String passwordHash = passwordEncoder.encode(passwordTemporal);
+            String confirmado = insMatriculaRepository.activarUsuarioMatricula(idUsuario, passwordHash);
+            log.info(confirmado);
+            return mensaje + " - Password temporal: " + passwordTemporal;
+        }
+
+        return mensaje + " - Usuario existente utilizado";
     }
 }

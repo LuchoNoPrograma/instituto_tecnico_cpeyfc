@@ -17,6 +17,7 @@ import {
   obtenerErroresCampo,
   validarFormulario as validarFormularioHelper
 } from '@/helpers/validations'
+import {showRegistrado} from "@/utils/sweetalert.js";
 
 const route = useRoute()
 const router = useRouter()
@@ -216,7 +217,7 @@ const enviarInscripcion = async () => {
     }
 
     const response = await api.post('/api/publico/preinscripcion', datosInscripcion)
-    alert('¡Preinscripción exitosa! Te contactaremos pronto.')
+    showRegistrado('¡Preinscripción exitosa!', ' Te contactaremos pronto.');
     mostrarFormulario.value = false
     limpiarFormulario()
 

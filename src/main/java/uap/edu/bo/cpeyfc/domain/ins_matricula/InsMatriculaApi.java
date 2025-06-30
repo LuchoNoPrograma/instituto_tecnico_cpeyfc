@@ -3,12 +3,12 @@ package uap.edu.bo.cpeyfc.domain.ins_matricula;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,10 +21,19 @@ public class InsMatriculaApi {
     String resultado = insMatriculaService.matricularPreinscrito(
             (Integer) datos.get("id_ins_preinscripcion"),
             (Integer) datos.get("id_ins_grupo"),
-            (String) datos.get("ci"),
-            (String) datos.get("tipo_matricula"),
             userDetails.getIdSegUsuario()
     );
     return ResponseEntity.ok(resultado);
+  }
+
+  @GetMapping("/api/matricula/vista/estudiantes-grupo")
+  public ResponseEntity<List<Map<String, Object>>> vistaEstudiantesGrupo(
+          @RequestParam(required = false) Integer idGrupo) {
+
+    if (idGrupo != null) {
+      return ResponseEntity.ok(insMatriculaRepository.vistaEstudiantesGrupoPorIdGrupo(idGrupo));
+    } else {
+      return ResponseEntity.ok(insMatriculaRepository.vistaEstudiantesGrupo());
+    }
   }
 }

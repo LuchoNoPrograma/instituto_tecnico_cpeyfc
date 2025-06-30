@@ -9,4 +9,7 @@ import java.util.Map;
 public interface FinConceptoPagoRepository extends JpaRepository<FinConceptoPago, Integer> {
   @Query(nativeQuery = true, value = "SELECT * FROM vista_fin_conceptos_pago_activos")
   List<Map<String, Object>> vistaConceptosPagosActivos();
+
+  @Query(value = "SELECT * FROM fn_obtener_conceptos_pago_programa_aprobado(:id_programa_aprobado)", nativeQuery = true)
+  List<Map<String, Object>> obtenerConceptosPagoProgramaAprobado(Integer id_programa_aprobado);
 }

@@ -173,7 +173,6 @@ const datosConfirmacion = computed(() => {
   const planEstudio = planesEstudio.value.find(p => p.id_aca_plan_estudio === formularioPrograma.id_aca_plan_estudio)
   const version = versiones.value.find(v => v.id_aca_version === formularioPrograma.id_aca_version)
   const area = areas.value.find(a => a.id_aca_area === programa?.id_aca_area)
-  const concepto = conceptoSeleccionado.value
 
   return {
     programa: programa?.nombre_programa || 'No seleccionado',
@@ -188,8 +187,8 @@ const datosConfirmacion = computed(() => {
     precioMatricula: new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(formularioPrograma.precio_matricula),
     precioColegiatura: new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(formularioPrograma.precio_colegiatura),
     precioTitulacion: new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(formularioPrograma.precio_titulacion),
-    fechaInicioVigencia: formularioPrograma.fecha_inicio_vigencia || 'No definida',
-    fechaFinVigencia: formularioPrograma.fecha_fin_vigencia || 'No definida'
+    fechaInicioVigencia: formularioPrograma.fecha_inicio_vigencia,
+    fechaFinVigencia: formularioPrograma.fecha_fin_vigencia
   }
 })
 
@@ -709,8 +708,8 @@ onMounted(() => {
               </div>
 
               <div class="text-body-2">
-                • <strong>Matrícula:</strong> Para programas con pago por semestre o único<br>
-                • <strong>Colegiatura:</strong> Para programas con pago completo<br>
+                • <strong>Matrícula:</strong> Para programas con pago por concepto de matricula semestral o matricula o única<br>
+                • <strong>Colegiatura:</strong> Para programas con pago completo al contado o parcelado<br>
                 • <strong>Titulación:</strong> Costo adicional para obtener el título (opcional)
               </div>
             </v-alert>
@@ -832,19 +831,19 @@ onMounted(() => {
               </v-card-title>
               <v-card-text class="pa-4">
                 <v-row>
-                  <v-col cols="12">
+                  <v-col cols="12" md="4">
                     <div class="info-item">
-                      <span class="label">Concepto de Pago:</span>
-                      <span class="value">{{ datosConfirmacion.conceptoPago }}</span>
+                      <span class="label">Precio Matrícula:</span>
+                      <span class="value text-success font-weight-bold">{{ datosConfirmacion.precioMatricula }}</span>
                     </div>
                   </v-col>
-                  <v-col cols="12" md="6">
+                  <v-col cols="12" md="4">
                     <div class="info-item">
-                      <span class="label">Monto Principal:</span>
-                      <span class="value text-success font-weight-bold">{{ datosConfirmacion.montoPrincipal }}</span>
+                      <span class="label">Precio Colegiatura:</span>
+                      <span class="value text-success font-weight-bold">{{ datosConfirmacion.precioColegiatura }}</span>
                     </div>
                   </v-col>
-                  <v-col cols="12" md="6">
+                  <v-col cols="12" md="4">
                     <div class="info-item">
                       <span class="label">Precio Titulación:</span>
                       <span class="value text-success font-weight-bold">{{ datosConfirmacion.precioTitulacion }}</span>

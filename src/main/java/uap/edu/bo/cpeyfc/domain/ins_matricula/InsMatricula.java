@@ -47,5 +47,4 @@ public class InsMatricula extends Auditoria {
 
   @Column(name = "tipo_matricula", nullable = false, length = 35)
   private String tipoMatricula;
-
 }

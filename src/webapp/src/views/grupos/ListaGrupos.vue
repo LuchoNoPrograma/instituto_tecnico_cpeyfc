@@ -5,42 +5,34 @@ import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
 import ExcelJS from 'exceljs'
 import FormularioPersona from '@/views/personas/FormularioPersona.vue'
+import { showRegistrado, showModificado } from '@/utils/sweetalert'
 
 const route = useRoute()
 const router = useRouter()
 
-// Estados
+// Estados principales
 const cronogramas = ref([])
 const programasAprobados = ref([])
+const personas = ref([])
+const estadisticas = ref({})
 const cargando = ref(false)
 const guardando = ref(false)
-const groupBy = ref([{key: 'grupo_info', order: 'asc'}])
+
+// Configuración tabla
+const groupBy = ref([{key: 'id_ins_grupo', order: 'asc'}])
 const busqueda = ref('')
-const estadisticas = ref({})
+
+// Filtros
 const programaSeleccionado = ref(null)
-const expanded = ref([])
 
 // Dialogs
 const dialogFormulario = ref(false)
 const dialogInscripciones = ref(false)
-const editando = ref(false)
 const dialogCronograma = ref(false)
-const cronogramaSeleccionado = ref({})
-const personas = ref([])
-const busquedaPersona = ref('')
 const dialogFormularioPersona = ref(false)
+const editando = ref(false)
 
-const formularioPersona = reactive({
-  nombre: '',
-  ap_paterno: '',
-  ap_materno: '',
-  ci: '',
-  nro_celular: '',
-  correo: '',
-  fecha_nacimiento: null
-})
-
-// Forms
+// Formularios
 const formularioGrupo = reactive({
   id_ins_grupo: null,
   id_aca_programa_aprobado: null,
@@ -51,7 +43,9 @@ const formularioGrupo = reactive({
   estado_grupo: 'PROGRAMADO'
 })
 
+const cronogramaSeleccionado = ref({})
 const grupoSeleccionado = ref(null)
+const busquedaPersona = ref('')
 
 // Headers tabla
 const headers = [
@@ -98,15 +92,6 @@ const estadisticasTarjetas = computed(() => [
   }
 ])
 
-const cronogramasFormateados = computed(() => {
-  return cronogramas.value.map(cronograma => ({
-    ...cronograma,
-    grupo_info: `${cronograma.nombre_grupo} (${cronograma.total_estudiantes} estudiantes)`,
-    periodo_modulo: formatearPeriodoModulo(cronograma.fecha_inicio, cronograma.fecha_fin),
-    docente_nombre_completo: cronograma.docente_nombre_completo || 'Sin asignar'
-  }))
-})
-
 const programasFiltro = computed(() =>
   programasAprobados.value.map(p => ({
     ...p,
@@ -114,37 +99,55 @@ const programasFiltro = computed(() =>
   }))
 )
 
-const gruposUnicos = computed(() => {
-  const grupos = new Map()
-  cronogramas.value.forEach(item => {
-    if (!grupos.has(item.id_ins_grupo)) {
-      grupos.set(item.id_ins_grupo, {
-        id_ins_grupo: item.id_ins_grupo,
-        nombre_grupo: item.nombre_grupo,
-        estado_grupo: item.estado_grupo,
-        total_estudiantes: item.total_estudiantes,
-        id_aca_programa_aprobado: item.id_aca_programa_aprobado,
-        fecha_inicio_inscripcion: item.fecha_inicio_inscripcion,
-        fecha_fin_inscripcion: item.fecha_fin_inscripcion,
-        gestion_inicio: item.gestion_inicio,
-        grupo_info: `${item.nombre_grupo} (${item.total_estudiantes} estudiantes)`,
-        programa_nombre: item.programa_nombre
-      })
-    }
-  })
-  return Array.from(grupos.values())
+const cronogramasFormateados = computed(() => {
+  return cronogramas.value.map(cronograma => ({
+    ...cronograma,
+    periodo_modulo: formatearPeriodoModulo(cronograma.fecha_inicio, cronograma.fecha_fin),
+    docente_nombre_completo: cronograma.docente_nombre_completo?.trim() || 'Sin asignar'
+  }))
 })
 
-// Funciones
+// Funciones utilitarias
+const formatearPeriodoModulo = (inicio, fin) => {
+  if (!inicio && !fin) return 'No programado'
+  if (!fin) return `Inicio: ${formatoFecha.ddMMaaaa(inicio)}`
+  return `${formatoFecha.ddMMaaaa(inicio)} - ${formatoFecha.ddMMaaaa(fin)}`
+}
+
+const obtenerColorEstado = (estado) => {
+  const colores = {
+    'PROGRAMADO': 'info',
+    'EN OFERTA': 'primary',
+    'EN EJECUCION': 'success',
+    'FINALIZADO': 'warning'
+  }
+  return colores[estado] || 'grey'
+}
+
+const limpiarFormularioGrupo = () => {
+  Object.assign(formularioGrupo, {
+    id_ins_grupo: null,
+    id_aca_programa_aprobado: programaSeleccionado.value,
+    nombre_grupo: '',
+    fecha_inicio_inscripcion: null,
+    fecha_fin_inscripcion: null,
+    gestion_inicio: new Date().getFullYear(),
+    estado_grupo: 'PROGRAMADO'
+  })
+}
+
+// Funciones de carga
 const cargarDatos = async () => {
   cargando.value = true
   try {
+    // Configurar endpoint según filtro
     let endpoint = '/api/grupos/vista/grupos-cronogramas'
     if (route.query.programa) {
       endpoint += `?programa=${route.query.programa}`
       programaSeleccionado.value = parseInt(route.query.programa)
     }
 
+    // Cargar datos en paralelo
     const [cronogramasRes, programasRes, statsRes] = await Promise.all([
       api.get(endpoint),
       api.get('/api/programa-aprobado/vista/programas-aprobados'),
@@ -155,8 +158,6 @@ const cargarDatos = async () => {
     programasAprobados.value = programasRes.data
     estadisticas.value = statsRes.data
 
-    // Expandir todos los grupos por defecto
-    expanded.value = gruposUnicos.value.map(g => g.grupo_info)
   } catch (error) {
     console.error('Error cargando datos:', error)
   } finally {
@@ -176,28 +177,10 @@ const cargarPersonas = async () => {
   }
 }
 
-const formatearPeriodoModulo = (inicio, fin) => {
-  if (!inicio && !fin) return 'No programado'
-  if (!fin) return `Inicio: ${formatoFecha.ddMMaaaa(inicio)}`
-  return `${formatoFecha.ddMMaaaa(inicio)} - ${formatoFecha.ddMMaaaa(fin)}`
-}
-
-const obtenerColorEstado = (estado) => {
-  const colores = {
-    'PROGRAMADO': 'info',
-    'EN OFERTA': 'primary',
-    'EN EJECUCION': 'success',
-    'FINALIZADO': 'warning'
-  }
-  return colores[estado] || 'grey'
-}
-
+// Funciones de filtrado
 const filtrarPorPrograma = async () => {
-  if (programaSeleccionado.value) {
-    await router.push({ query: { programa: programaSeleccionado.value } })
-  } else {
-    await router.push({ query: {} })
-  }
+  const query = programaSeleccionado.value ? { programa: programaSeleccionado.value } : {}
+  await router.push({ query })
   await cargarDatos()
 }
 
@@ -207,16 +190,9 @@ const limpiarFiltro = async () => {
   await cargarDatos()
 }
 
+// Funciones de formulario grupo
 const abrirDialogNuevo = () => {
-  Object.assign(formularioGrupo, {
-    id_ins_grupo: null,
-    id_aca_programa_aprobado: programaSeleccionado.value,
-    nombre_grupo: '',
-    fecha_inicio_inscripcion: null,
-    fecha_fin_inscripcion: null,
-    gestion_inicio: new Date().getFullYear(),
-    estado_grupo: 'PROGRAMADO'
-  })
+  limpiarFormularioGrupo()
   editando.value = false
   dialogFormulario.value = true
 }
@@ -239,22 +215,22 @@ const guardarGrupo = async () => {
   try {
     guardando.value = true
 
+    const payload = {
+      id_ins_grupo: formularioGrupo.id_ins_grupo,
+      id_aca_programa_aprobado: formularioGrupo.id_aca_programa_aprobado,
+      nombre_grupo: formularioGrupo.nombre_grupo,
+      fecha_inicio_inscripcion: formularioGrupo.fecha_inicio_inscripcion,
+      fecha_fin_inscripcion: formularioGrupo.fecha_fin_inscripcion,
+      gestion_inicio: formularioGrupo.gestion_inicio,
+      estado_grupo: formularioGrupo.estado_grupo
+    }
+
     if (editando.value) {
-      await api.put('/api/grupos', {
-        id_ins_grupo: formularioGrupo.id_ins_grupo,
-        nombre_grupo: formularioGrupo.nombre_grupo,
-        fecha_inicio_inscripcion: formularioGrupo.fecha_inicio_inscripcion,
-        fecha_fin_inscripcion: formularioGrupo.fecha_fin_inscripcion,
-        estado_grupo: formularioGrupo.estado_grupo
-      })
+      await api.put('/api/grupos', payload)
+      showModificado('Grupo actualizado correctamente')
     } else {
-      await api.post('/api/grupos', {
-        id_aca_programa_aprobado: formularioGrupo.id_aca_programa_aprobado,
-        nombre_grupo: formularioGrupo.nombre_grupo,
-        fecha_inicio_inscripcion: formularioGrupo.fecha_inicio_inscripcion,
-        fecha_fin_inscripcion: formularioGrupo.fecha_fin_inscripcion,
-        gestion_inicio: formularioGrupo.gestion_inicio
-      })
+      await api.post('/api/grupos', payload)
+      showRegistrado('Grupo creado exitosamente')
     }
 
     await cargarDatos()
@@ -266,9 +242,10 @@ const guardarGrupo = async () => {
   }
 }
 
+// Funciones de cronograma
 const abrirDialogCronograma = async (cronograma) => {
   cronogramaSeleccionado.value = { ...cronograma }
-  await cargarPersonas() // ✅ Nueva línea
+  await cargarPersonas()
   dialogCronograma.value = true
 }
 
@@ -281,6 +258,7 @@ const guardarCronograma = async () => {
       fecha_fin: cronogramaSeleccionado.value.fecha_fin
     })
 
+    showModificado('Cronograma actualizado correctamente')
     await cargarDatos()
     dialogCronograma.value = false
   } catch (error) {
@@ -288,10 +266,7 @@ const guardarCronograma = async () => {
   }
 }
 
-const asignarDocente = (cronograma) => {
-  router.push(`/cronogramas/${cronograma.id_eje_cronograma_modulo}/asignar-docente`)
-}
-
+// Funciones de navegación
 const verEstudiantes = (grupo) => {
   router.push(`/grupos/${grupo.id_ins_grupo}/estudiantes`)
 }
@@ -301,16 +276,8 @@ const gestionarInscripciones = (grupo) => {
   dialogInscripciones.value = true
 }
 
+// Funciones de persona
 const abrirFormularioNuevaPersona = () => {
-  Object.assign(formularioPersona, {
-    nombre: '',
-    ap_paterno: '',
-    ap_materno: '',
-    ci: '',
-    nro_celular: '',
-    correo: '',
-    fecha_nacimiento: null
-  })
   dialogFormularioPersona.value = true
 }
 
@@ -320,11 +287,13 @@ const guardarPersona = async (datosPersona) => {
       responseType: 'text'
     })
 
-    console.log('Persona creada exitosamente')
-    const textoRespuesta = response.data
-    const match = textoRespuesta.match(/ID:\s*(\d+)/)
+    // Extraer ID de la respuesta
+    const match = response.data.match(/ID:\s*(\d+)/)
     const idPersonaCreada = match ? parseInt(match[1]) : null
+
+    showRegistrado('Persona registrada exitosamente')
     await cargarPersonas()
+
     if (idPersonaCreada) {
       cronogramaSeleccionado.value.id_prs_persona = idPersonaCreada
     }
@@ -340,6 +309,7 @@ const cancelarFormularioPersona = () => {
   dialogFormularioPersona.value = false
 }
 
+// Función de exportación
 const exportarExcel = async () => {
   try {
     const workbook = new ExcelJS.Workbook()
@@ -360,7 +330,7 @@ const exportarExcel = async () => {
     worksheet.addRow([])
 
     // Headers
-    const headerRow = worksheet.addRow(['Grupo', 'Módulo', 'Nivel', 'Sigla', 'Horas', 'Créditos', 'Docente', 'Fechas', 'Estado'])
+    const headerRow = worksheet.addRow(['Grupo', 'Programa', 'Módulo', 'Nivel', 'Sigla', 'Horas', 'Créditos', 'Docente', 'Fechas', 'Estado'])
     headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: colorBlanco } }
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colorAzul } }
@@ -371,13 +341,20 @@ const exportarExcel = async () => {
       }
     })
 
-    // Datos agrupados
-    gruposUnicos.value.forEach(grupo => {
-      const cronogramasGrupo = cronogramasFormateados.value.filter(c => c.id_ins_grupo === grupo.id_ins_grupo)
+    // Datos agrupados por ID
+    const gruposMap = new Map()
+    cronogramasFormateados.value.forEach(cronograma => {
+      if (!gruposMap.has(cronograma.id_ins_grupo)) {
+        gruposMap.set(cronograma.id_ins_grupo, [])
+      }
+      gruposMap.get(cronograma.id_ins_grupo).push(cronograma)
+    })
 
+    gruposMap.forEach(cronogramasGrupo => {
       cronogramasGrupo.forEach((cronograma, index) => {
         const dataRow = worksheet.addRow([
-          index === 0 ? grupo.nombre_grupo : '', // Solo en primera fila del grupo
+          index === 0 ? cronograma.nombre_grupo : '',
+          index === 0 ? cronograma.nombre_programa : '',
           cronograma.nombre_modulo,
           cronograma.nombre_nivel,
           cronograma.sigla,
@@ -454,7 +431,7 @@ onMounted(cargarDatos)
             <v-select
               v-model="programaSeleccionado"
               :items="programasFiltro"
-              item-title="title"
+              :item-title="item => `${item.programa_nombre}, Plan ${item.plan_anho}, Versión ${item.cod_version}, ${item.modalidad_nombre}`"
               item-value="id_aca_programa_aprobado"
               label="Filtrar por Programa"
               variant="outlined"
@@ -492,7 +469,6 @@ onMounted(cargarDatos)
         no-data-text="No hay cronogramas registrados"
         class="rounded-lg"
         :group-by="groupBy"
-        v-model:expanded="expanded"
       >
         <template #top>
           <v-toolbar flat class="rounded-t-lg pa-4">
@@ -557,7 +533,9 @@ onMounted(cargarDatos)
                 <v-icon color="primary" class="mr-2">mdi-account-group</v-icon>
 
                 <div class="flex-grow-1">
-                  <div class="text-h6 font-weight-bold">{{ item.value }}</div>
+                  <div class="text-h6 font-weight-bold">
+                    {{ item.items[0]?.raw?.nombre_grupo }}
+                  </div>
                   <div class="text-caption">{{ item.items.length }} módulos programados</div>
                 </div>
 
@@ -767,7 +745,7 @@ onMounted(cargarDatos)
             size="large"
             class="mb-2"
             block
-            @click="router.push(`/inscripciones?programa=${grupoSeleccionado?.id_ins_grupo}`)"
+            @click="router.push(`/inscripciones?programa=${grupoSeleccionado?.id_aca_programa_aprobado}`)"
           >
             <v-icon start>mdi-account-plus</v-icon>
             Inscribir Estudiantes
@@ -835,49 +813,46 @@ onMounted(cargarDatos)
 
             <!-- Campos editables -->
             <v-col cols="12">
-              <v-col cols="12">
-                <v-autocomplete
-                  v-model="cronogramaSeleccionado.id_prs_persona"
-                  v-model:search="busquedaPersona"
-                  :custom-filter="filtroL"
-                  :items="personas"
-                  item-title="nombre_completo"
-                  item-value="id_prs_persona"
-                  label="Persona para Docente *"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-account"
-                  clearable
-                >
-                  <template #item="{ props, item }">
-                    <v-list-item v-bind="props">
-                      <template #title>{{ item.raw.nombre_completo }}</template>
-                      <template #subtitle>
-                        CI: {{ item.raw.ci }} | Cel: {{ item.raw.nro_celular }}
-                      </template>
-                    </v-list-item>
-                  </template>
+              <v-autocomplete
+                v-model="cronogramaSeleccionado.id_prs_persona"
+                v-model:search="busquedaPersona"
+                :items="personas"
+                item-title="nombre_completo"
+                item-value="id_prs_persona"
+                label="Persona para Docente *"
+                variant="outlined"
+                prepend-inner-icon="mdi-account"
+                clearable
+              >
+                <template #item="{ props, item }">
+                  <v-list-item v-bind="props">
+                    <template #title>{{ item.raw.nombre_completo }}</template>
+                    <template #subtitle>
+                      CI: {{ item.raw.ci }} | Cel: {{ item.raw.nro_celular }}
+                    </template>
+                  </v-list-item>
+                </template>
 
-                  <template #no-data>
-                    <div class="pa-4 text-center">
-                      <p class="text-body-2 mb-3">
-                        {{ busquedaPersona ?
-                        `No se encontró la persona "${busquedaPersona}"` :
-                        'Escriba para buscar personas' }}
-                      </p>
-                      <v-btn
-                        v-if="busquedaPersona && busquedaPersona.length > 2"
-                        color="primary"
-                        variant="elevated"
-                        size="small"
-                        @click="abrirFormularioNuevaPersona"
-                      >
-                        <v-icon start>mdi-plus</v-icon>
-                        Registrar nueva persona
-                      </v-btn>
-                    </div>
-                  </template>
-                </v-autocomplete>
-              </v-col>
+                <template #no-data>
+                  <div class="pa-4 text-center">
+                    <p class="text-body-2 mb-3">
+                      {{ busquedaPersona ?
+                      `No se encontró la persona "${busquedaPersona}"` :
+                      'Escriba para buscar personas' }}
+                    </p>
+                    <v-btn
+                      v-if="busquedaPersona && busquedaPersona.length > 2"
+                      color="primary"
+                      variant="elevated"
+                      size="small"
+                      @click="abrirFormularioNuevaPersona"
+                    >
+                      <v-icon start>mdi-plus</v-icon>
+                      Registrar nueva persona
+                    </v-btn>
+                  </div>
+                </template>
+              </v-autocomplete>
             </v-col>
 
             <v-col cols="12" md="6">
@@ -908,6 +883,8 @@ onMounted(cargarDatos)
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Dialog Registrar Persona -->
     <v-dialog v-model="dialogFormularioPersona" max-width="800px" persistent>
       <v-card class="rounded-lg">
         <v-card-title class="bg-primary text-white">

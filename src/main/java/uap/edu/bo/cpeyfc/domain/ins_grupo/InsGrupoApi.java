@@ -17,11 +17,14 @@ public class InsGrupoApi {
 
   @GetMapping("/api/grupos/vista/grupos-completos")
   public ResponseEntity<List<Map<String, Object>>> obtenerGruposCompletos(
-    @RequestParam(required = false) Integer idProgramaAprobado) {
+          @RequestParam(required = false) Integer idProgramaAprobado,
+          @RequestParam(required = false) Integer idGrupo) {
 
     List<Map<String, Object>> grupos;
 
-    if (idProgramaAprobado != null) {
+    if (idGrupo != null) {
+      grupos = insGrupoRepository.vistaGruposCompletosPorIdGrupo(idGrupo);
+    } else if (idProgramaAprobado != null) {
       grupos = insGrupoRepository.vistaGruposCompletosPorIdProgramaAprobado(idProgramaAprobado);
     } else {
       grupos = insGrupoRepository.vistaGruposCompletos();

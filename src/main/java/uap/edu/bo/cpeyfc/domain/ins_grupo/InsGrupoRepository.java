@@ -15,6 +15,9 @@ public interface InsGrupoRepository extends JpaRepository<InsGrupo, Integer> {
   @Query(value = "SELECT * FROM vista_grupos_completos WHERE id_aca_programa_aprobado = :id_programa_aprobado ORDER BY gestion_inicio DESC, nombre_grupo", nativeQuery = true)
   List<Map<String, Object>> vistaGruposCompletosPorIdProgramaAprobado(Integer id_programa_aprobado);
 
+  @Query(value = "SELECT * FROM vista_grupos_completos WHERE id_ins_grupo = :id_grupo", nativeQuery = true)
+  List<Map<String, Object>> vistaGruposCompletosPorIdGrupo(Integer id_grupo);
+
   @Query(value = "SELECT * FROM vista_grupos_con_cronogramas", nativeQuery = true)
   List<Map<String, Object>> vistaGruposConCronogramas();
 

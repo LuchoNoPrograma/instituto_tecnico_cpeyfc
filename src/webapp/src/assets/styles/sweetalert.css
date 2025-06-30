@@ -100,38 +100,6 @@
     transform: translateY(-1px) !important;
 }
 
-/* Iconos personalizados */
-.swal2-icon.swal2-success {
-    border-color: #4CAF50 !important;
-}
-
-.swal2-icon.swal2-success .swal2-success-ring {
-    border-color: #4CAF50 !important;
-}
-
-.swal2-icon.swal2-success .swal2-success-fix {
-    background-color: #4CAF50 !important;
-}
-
-.swal2-icon.swal2-warning {
-    border-color: #FF9800 !important;
-    color: #FF9800 !important;
-}
-
-.swal2-icon.swal2-error {
-    border-color: #FF5252 !important;
-    color: #FF5252 !important;
-}
-
-.swal2-icon.swal2-info {
-    border-color: #2196F3 !important;
-    color: #2196F3 !important;
-}
-
-.swal2-icon.swal2-question {
-    border-color: #1976D2 !important;
-    color: #1976D2 !important;
-}
 
 /* Progress bar personalizada */
 .swal2-timer-progress-bar {
