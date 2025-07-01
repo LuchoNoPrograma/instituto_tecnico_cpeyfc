@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { api } from '@/services/api'
-import {showRegistrado} from "@/utils/sweetalert.js";
+import { showRegistrado } from "@/utils/sweetalert.js"
 
 const router = useRouter()
 const route = useRoute()
@@ -28,6 +28,10 @@ const formulario = reactive({
   descuento_seleccionado: null
 })
 
+// Conceptos que permiten descuento (matrícula y colegiatura)
+const CONCEPTOS_CON_DESCUENTO = [1, 2] // Ajustar según tus IDs reales
+const CONCEPTOS_GRATUITOS = [3] // Certificado gratuito para regulares
+
 // Computed
 const preinscriptoSeleccionado = computed(() =>
   preinscripciones.value.find(p => p.id_ins_preinscripcion === formulario.id_ins_preinscripcion)
@@ -49,34 +53,59 @@ const conceptosConDescuento = computed(() => {
   if (!conceptosPago.value.length) return []
 
   return conceptosPago.value.map(concepto => {
+    const esGratuito = CONCEPTOS_GRATUITOS.includes(concepto.id_fin_concepto_pago)
+    const permiteDescuento = CONCEPTOS_CON_DESCUENTO.includes(concepto.id_fin_concepto_pago)
+
     let montoFinal = concepto.monto_aplicar
     let descuentoAplicado = 0
+    let observacion = ''
 
-    if (descuentoSeleccionado.value) {
+    if (esGratuito) {
+      // Certificado es gratuito para estudiantes regulares
+      montoFinal = 0
+      observacion = 'Primera impresión gratuita - Estudiante Regular'
+    } else if (permiteDescuento && descuentoSeleccionado.value) {
+      // Solo aplicar descuento a matrícula/colegiatura
       const porcentaje = parseFloat(descuentoSeleccionado.value.valor.replace('%', ''))
       descuentoAplicado = (concepto.monto_aplicar * porcentaje / 100)
       montoFinal = concepto.monto_aplicar - descuentoAplicado
+      observacion = `Descuento aplicado: ${descuentoSeleccionado.value.nombre_param}`
     }
 
     return {
       ...concepto,
       monto_original: concepto.monto_aplicar,
       descuento_aplicado: descuentoAplicado,
-      monto_final: montoFinal
+      monto_final: montoFinal,
+      es_gratuito: esGratuito,
+      permite_descuento: permiteDescuento,
+      observacion
     }
   })
 })
 
 const totalOriginal = computed(() =>
-  conceptosPago.value.reduce((sum, c) => sum + c.monto_aplicar, 0)
+  conceptosPago.value
+    .filter(c => !CONCEPTOS_GRATUITOS.includes(c.id_fin_concepto_pago))
+    .reduce((sum, c) => sum + c.monto_aplicar, 0)
 )
 
 const totalDescuentos = computed(() =>
-  conceptosConDescuento.value.reduce((sum, c) => sum + c.descuento_aplicado, 0)
+  conceptosConDescuento.value
+    .filter(c => !c.es_gratuito)
+    .reduce((sum, c) => sum + c.descuento_aplicado, 0)
 )
 
 const totalFinal = computed(() =>
-  conceptosConDescuento.value.reduce((sum, c) => sum + c.monto_final, 0)
+  conceptosConDescuento.value
+    .filter(c => !c.es_gratuito)
+    .reduce((sum, c) => sum + c.monto_final, 0)
+)
+
+const totalGratuitos = computed(() =>
+  conceptosConDescuento.value
+    .filter(c => c.es_gratuito)
+    .reduce((sum, c) => sum + c.monto_original, 0)
 )
 
 // Cargar conceptos cuando cambie el programa
@@ -125,10 +154,17 @@ const matricular = async () => {
 
   matriculando.value = true
   try {
-    await api.post('/api/matricula/matricular-preinscrito', {
+    const payload = {
       id_ins_preinscripcion: formulario.id_ins_preinscripcion,
       id_ins_grupo: formulario.id_ins_grupo
-    })
+    }
+
+    // Solo enviar descuento si está seleccionado
+    if (formulario.descuento_seleccionado) {
+      payload.id_parametro_descuento = formulario.descuento_seleccionado
+    }
+
+    await api.post('/api/matricula/matricular-preinscrito', payload)
 
     showRegistrado('Estudiante matriculado exitosamente', '¡Matrícula Completada!')
     router.push(`/matriculas?grupo=${formulario.id_ins_grupo}`)
@@ -162,6 +198,18 @@ const formatearFecha = (fecha) => {
 const getIniciales = (nombreCompleto) => {
   const partes = nombreCompleto.split(' ')
   return `${partes[0]?.[0] || ''}${partes[1]?.[0] || ''}`.toUpperCase()
+}
+
+const getConceptoColor = (concepto) => {
+  if (concepto.es_gratuito) return 'success'
+  if (concepto.descuento_aplicado > 0) return 'orange'
+  return 'primary'
+}
+
+const getConceptoIcon = (concepto) => {
+  if (concepto.es_gratuito) return 'mdi-gift'
+  if (concepto.descuento_aplicado > 0) return 'mdi-percent'
+  return 'mdi-currency-usd'
 }
 
 onMounted(async () => {
@@ -457,15 +505,17 @@ onMounted(async () => {
                             :items="parametros"
                             item-title="nombre_param"
                             item-value="id_parametro"
-                            label="Aplicar descuento (opcional)"
+                            label="Aplicar descuento a matrícula/colegiatura (opcional)"
                             variant="outlined"
                             prepend-inner-icon="mdi-percent"
                             clearable
+                            hint="El descuento solo se aplica a matrícula y colegiatura, no a certificados"
+                            persistent-hint
                           >
                             <template #item="{ props, item }">
                               <v-list-item v-bind="props">
                                 <template #title>{{ item.raw.nombre_param }}</template>
-                                <template #subtitle>Descuento del {{ item.raw.valor }}</template>
+                                <template #subtitle>Descuento del {{ item.raw.valor }} (solo matrícula/colegiatura)</template>
                               </v-list-item>
                             </template>
                           </v-select>
@@ -488,28 +538,54 @@ onMounted(async () => {
                             v-for="concepto in conceptosConDescuento"
                             :key="concepto.id_fin_concepto_pago"
                             variant="outlined"
+                            :color="getConceptoColor(concepto)"
                             class="mb-3"
                           >
-                            <v-card-text class="pa-4">
+                            <v-card-text class="pa-4" color="gr">
                               <div class="d-flex justify-space-between align-center mb-2">
-                                <h5 class="text-subtitle-2 font-weight-bold">{{ concepto.nombre_concepto }}</h5>
-                                <v-chip size="small" color="primary" variant="tonal">
-                                  ID: {{ concepto.id_fin_concepto_pago }}
-                                </v-chip>
+                                <div class="d-flex align-center">
+                                  <v-icon :color="concepto.es_gratuito ? 'success' : concepto.descuento_aplicado > 0 ? 'orange' : 'grey'" class="mr-2">
+                                    {{ getConceptoIcon(concepto) }}
+                                  </v-icon>
+                                  <h5 class="text-subtitle-2 font-weight-bold">{{ concepto.nombre_concepto }}</h5>
+                                </div>
+                                <div class="d-flex align-center gap-2">
+                                  <v-chip v-if="concepto.es_gratuito" size="small" color="success" variant="tonal">
+                                    <v-icon start size="small">mdi-gift</v-icon>
+                                    GRATUITO
+                                  </v-chip>
+                                  <v-chip v-else-if="concepto.descuento_aplicado > 0" size="small" color="orange" variant="tonal">
+                                    <v-icon start size="small">mdi-percent</v-icon>
+                                    CON DESCUENTO
+                                  </v-chip>
+                                </div>
                               </div>
 
                               <p class="text-body-2 text-medium-emphasis mb-3">{{ concepto.descripcion }}</p>
 
+                              <div v-if="concepto.observacion" class="mb-2">
+                                <v-alert
+                                  density="compact"
+                                  :color="concepto.es_gratuito ? 'success' : 'info'"
+                                  variant="tonal"
+                                >
+                                  <v-icon start size="small">mdi-information</v-icon>
+                                  {{ concepto.observacion }}
+                                </v-alert>
+                              </div>
+
                               <div class="d-flex justify-space-between">
                                 <div>
-                                  <div class="text-body-2">Monto base: <strong>{{ formatearMonto(concepto.monto_original) }}</strong></div>
+                                  <div v-if="!concepto.es_gratuito" class="text-body-2">
+                                    Monto base: <strong>{{ formatearMonto(concepto.monto_original) }}</strong>
+                                  </div>
                                   <div v-if="concepto.descuento_aplicado > 0" class="text-body-2 text-orange">
                                     Descuento: <strong>-{{ formatearMonto(concepto.descuento_aplicado) }}</strong>
                                   </div>
                                 </div>
                                 <div class="text-right">
-                                  <div class="text-h6 font-weight-bold text-success">
-                                    {{ formatearMonto(concepto.monto_final) }}
+                                  <div class="text-h6 font-weight-bold" :class="concepto.es_gratuito ? 'text-success' : concepto.descuento_aplicado > 0 ? 'text-orange' : 'text-primary'">
+                                    {{ concepto.es_gratuito ? 'GRATUITO' : formatearMonto(concepto.monto_final) }}
                                   </div>
                                 </div>
                               </div>
@@ -541,9 +617,15 @@ onMounted(async () => {
                           <span class="font-weight-medium">{{ formatearMonto(totalOriginal) }}</span>
                         </div>
 
+                        <!-- Beneficios Gratuitos -->
+                        <div v-if="totalGratuitos > 0" class="d-flex justify-space-between mb-2 text-success">
+                          <span>Beneficios gratuitos:</span>
+                          <span class="font-weight-medium">{{ formatearMonto(totalGratuitos) }}</span>
+                        </div>
+
                         <!-- Descuentos -->
                         <div v-if="totalDescuentos > 0" class="d-flex justify-space-between mb-2 text-orange">
-                          <span>Total descuentos:</span>
+                          <span>Descuentos aplicados:</span>
                           <span class="font-weight-medium">-{{ formatearMonto(totalDescuentos) }}</span>
                         </div>
 
@@ -553,6 +635,15 @@ onMounted(async () => {
                         <div class="d-flex justify-space-between text-h5 font-weight-bold text-success mb-4">
                           <span>TOTAL A PAGAR:</span>
                           <span>{{ formatearMonto(totalFinal) }}</span>
+                        </div>
+
+                        <!-- Desglose adicional -->
+                        <div v-if="totalGratuitos > 0 || totalDescuentos > 0">
+                          <v-divider class="my-3" />
+                          <div class="text-caption text-medium-emphasis">
+                            <div>• Servicios gratuitos: {{ formatearMonto(totalGratuitos) }}</div>
+                            <div v-if="totalDescuentos > 0">• Ahorro por descuentos: {{ formatearMonto(totalDescuentos) }}</div>
+                          </div>
                         </div>
                       </div>
 

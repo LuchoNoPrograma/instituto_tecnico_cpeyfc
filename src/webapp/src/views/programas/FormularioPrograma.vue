@@ -377,25 +377,7 @@ const cargarDatosPrograma = (programa) => {
   if (!programa) return
 
   Object.assign(formularioPrograma, programa)
-
-  // Detectar concepto basado en precios
-  if (programa.precio_matricula > 0) {
-    const conceptoMatricula = conceptosPago.value.find(c =>
-      c.nombre_concepto.includes('MATRICULA')
-    )
-    if (conceptoMatricula) {
-      formularioPrograma.id_concepto_principal = conceptoMatricula.id_fin_concepto_pago
-      formularioPrograma.monto_principal = programa.precio_matricula
-    }
-  } else if (programa.precio_colegiatura > 0) {
-    const conceptoColegiatura = conceptosPago.value.find(c =>
-      c.nombre_concepto.includes('COLEGIATURA')
-    )
-    if (conceptoColegiatura) {
-      formularioPrograma.id_concepto_principal = conceptoColegiatura.id_fin_concepto_pago
-      formularioPrograma.monto_principal = programa.precio_colegiatura
-    }
-  }
+  busquedaPrograma.value = programa.programa_nombre || ''
 }
 
 // Watchers

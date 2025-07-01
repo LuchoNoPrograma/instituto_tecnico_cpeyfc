@@ -21,7 +21,8 @@ public class InsMatriculaApi {
     String resultado = insMatriculaService.matricularPreinscrito(
             (Integer) datos.get("id_ins_preinscripcion"),
             (Integer) datos.get("id_ins_grupo"),
-            userDetails.getIdSegUsuario()
+            userDetails.getIdSegUsuario(),
+            (Integer) datos.get("id_parametro_descuento")
     );
     return ResponseEntity.ok(resultado);
   }

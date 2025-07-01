@@ -266,11 +266,6 @@ const guardarCronograma = async () => {
   }
 }
 
-// Funciones de navegación
-const verEstudiantes = (grupo) => {
-  router.push(`/grupos/${grupo.id_ins_grupo}/estudiantes`)
-}
-
 const gestionarInscripciones = (grupo) => {
   grupoSeleccionado.value = grupo
   dialogInscripciones.value = true
@@ -554,7 +549,7 @@ onMounted(cargarDatos)
                     size="small"
                     color="info"
                     variant="elevated"
-                    @click="verEstudiantes(item.items[0].raw)"
+                    @click="router.push(`/matriculas?grupo=${item.items[0]?.raw?.id_ins_grupo}`)"
                   >
                     <v-icon>mdi-account-multiple</v-icon>
                     <v-tooltip activator="parent" location="top">Ver estudiantes</v-tooltip>

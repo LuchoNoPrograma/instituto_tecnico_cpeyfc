@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 public interface InsMatriculaRepository extends JpaRepository<InsMatricula, Integer> {
-  @Query(value = "SELECT * FROM fn_matricular_preinscrito_completo(:id_ins_preinscripcion, :id_ins_grupo, :user_reg)", nativeQuery = true)
+  @Query(value = "SELECT * FROM fn_matricular_preinscrito_completo(:id_ins_preinscripcion, :id_ins_grupo, :user_reg, :p_id_parametro_descuento)", nativeQuery = true)
   Map<String, Object> matricularPreinscritoCompleto(Integer id_ins_preinscripcion,
-                                       Integer id_ins_grupo,
-                                       Integer user_reg);
+                                                    Integer id_ins_grupo,
+                                                    Integer user_reg,
+                                                    Integer p_id_parametro_descuento
+  );
 
   @Query(value = "SELECT * FROM fn_activar_usuario_matricula(:id_usuario, :password_hash)", nativeQuery = true)
   String activarUsuarioMatricula(Integer id_usuario, String password_hash);

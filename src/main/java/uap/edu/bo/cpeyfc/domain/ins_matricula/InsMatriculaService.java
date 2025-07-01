@@ -17,8 +17,8 @@ public class InsMatriculaService {
     private final InsMatriculaRepository insMatriculaRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public String matricularPreinscrito(Integer idPreinscripcion, Integer idGrupo, Integer userReg) {
-        Map<String, Object> resultado = insMatriculaRepository.matricularPreinscritoCompleto(idPreinscripcion, idGrupo, userReg);
+    public String matricularPreinscrito(Integer idPreinscripcion, Integer idGrupo, Integer userReg, Integer idParametroDescuento) {
+        Map<String, Object> resultado = insMatriculaRepository.matricularPreinscritoCompleto(idPreinscripcion, idGrupo, userReg, idParametroDescuento);
 
         Boolean usuarioExistia = (Boolean) resultado.get("usuario_existia");
         String mensaje = (String) resultado.get("mensaje");
