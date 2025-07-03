@@ -23,13 +23,13 @@ const menuItems = computed(() => [
     mostrar: hasPermission('VER_PERSONAS')
   },
   {
-    titulo: 'Programas',
+    titulo: 'Programas aprobados',
     icono: 'mdi-school',
     ruta: '/programas',
     mostrar: hasPermission('VER_PROGRAMAS')
   },
   {
-    titulo: 'Grupos',
+    titulo: 'Grupos con módulos',
     icono: 'mdi-account-group',
     ruta: '/grupos',
     mostrar: hasPermission('VER_PROGRAMAS')

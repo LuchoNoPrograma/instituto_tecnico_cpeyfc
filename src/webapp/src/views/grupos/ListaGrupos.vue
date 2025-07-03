@@ -481,7 +481,7 @@ onMounted(cargarDatos)
           <v-toolbar flat class="rounded-t-lg pa-4">
             <v-toolbar-title class="text-h6 font-weight-bold d-flex align-center">
               <v-icon class="mr-2" color="primary">mdi-account-group</v-icon>
-              Gestión de Grupos y Cronogramas
+              Adm. Grupos con módulos
             </v-toolbar-title>
 
             <v-spacer></v-spacer>

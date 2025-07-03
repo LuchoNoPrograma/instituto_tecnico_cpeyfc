@@ -108,8 +108,7 @@ onMounted(() => {
         <template #top>
           <v-toolbar flat class="rounded-t-lg">
             <v-toolbar-title class="text-h6 font-weight-bold d-flex align-center">
-              <v-icon class="mr-2" color="primary">mdi-account-group</v-icon>
-              Gestión de Personas
+              Adm. Personas
             </v-toolbar-title>
 
             <v-spacer></v-spacer>

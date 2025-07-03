@@ -302,7 +302,7 @@ const crearNuevoPlan = async () => {
     await cargarPlanesEstudio()
     mostrarFormularioNuevoPlan.value = false
 
-    // Auto-seleccionar el plan recién creado
+    // Autoseleccionar el plan recién creado
     const nuevoPlan = planesEstudio.value.find(p => p.anho === formularioPrograma.planNuevo.anho)
     if (nuevoPlan) {
       formularioPrograma.id_aca_plan_estudio = nuevoPlan.id_aca_plan_estudio
@@ -553,6 +553,44 @@ onMounted(() => {
               prepend-inner-icon="mdi-book-outline"
               :disabled="cargandoFormulario"
             >
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props">
+                  <template #title>
+                    <div class="d-flex align-center">
+                      <span class="font-weight-bold">Plan {{ item.raw.anho }}</span>
+                      <v-chip
+                        v-if="item.raw.vigente"
+                        color="success"
+                        size="small"
+                        class="ml-2"
+                      >
+                        Vigente
+                      </v-chip>
+                      <v-chip
+                        v-else
+                        color="warning"
+                        variant="outlined"
+                        size="x-small"
+                        class="ml-2"
+                      >
+                        Sin vigencia
+                      </v-chip>
+                    </div>
+                  </template>
+                  <template #subtitle>
+                    <div class="text-caption mt-1">
+                      {{ item.raw.descripcion_plan.includes('Sin programas asignados')
+                      ? 'Sin programas asignados'
+                      : item.raw.descripcion_plan.split(' - Usado por: ')[1] }}
+                    </div>
+                  </template>
+                </v-list-item>
+              </template>
+
+              <template #selection="{ item }">
+                <span>Plan {{ item.raw.anho }}{{ item.raw.vigente ? ' (Vigente)' : '' }}</span>
+              </template>
+
               <template #append-item>
                 <v-divider></v-divider>
                 <v-list-item @click="abrirFormularioNuevoPlan">
@@ -568,12 +606,13 @@ onMounted(() => {
           <v-col cols="12" md="6">
             <v-select
               v-model="formularioPrograma.estado_programa_aprobado"
+              :disabled="cargandoFormulario"
               :items="['SIN INICIAR', 'EN EJECUCION', 'FINALIZADO']"
               :error-messages="obtenerErroresCampo($vPaso2.estado_programa_aprobado)"
               label="Estado del Programa *"
-              variant="outlined"
               prepend-inner-icon="mdi-flag"
-              :disabled="cargandoFormulario"
+              readonly
+              variant="outlined"
             ></v-select>
           </v-col>
 
@@ -584,7 +623,7 @@ onMounted(() => {
               variant="outlined"
               prepend-inner-icon="mdi-certificate"
               placeholder="123/2024"
-              hint="Formato: número/año"
+              hint="Ejemplo: 3/2025"
               persistent-hint
               :disabled="cargandoFormulario"
             ></v-text-field>
@@ -690,9 +729,9 @@ onMounted(() => {
               </div>
 
               <div class="text-body-2">
-                • <strong>Matrícula:</strong> Para programas con pago por concepto de matricula semestral o matricula o única<br>
+                • <strong>Matrícula:</strong> Para programas con pago por concepto de matricula semestral o matricula única<br>
                 • <strong>Colegiatura:</strong> Para programas con pago completo al contado o parcelado<br>
-                • <strong>Titulación:</strong> Costo adicional para obtener el título (opcional)
+                • <strong>Titulación:</strong> Costo adicional para obtener el título/impresion de certificados (opcional)
               </div>
             </v-alert>
           </v-col>

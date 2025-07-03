@@ -153,7 +153,6 @@ onMounted(() => {
     <!-- Header del Grupo -->
     <v-card class="mb-6 elevation-2">
       <v-card-title class="d-flex align-center">
-        <v-icon left color="primary">mdi-account-group</v-icon>
         <div>
           <h2 class="text-h5 font-weight-bold">{{ grupoInfo.nombre_grupo }}</h2>
           <div class="text-subtitle-1 text-medium-emphasis">

@@ -430,9 +430,8 @@ onMounted(() => {
           <v-toolbar flat class="rounded-t-lg pa-4">
             <v-toolbar-title class="text-h6 font-weight-bold d-flex align-center">
               <v-icon class="mr-2" color="primary">mdi-school</v-icon>
-              Administrar Programas
+              Adm. Programas Aprobados
             </v-toolbar-title>
-
             <v-spacer></v-spacer>
 
             <div class="d-flex align-center ga-3 flex-wrap">
@@ -454,7 +453,7 @@ onMounted(() => {
                 :disabled="cargando"
               >
                 <v-icon start>mdi-file-excel</v-icon>
-                Exportar Excel
+                Exportar
               </v-btn>
 
               <v-btn
