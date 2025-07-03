@@ -2,7 +2,7 @@ import axios from 'axios'
 import { showError } from '@/utils/sweetalert'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

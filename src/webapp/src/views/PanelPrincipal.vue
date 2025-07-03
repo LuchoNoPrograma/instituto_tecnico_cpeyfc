@@ -2,9 +2,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { api } from '@/services/api'
+import PanelPrincipalDocente from "@/views/docente/PanelPrincipalDocente.vue";
 
 const { getCurrentUser, hasPermission } = useAuth()
 const usuario = computed(() => getCurrentUser())
+
+// Verificar si es docente
+const esDocente = computed(() => {
+  return usuario.value?.roles?.includes('DOCENTE') || false
+})
 
 // Estados reactivos
 const estadisticas = ref({
@@ -94,15 +100,22 @@ const accesosRapidos = computed(() => [
 const cargarDashboard = async () => {
   cargando.value = true
   try {
-    const [statsResponse, actividadesResponse, notificacionesResponse] = await Promise.all([
-      api.get('/dashboard/estadisticas'),
-      api.get('/dashboard/actividades'),
-      api.get('/dashboard/notificaciones')
-    ])
+    // Solo cargar datos genéricos si no es docente
+    if (!esDocente.value) {
+      /*const [statsResponse, actividadesResponse, notificacionesResponse] = await Promise.all([
+        api.get('/dashboard/estadisticas'),
+        api.get('/dashboard/actividades'),
+        api.get('/dashboard/notificaciones')
+      ])*/
 
-    estadisticas.value = statsResponse.data
-    actividades.value = actividadesResponse.data
-    notificaciones.value = notificacionesResponse.data
+      /*estadisticas.value = statsResponse.data
+      actividades.value = actividadesResponse.data
+      notificaciones.value = notificacionesResponse.data*/
+
+      estadisticas.value = []
+      actividades.value = []
+      notificaciones.value = []
+    }
   } catch (error) {
     console.error('Error al cargar dashboard:', error)
   } finally {
@@ -138,160 +151,166 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Estadísticas principales -->
-    <div class="estadisticas-section">
-      <h2 class="section-title">Resumen General</h2>
+    <!-- Dashboard específico para docentes -->
+    <PanelPrincipalDocente v-if="esDocente" />
+
+    <!-- Dashboard genérico para otros roles -->
+    <div v-else>
+      <!-- Estadísticas principales -->
+      <div class="estadisticas-section">
+        <h2 class="section-title">Resumen General</h2>
+
+        <v-row>
+          <v-col
+            v-for="tarjeta in tarjetasEstadisticas"
+            :key="tarjeta.titulo"
+            cols="12"
+            sm="6"
+            md="3"
+          >
+            <v-card
+              :color="tarjeta.color"
+              variant="flat"
+              class="estadistica-card text-white"
+              :to="tarjeta.ruta"
+              hover
+            >
+              <v-card-text class="d-flex align-center">
+                <div class="flex-grow-1">
+                  <div class="text-h4 font-weight-bold mb-1">
+                    {{ tarjeta.valor }}
+                  </div>
+                  <div class="text-subtitle-1">
+                    {{ tarjeta.titulo }}
+                  </div>
+                </div>
+                <v-icon size="48" opacity="0.8">
+                  {{ tarjeta.icono }}
+                </v-icon>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </div>
 
       <v-row>
-        <v-col
-          v-for="tarjeta in tarjetasEstadisticas"
-          :key="tarjeta.titulo"
-          cols="12"
-          sm="6"
-          md="3"
-        >
-          <v-card
-            :color="tarjeta.color"
-            variant="flat"
-            class="estadistica-card text-white"
-            :to="tarjeta.ruta"
-            hover
-          >
-            <v-card-text class="d-flex align-center">
-              <div class="flex-grow-1">
-                <div class="text-h4 font-weight-bold mb-1">
-                  {{ tarjeta.valor }}
-                </div>
-                <div class="text-subtitle-1">
-                  {{ tarjeta.titulo }}
-                </div>
-              </div>
-              <v-icon size="48" opacity="0.8">
-                {{ tarjeta.icono }}
-              </v-icon>
+        <!-- Accesos rápidos -->
+        <v-col cols="12" md="8">
+          <h2 class="section-title">Accesos Rápidos</h2>
+
+          <v-row>
+            <v-col
+              v-for="acceso in accesosRapidos"
+              :key="acceso.titulo"
+              cols="12"
+              sm="6"
+            >
+              <v-card
+                class="acceso-card"
+                :to="acceso.ruta"
+                hover
+              >
+                <v-card-text class="d-flex align-center pa-4">
+                  <v-avatar
+                    :color="acceso.color"
+                    size="56"
+                    class="me-4"
+                  >
+                    <v-icon color="white" size="32">
+                      {{ acceso.icono }}
+                    </v-icon>
+                  </v-avatar>
+
+                  <div>
+                    <div class="text-h6 font-weight-medium mb-1">
+                      {{ acceso.titulo }}
+                    </div>
+                    <div class="text-body-2 text-medium-emphasis">
+                      {{ acceso.descripcion }}
+                    </div>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-col>
+
+        <!-- Notificaciones y actividades recientes -->
+        <v-col cols="12" md="4">
+          <h2 class="section-title">Actividad Reciente</h2>
+
+          <!-- Notificaciones -->
+          <v-card class="mb-4">
+            <v-card-title class="d-flex align-center bg-warning text-white">
+              <v-icon class="me-2">mdi-bell</v-icon>
+              Notificaciones
+            </v-card-title>
+
+            <v-card-text class="pa-0">
+              <v-list density="compact">
+                <v-list-item
+                  v-for="notif in notificaciones.slice(0, 5)"
+                  :key="notif.id"
+                  class="px-4"
+                >
+                  <v-list-item-title class="text-body-2">
+                    {{ notif.mensaje }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    {{ notif.fecha }}
+                  </v-list-item-subtitle>
+                </v-list-item>
+
+                <v-list-item v-if="notificaciones.length === 0">
+                  <v-list-item-title class="text-body-2 text-medium-emphasis">
+                    No hay notificaciones pendientes
+                  </v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-card-text>
+          </v-card>
+
+          <!-- Actividades recientes -->
+          <v-card>
+            <v-card-title class="d-flex align-center bg-info text-white">
+              <v-icon class="me-2">mdi-history</v-icon>
+              Actividades Recientes
+            </v-card-title>
+
+            <v-card-text class="pa-0">
+              <v-list density="compact">
+                <v-list-item
+                  v-for="actividad in actividades.slice(0, 5)"
+                  :key="actividad.id"
+                  class="px-4"
+                >
+                  <template #prepend>
+                    <v-avatar size="32" :color="actividad.color">
+                      <v-icon size="18" color="white">
+                        {{ actividad.icono }}
+                      </v-icon>
+                    </v-avatar>
+                  </template>
+
+                  <v-list-item-title class="text-body-2">
+                    {{ actividad.descripcion }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle>
+                    {{ actividad.fecha }}
+                  </v-list-item-subtitle>
+                </v-list-item>
+
+                <v-list-item v-if="actividades.length === 0">
+                  <v-list-item-title class="text-body-2 text-medium-emphasis">
+                    No hay actividades recientes
+                  </v-list-item-title>
+                </v-list-item>
+              </v-list>
             </v-card-text>
           </v-card>
         </v-col>
       </v-row>
     </div>
-
-    <v-row>
-      <!-- Accesos rápidos -->
-      <v-col cols="12" md="8">
-        <h2 class="section-title">Accesos Rápidos</h2>
-
-        <v-row>
-          <v-col
-            v-for="acceso in accesosRapidos"
-            :key="acceso.titulo"
-            cols="12"
-            sm="6"
-          >
-            <v-card
-              class="acceso-card"
-              :to="acceso.ruta"
-              hover
-            >
-              <v-card-text class="d-flex align-center pa-4">
-                <v-avatar
-                  :color="acceso.color"
-                  size="56"
-                  class="me-4"
-                >
-                  <v-icon color="white" size="32">
-                    {{ acceso.icono }}
-                  </v-icon>
-                </v-avatar>
-
-                <div>
-                  <div class="text-h6 font-weight-medium mb-1">
-                    {{ acceso.titulo }}
-                  </div>
-                  <div class="text-body-2 text-medium-emphasis">
-                    {{ acceso.descripcion }}
-                  </div>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-col>
-
-      <!-- Notificaciones y actividades recientes -->
-      <v-col cols="12" md="4">
-        <h2 class="section-title">Actividad Reciente</h2>
-
-        <!-- Notificaciones -->
-        <v-card class="mb-4">
-          <v-card-title class="d-flex align-center bg-warning text-white">
-            <v-icon class="me-2">mdi-bell</v-icon>
-            Notificaciones
-          </v-card-title>
-
-          <v-card-text class="pa-0">
-            <v-list density="compact">
-              <v-list-item
-                v-for="notif in notificaciones.slice(0, 5)"
-                :key="notif.id"
-                class="px-4"
-              >
-                <v-list-item-title class="text-body-2">
-                  {{ notif.mensaje }}
-                </v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ notif.fecha }}
-                </v-list-item-subtitle>
-              </v-list-item>
-
-              <v-list-item v-if="notificaciones.length === 0">
-                <v-list-item-title class="text-body-2 text-medium-emphasis">
-                  No hay notificaciones pendientes
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
-
-        <!-- Actividades recientes -->
-        <v-card>
-          <v-card-title class="d-flex align-center bg-info text-white">
-            <v-icon class="me-2">mdi-history</v-icon>
-            Actividades Recientes
-          </v-card-title>
-
-          <v-card-text class="pa-0">
-            <v-list density="compact">
-              <v-list-item
-                v-for="actividad in actividades.slice(0, 5)"
-                :key="actividad.id"
-                class="px-4"
-              >
-                <template #prepend>
-                  <v-avatar size="32" :color="actividad.color">
-                    <v-icon size="18" color="white">
-                      {{ actividad.icono }}
-                    </v-icon>
-                  </v-avatar>
-                </template>
-
-                <v-list-item-title class="text-body-2">
-                  {{ actividad.descripcion }}
-                </v-list-item-title>
-                <v-list-item-subtitle>
-                  {{ actividad.fecha }}
-                </v-list-item-subtitle>
-              </v-list-item>
-
-              <v-list-item v-if="actividades.length === 0">
-                <v-list-item-title class="text-body-2 text-medium-emphasis">
-                  No hay actividades recientes
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
 
     <!-- Loading overlay -->
     <v-overlay

@@ -17,6 +17,7 @@ const personas = ref([])
 const estadisticas = ref({})
 const cargando = ref(false)
 const guardando = ref(false)
+const groupHeaders = ref({})
 
 // Configuración tabla
 const groupBy = ref([{key: 'id_ins_grupo', order: 'asc'}])
@@ -103,7 +104,7 @@ const cronogramasFormateados = computed(() => {
   return cronogramas.value.map(cronograma => ({
     ...cronograma,
     periodo_modulo: formatearPeriodoModulo(cronograma.fecha_inicio, cronograma.fecha_fin),
-    docente_nombre_completo: cronograma.docente_nombre_completo?.trim() || 'Sin asignar'
+    docente_nombre_completo: cronograma.docente_nombre_completo?.trim()
   }))
 })
 
@@ -158,6 +159,9 @@ const cargarDatos = async () => {
     programasAprobados.value = programasRes.data
     estadisticas.value = statsRes.data
 
+    nextTick(() => {
+      autoExpandirGrupos()
+    })
   } catch (error) {
     console.error('Error cargando datos:', error)
   } finally {
@@ -195,6 +199,18 @@ const abrirDialogNuevo = () => {
   limpiarFormularioGrupo()
   editando.value = false
   dialogFormulario.value = true
+}
+
+const autoExpandirGrupos = () => {
+  setTimeout(() => {
+    Object.values(groupHeaders.value).forEach(groupData => {
+      if (groupData?.toggleGroup && groupData?.isGroupOpen && groupData?.item) {
+        if (!groupData.isGroupOpen(groupData.item)) {
+          groupData.toggleGroup(groupData.item)
+        }
+      }
+    })
+  }, 100)
 }
 
 const abrirDialogEditar = (grupo) => {
@@ -266,10 +282,6 @@ const guardarCronograma = async () => {
   }
 }
 
-const gestionarInscripciones = (grupo) => {
-  grupoSeleccionado.value = grupo
-  dialogInscripciones.value = true
-}
 
 // Funciones de persona
 const abrirFormularioNuevaPersona = () => {
@@ -511,6 +523,8 @@ onMounted(cargarDatos)
 
         <!-- Header de grupo -->
         <template #group-header="{ item, columns, toggleGroup, isGroupOpen }">
+          <template :ref="(el) => { groupHeaders[item.value] = { item, toggleGroup, isGroupOpen } }" />
+
           <tr class="grupo-header-row">
             <td :colspan="columns.length" class="pa-3">
               <div class="d-flex align-center">
@@ -571,7 +585,7 @@ onMounted(cargarDatos)
                     size="small"
                     color="success"
                     variant="elevated"
-                    @click="gestionarInscripciones(item.items[0].raw)"
+                    :to="`/inscripciones?programa=${item.items[0].raw.id_aca_programa_aprobado}`"
                   >
                     <v-icon>mdi-account-plus</v-icon>
                     <v-tooltip activator="parent" location="top">Gestionar inscripciones</v-tooltip>
@@ -716,51 +730,6 @@ onMounted(cargarDatos)
             <v-icon start>mdi-content-save</v-icon>
             {{ editando ? 'Actualizar' : 'Guardar' }}
           </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Dialog Gestionar Inscripciones -->
-    <v-dialog v-model="dialogInscripciones" max-width="500px">
-      <v-card class="rounded-lg">
-        <v-card-title class="bg-success text-white">
-          <v-icon start>mdi-account-plus</v-icon>
-          Gestionar Inscripciones
-        </v-card-title>
-
-        <v-card-text class="pa-6 text-center">
-          <div class="mb-4">
-            <h3>{{ grupoSeleccionado?.nombre_grupo }}</h3>
-            <p class="text-medium-emphasis">{{ grupoSeleccionado?.programa_nombre }}</p>
-          </div>
-
-          <v-btn
-            color="primary"
-            variant="elevated"
-            size="large"
-            class="mb-2"
-            block
-            @click="router.push(`/inscripciones?programa=${grupoSeleccionado?.id_aca_programa_aprobado}`)"
-          >
-            <v-icon start>mdi-account-plus</v-icon>
-            Inscribir Estudiantes
-          </v-btn>
-
-          <v-btn
-            color="info"
-            variant="elevated"
-            size="large"
-            block
-            @click="router.push(`/matriculas?grupo=${grupoSeleccionado?.id_ins_grupo}`)"
-          >
-            <v-icon start>mdi-card-account-details</v-icon>
-            Gestionar Matrículas
-          </v-btn>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn variant="text" @click="dialogInscripciones = false">Cerrar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

@@ -145,7 +145,7 @@ onMounted(() => {
 
         <template #item.acciones="{ item }">
           <div class="d-flex ga-2">
-            <v-btn
+<!--            <v-btn
               icon="mdi-eye"
               size="small"
               color="info"
@@ -154,7 +154,7 @@ onMounted(() => {
             >
               <v-icon>mdi-eye</v-icon>
               <v-tooltip activator="parent" location="top">Ver detalle</v-tooltip>
-            </v-btn>
+            </v-btn>-->
 
             <v-btn
               icon="mdi-pencil"

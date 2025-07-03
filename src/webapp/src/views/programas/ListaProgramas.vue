@@ -502,7 +502,7 @@ onMounted(() => {
 
         <template #item.acciones="{ item }">
           <div class="d-flex ga-1">
-            <v-btn
+<!--            <v-btn
               icon="mdi-eye"
               size="small"
               color="info"
@@ -511,7 +511,7 @@ onMounted(() => {
             >
               <v-icon>mdi-eye</v-icon>
               <v-tooltip activator="parent" location="top">Ver detalle</v-tooltip>
-            </v-btn>
+            </v-btn>-->
 
             <v-btn
               icon="mdi-pencil"
@@ -559,12 +559,12 @@ onMounted(() => {
                   <v-list-item-title>Configurar Descuentos</v-list-item-title>
                 </v-list-item>
 
-                <v-list-item @click="duplicarPrograma(item)">
+<!--                <v-list-item @click="duplicarPrograma(item)">
                   <template #prepend>
                     <v-icon>mdi-content-copy</v-icon>
                   </template>
                   <v-list-item-title>Duplicar Programa</v-list-item-title>
-                </v-list-item>
+                </v-list-item>-->
               </v-list>
             </v-menu>
           </div>

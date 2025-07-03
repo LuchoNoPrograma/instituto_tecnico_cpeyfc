@@ -173,10 +173,6 @@ const obtenerColorEstado = (estado) => {
   return colores[estado] || 'info'
 }
 
-const irInscripcion = () => {
-  router.push('/inscripciones')
-}
-
 const verPrograma = (programa) => {
   router.push(`/inscripciones?programa=${programa.id}`)
 }
@@ -283,10 +279,10 @@ const animarContadores = () => {
                       size="x-large"
                       variant="flat"
                       prepend-icon="mdi-school"
-                      @click="irInscripcion"
+                      @click="scrollToProgramas"
                       class="me-4 mb-4 action-btn"
                     >
-                      Inscríbete Ahora
+                      Ver Programas
                     </v-btn>
 
                     <v-btn
@@ -646,7 +642,7 @@ const animarContadores = () => {
                 size="large"
                 variant="flat"
                 prepend-icon="mdi-account-plus"
-                @click="irInscripcion"
+                @click="scrollToProgramas"
                 class="me-4 cta-btn"
               >
                 Inscríbete Ahora

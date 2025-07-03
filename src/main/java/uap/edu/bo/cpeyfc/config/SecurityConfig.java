@@ -96,25 +96,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Permitir el origen del frontend Vue
-        configuration.setAllowedOrigins(Arrays.asList(
-          "http://localhost:5173",  // Vite dev server
-          "http://localhost:3000",  // Si usas otro puerto
-          "http://127.0.0.1:5173"   // Alternativa localhost
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "http://127.0.0.1:5173",
+                "https://*.trycloudflare.com"
         ));
 
-        // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList(
-          "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+                "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
 
-        // Headers permitidos
         configuration.setAllowedHeaders(Arrays.asList("*"));
-
-        // Permitir credenciales (importante para JWT)
         configuration.setAllowCredentials(true);
-
-        // Tiempo de cache para preflight requests
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

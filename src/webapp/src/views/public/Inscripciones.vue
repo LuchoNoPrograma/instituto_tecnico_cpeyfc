@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
@@ -28,6 +28,8 @@ const cargandoPlan = ref(false)
 const cargando = ref(false)
 const mostrarFormulario = ref(false)
 const pasoFormulario = ref(1)
+const groupHeaders = ref({})
+
 const formularioInscripcion = ref({
   ci: '',
   nombre: '',
@@ -117,8 +119,24 @@ const headersModulos = [
   { title: 'Competencia', key: 'competencia', sortable: false }
 ]
 
+// Función para autoexpandir grupos
+const autoExpandirGrupos = () => {
+  setTimeout(() => {
+    Object.values(groupHeaders.value).forEach(groupData => {
+      if (groupData?.toggleGroup && groupData?.isGroupOpen && groupData?.item) {
+        if (!groupData.isGroupOpen(groupData.item)) {
+          groupData.toggleGroup(groupData.item)
+        }
+      }
+    })
+  }, 100)
+}
+
 const obtenerDetallePrograma = async () => {
-  if (!programaId.value) return
+  if (!programaId.value) {
+    router.push('/')
+    return
+  }
 
   cargando.value = true
   try {
@@ -126,14 +144,12 @@ const obtenerDetallePrograma = async () => {
     const programas = response.data
     programa.value = programas.find(p => p.id_aca_programa_aprobado == programaId.value)
 
-    if (!programa.value) {
-      router.push('/')
-    } else {
+    if (programa.value) {
       await obtenerPlanEstudios()
     }
   } catch (error) {
     console.error('Error al obtener programa:', error)
-    router.push('/')
+    programa.value = null
   } finally {
     cargando.value = false
   }
@@ -146,23 +162,16 @@ const obtenerPlanEstudios = async () => {
   try {
     const response = await api.get(`/api/programa-aprobado/plan-estudio/${programaId.value}`)
     planEstudios.value = response.data
+
+    nextTick(() => {
+      autoExpandirGrupos()
+    })
   } catch (error) {
     console.error('Error al obtener plan de estudios:', error)
     planEstudios.value = []
   } finally {
     cargandoPlan.value = false
   }
-}
-
-const agruparPorNivel = (modulos) => {
-  return modulos.reduce((grupos, modulo) => {
-    const nivel = modulo.nivel
-    if (!grupos[nivel]) {
-      grupos[nivel] = []
-    }
-    grupos[nivel].push(modulo)
-    return grupos
-  }, {})
 }
 
 const abrirFormulario = () => {
@@ -184,7 +193,6 @@ const continuarConDatos = async () => {
     const response = await api.get(`/api/publico/persona/ci?ci=${formularioInscripcion.value.ci}`)
 
     if (response.data && Object.keys(response.data).length > 0) {
-      // Poblar formulario...
       formularioInscripcion.value.nombre = response.data.nombre || ''
       formularioInscripcion.value.ap_paterno = response.data.ap_paterno || ''
       formularioInscripcion.value.ap_materno = response.data.ap_materno || ''
@@ -205,7 +213,6 @@ const continuarConDatos = async () => {
 }
 
 const enviarInscripcion = async () => {
-  // Validar todo el formulario con Vuelidate
   const esValido = await validarFormularioHelper($v.value)
   if (!esValido) return
 
@@ -223,7 +230,6 @@ const enviarInscripcion = async () => {
 
   } catch (error) {
     console.error('Error en inscripción:', error)
-    alert('Error en la inscripción. Por favor intenta nuevamente.')
   } finally {
     enviandoFormulario.value = false
   }
@@ -265,18 +271,22 @@ onMounted(() => {
 
 <template>
   <div class="detalle-programa">
-    <!-- Loading State -->
-    <div v-if="cargando" class="loading-container">
-      <v-container>
-        <div class="text-center py-16">
-          <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-          <p class="mt-4 text-h6">Cargando información del programa...</p>
-        </div>
-      </v-container>
-    </div>
+    <!-- Overlay de carga -->
+    <v-overlay
+      :model-value="cargando"
+      class="align-center justify-center"
+      persistent
+      z-index="2000"
+    >
+      <v-progress-circular
+        color="primary"
+        size="64"
+        indeterminate
+      ></v-progress-circular>
+    </v-overlay>
 
     <!-- Programa No Encontrado -->
-    <div v-else-if="!programa" class="no-programa">
+    <div v-if="!cargando && !programa" class="no-programa">
       <v-container>
         <div class="text-center py-16">
           <v-icon size="64" color="grey">mdi-school-outline</v-icon>
@@ -289,7 +299,7 @@ onMounted(() => {
     </div>
 
     <!-- Contenido Principal -->
-    <div v-else class="programa-content">
+    <div v-if="!cargando && programa" class="programa-content">
       <!-- Header del Programa -->
       <section class="programa-header">
         <v-container fluid class="pa-0">
@@ -340,7 +350,7 @@ onMounted(() => {
                 </div>
 
                 <!-- Botones de Acción -->
-                <div class="d-flex gap-4">
+                <div class="d-flex gap-4 mt-6">
                   <v-btn
                     v-if="programa.estado_inscripcion === 'INSCRIPCIONES ABIERTAS'"
                     color="white"
@@ -499,8 +509,10 @@ onMounted(() => {
                           </v-col>
                         </v-row>
                       </template>
+
                       <!-- Header de grupo -->
                       <template v-slot:group-header="{ item, columns, toggleGroup, isGroupOpen }">
+                        <template :ref="(el) => { groupHeaders[item.value] = { item, toggleGroup, isGroupOpen } }" />
                         <tr class="grupo-nivel">
                           <td :colspan="columns.length" class="pa-3 bg-orange-lighten-5">
                             <v-btn
@@ -728,7 +740,6 @@ onMounted(() => {
 
               <!-- Nombres y apellidos -->
               <v-row>
-
                 <v-col cols="12" md="4">
                   <v-text-field
                     v-model="formularioInscripcion.nombre"
