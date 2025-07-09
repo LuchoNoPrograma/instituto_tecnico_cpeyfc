@@ -1,0 +1,185 @@
+/* assets/styles/sweetalert.css */
+
+/* Configuración general del popup */
+.cpeyfc-swal-popup {
+    border-radius: 12px !important;
+    padding: 1.5rem !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+    font-family: 'Roboto', sans-serif !important;
+}
+
+/* Título personalizado */
+.cpeyfc-swal-title {
+    color: #1976D2 !important;
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Contenido del texto */
+.cpeyfc-swal-content {
+    color: #424242 !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+}
+
+/* Botones base */
+.cpeyfc-swal-confirm,
+.cpeyfc-swal-cancel {
+    border-radius: 8px !important;
+    padding: 12px 24px !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    margin: 0 4px !important;
+}
+
+/* Botón confirmar - Success */
+.cpeyfc-swal-confirm.success {
+    background-color: #4CAF50 !important;
+    color: white !important;
+}
+
+.cpeyfc-swal-confirm.success:hover {
+    background-color: #45a049 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;
+}
+
+/* Botón confirmar - Info */
+.cpeyfc-swal-confirm.info {
+    background-color: #2196F3 !important;
+    color: white !important;
+}
+
+.cpeyfc-swal-confirm.info:hover {
+    background-color: #1976D2 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
+}
+
+/* Botón confirmar - Warning */
+.cpeyfc-swal-confirm.warning {
+    background-color: #FF9800 !important;
+    color: white !important;
+}
+
+.cpeyfc-swal-confirm.warning:hover {
+    background-color: #F57C00 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3) !important;
+}
+
+/* Botón confirmar - Error */
+.cpeyfc-swal-confirm.error {
+    background-color: #FF5252 !important;
+    color: white !important;
+}
+
+.cpeyfc-swal-confirm.error:hover {
+    background-color: #F44336 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3) !important;
+}
+
+/* Botón cancelar */
+.cpeyfc-swal-cancel {
+    background-color: transparent !important;
+    color: #757575 !important;
+    border: 2px solid #E0E0E0 !important;
+}
+
+.cpeyfc-swal-cancel:hover {
+    background-color: #F5F5F5 !important;
+    border-color: #BDBDBD !important;
+    color: #424242 !important;
+    transform: translateY(-1px) !important;
+}
+
+
+/* Progress bar personalizada */
+.swal2-timer-progress-bar {
+    background: linear-gradient(90deg, #1976D2, #2196F3) !important;
+}
+
+/* Toast personalizado */
+.swal2-toast {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+}
+
+.swal2-toast .swal2-title {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: #424242 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cpeyfc-swal-popup {
+        padding: 1rem !important;
+        margin: 1rem !important;
+    }
+
+    .cpeyfc-swal-title {
+        font-size: 1.25rem !important;
+    }
+
+    .cpeyfc-swal-confirm,
+    .cpeyfc-swal-cancel {
+        padding: 10px 20px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Animaciones adicionales */
+.swal2-show {
+    animation: swal2-show 0.3s ease-out !important;
+}
+
+.swal2-hide {
+    animation: swal2-hide 0.15s ease-in forwards !important;
+}
+
+@keyframes swal2-show {
+    0% {
+        transform: scale(0.7) translateY(-20px);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes swal2-hide {
+    0% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.9) translateY(-10px);
+        opacity: 0;
+    }
+}
+
+.swal2-container {
+    z-index: 999999 !important;
+}
+
+.swal2-backdrop-show {
+    z-index: 999998 !important;
+}
+
+.swal2-popup {
+    z-index: 1000000 !important;
+}
+
+/* Para toast también */
+.swal2-toast-shown {
+    z-index: 1000001 !important;
+}

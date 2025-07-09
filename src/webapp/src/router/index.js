@@ -6,7 +6,9 @@ import rutasAdmin from './rutasAutenticacion.js'
 import rutasPersonas from '@/views/personas/rutasPersonas.js'
 import rutasProgramas from '@/views/programas/rutasProgramas.js';
 import rutasGrupos from '@/views/grupos/rutasGrupos.js';
+import rutasMatriculas from '@/views/matriculas/rutasMatriculas.js';
 import rutasPlanEstudio from '@/views/plan-estudio/rutasPlanEstudio.js';
+import rutasDocente from '@/views/docente/rutasDocente.js';
 
 const routes = [
   ...rutasPublicas,
@@ -15,7 +17,9 @@ const routes = [
   ...rutasPersonas,
   ...rutasProgramas,
   ...rutasGrupos,
+  ...rutasMatriculas,
   ...rutasPlanEstudio,
+  ...rutasDocente,
 
   // Dashboard principal
   {

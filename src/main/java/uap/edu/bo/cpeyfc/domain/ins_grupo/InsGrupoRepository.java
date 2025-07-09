@@ -12,14 +12,20 @@ public interface InsGrupoRepository extends JpaRepository<InsGrupo, Integer> {
   @Query(value = "SELECT * FROM vista_grupos_completos ORDER BY gestion_inicio DESC, nombre_grupo", nativeQuery = true)
   List<Map<String, Object>> vistaGruposCompletos();
 
-  @Query(value = "SELECT * FROM vista_grupos_completos WHERE id_aca_programa_aprobado = :id_programa ORDER BY gestion_inicio DESC, nombre_grupo", nativeQuery = true)
-  List<Map<String, Object>> vistaGruposCompletosPorIdPrograma(Integer id_programa);
+  @Query(value = "SELECT * FROM vista_grupos_completos WHERE id_aca_programa_aprobado = :id_programa_aprobado ORDER BY gestion_inicio DESC, nombre_grupo", nativeQuery = true)
+  List<Map<String, Object>> vistaGruposCompletosPorIdProgramaAprobado(Integer id_programa_aprobado);
+
+  @Query(value = "SELECT * FROM vista_grupos_completos WHERE id_ins_grupo = :id_grupo", nativeQuery = true)
+  List<Map<String, Object>> vistaGruposCompletosPorIdGrupo(Integer id_grupo);
 
   @Query(value = "SELECT * FROM vista_grupos_con_cronogramas", nativeQuery = true)
   List<Map<String, Object>> vistaGruposConCronogramas();
 
   @Query(value = "SELECT * FROM vista_grupos_con_cronogramas where id_aca_programa_aprobado = :id_programa", nativeQuery = true)
   List<Map<String, Object>> vistaGruposConCronogramasPorIdPrograma(Integer id_programa);
+
+  @Query(value = "SELECT * FROM vista_grupos_matriculacion where id_aca_programa_aprobado = ?1", nativeQuery = true)
+  List<Map<String, Object>> vistaGruposActivosPorProgramaAprobado(Long idProgramaAprobado);
 
   @Query(value = """
         SELECT 
@@ -35,17 +41,8 @@ public interface InsGrupoRepository extends JpaRepository<InsGrupo, Integer> {
   @Query(value = "SELECT * FROM vista_estudiantes_por_grupo WHERE id_ins_grupo = :id_grupo ORDER BY ap_paterno, ap_materno, nombre", nativeQuery = true)
   List<Map<String, Object>> obtenerEstudiantesPorGrupo(Integer id_grupo);
 
-  @Query(value = """
-        SELECT 
-            pa.id_aca_programa_aprobado,
-            CONCAT(p.nombre_programa, ' - ', m.nombre_modalidad, ' (', pa.gestion, ')') as nombre_programa_completo
-        FROM aca_programa_aprobado pa
-        JOIN aca_programa p ON pa.id_aca_programa = p.id_aca_programa  
-        JOIN aca_modalidad m ON pa.id_aca_modalidad = m.id_aca_modalidad
-        WHERE pa.estado_programa_aprobado = 'ACTIVO'
-        ORDER BY p.nombre_programa, m.nombre_modalidad
-        """, nativeQuery = true)
-  List<Map<String, Object>> obtenerProgramasActivos();
+  @Query(value = "SELECT * FROM vista_programas_publicos", nativeQuery = true)
+  List<Map<String, Object>> vistaProgramasOfertadosAPublico();
 
   @Query(value = """
         SELECT fn_registrar_grupo(

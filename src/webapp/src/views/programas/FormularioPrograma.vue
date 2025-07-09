@@ -41,10 +41,10 @@ const formularioPrograma = reactive({
   estado_programa_aprobado: 'SIN INICIAR',
   cod_certificado_ceub: '',
 
-  // Paso 3: Precios y vigencia
+  // Paso 3: Costos del programa
   precio_matricula: 0,
   precio_colegiatura: 0,
-  precio_titulacion: 0, // Cambiado de null a 0
+  precio_titulacion: 0,
   fecha_inicio_vigencia: null,
   fecha_fin_vigencia: null,
 
@@ -187,8 +187,8 @@ const datosConfirmacion = computed(() => {
     precioMatricula: new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(formularioPrograma.precio_matricula),
     precioColegiatura: new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(formularioPrograma.precio_colegiatura),
     precioTitulacion: new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(formularioPrograma.precio_titulacion),
-    fechaInicioVigencia: formularioPrograma.fecha_inicio_vigencia || 'No definida',
-    fechaFinVigencia: formularioPrograma.fecha_fin_vigencia || 'No definida'
+    fechaInicioVigencia: formularioPrograma.fecha_inicio_vigencia,
+    fechaFinVigencia: formularioPrograma.fecha_fin_vigencia
   }
 })
 
@@ -302,7 +302,7 @@ const crearNuevoPlan = async () => {
     await cargarPlanesEstudio()
     mostrarFormularioNuevoPlan.value = false
 
-    // Auto-seleccionar el plan recién creado
+    // Autoseleccionar el plan recién creado
     const nuevoPlan = planesEstudio.value.find(p => p.anho === formularioPrograma.planNuevo.anho)
     if (nuevoPlan) {
       formularioPrograma.id_aca_plan_estudio = nuevoPlan.id_aca_plan_estudio
@@ -320,7 +320,7 @@ const cancelarNuevoPlan = () => {
   })
 }
 
-// Guardar
+// Preparar datos para envío
 const guardar = async () => {
   cargandoFormulario.value = true
 
@@ -349,7 +349,7 @@ const limpiarFormulario = () => {
     cod_certificado_ceub: '',
     precio_matricula: 0,
     precio_colegiatura: 0,
-    precio_titulacion: 0, // Cambiado de null a 0
+    precio_titulacion: 0,
     fecha_inicio_vigencia: null,
     fecha_fin_vigencia: null,
     programaNuevo: {
@@ -372,8 +372,22 @@ const cancelar = () => {
   emit('cancelar')
 }
 
+// Cargar datos al editar
+const cargarDatosPrograma = (programa) => {
+  if (!programa) return
+
+  Object.assign(formularioPrograma, programa)
+  busquedaPrograma.value = programa.programa_nombre || ''
+}
+
 // Watchers
 watch(() => formularioPrograma.id_aca_programa, cargarPlanesEstudio)
+
+watch(() => props.programa, (programa) => {
+  if (programa && props.esEdicion) {
+    cargarDatosPrograma(programa)
+  }
+}, { immediate: true })
 
 // Actualizar código certificado cuando cambie la gestión
 watch(() => formularioPrograma.gestion, (newGestion) => {
@@ -415,8 +429,8 @@ onMounted(() => {
           <v-stepper-item
             :complete="pasoActual > 3"
             :value="3"
-            title="Precios"
-            subtitle="Costos y vigencia"
+            title="Costos"
+            subtitle="Precios del programa"
           ></v-stepper-item>
 
           <v-divider></v-divider>
@@ -539,6 +553,44 @@ onMounted(() => {
               prepend-inner-icon="mdi-book-outline"
               :disabled="cargandoFormulario"
             >
+              <template #item="{ props, item }">
+                <v-list-item v-bind="props">
+                  <template #title>
+                    <div class="d-flex align-center">
+                      <span class="font-weight-bold">Plan {{ item.raw.anho }}</span>
+                      <v-chip
+                        v-if="item.raw.vigente"
+                        color="success"
+                        size="small"
+                        class="ml-2"
+                      >
+                        Vigente
+                      </v-chip>
+                      <v-chip
+                        v-else
+                        color="warning"
+                        variant="outlined"
+                        size="x-small"
+                        class="ml-2"
+                      >
+                        Sin vigencia
+                      </v-chip>
+                    </div>
+                  </template>
+                  <template #subtitle>
+                    <div class="text-caption mt-1">
+                      {{ item.raw.descripcion_plan.includes('Sin programas asignados')
+                      ? 'Sin programas asignados'
+                      : item.raw.descripcion_plan.split(' - Usado por: ')[1] }}
+                    </div>
+                  </template>
+                </v-list-item>
+              </template>
+
+              <template #selection="{ item }">
+                <span>Plan {{ item.raw.anho }}{{ item.raw.vigente ? ' (Vigente)' : '' }}</span>
+              </template>
+
               <template #append-item>
                 <v-divider></v-divider>
                 <v-list-item @click="abrirFormularioNuevoPlan">
@@ -554,12 +606,13 @@ onMounted(() => {
           <v-col cols="12" md="6">
             <v-select
               v-model="formularioPrograma.estado_programa_aprobado"
+              :disabled="cargandoFormulario"
               :items="['SIN INICIAR', 'EN EJECUCION', 'FINALIZADO']"
               :error-messages="obtenerErroresCampo($vPaso2.estado_programa_aprobado)"
               label="Estado del Programa *"
-              variant="outlined"
               prepend-inner-icon="mdi-flag"
-              :disabled="cargandoFormulario"
+              readonly
+              variant="outlined"
             ></v-select>
           </v-col>
 
@@ -570,7 +623,7 @@ onMounted(() => {
               variant="outlined"
               prepend-inner-icon="mdi-certificate"
               placeholder="123/2024"
-              hint="Formato: número/año"
+              hint="Ejemplo: 3/2025"
               persistent-hint
               :disabled="cargandoFormulario"
             ></v-text-field>
@@ -609,9 +662,9 @@ onMounted(() => {
         </v-row>
       </div>
 
-      <!-- Paso 3: Precios -->
+      <!-- Paso 3: Costos del Programa -->
       <div v-if="pasoActual === 3">
-        <h3 class="text-h6 mb-4">Precios</h3>
+        <h3 class="text-h6 mb-4">Costos del Programa</h3>
 
         <v-row>
           <v-col cols="12" md="4">
@@ -625,6 +678,8 @@ onMounted(() => {
               min="0"
               step="0.01"
               :disabled="cargandoFormulario"
+              hint="Costo por matrícula del programa"
+              persistent-hint
             ></v-text-field>
           </v-col>
 
@@ -639,20 +694,46 @@ onMounted(() => {
               min="0"
               step="0.01"
               :disabled="cargandoFormulario"
+              hint="Costo total del programa completo"
+              persistent-hint
             ></v-text-field>
           </v-col>
 
           <v-col cols="12" md="4">
             <v-text-field
               v-model.number="formularioPrograma.precio_titulacion"
-              label="Precio Titulación *"
+              label="Precio Titulación"
               variant="outlined"
               prepend-inner-icon="mdi-currency-usd"
               type="number"
               min="0"
               step="0.01"
               :disabled="cargandoFormulario"
+              hint="Costo adicional por obtener el título"
+              persistent-hint
             ></v-text-field>
+          </v-col>
+
+          <v-col cols="12">
+            <v-alert
+              color="info"
+              variant="tonal"
+              class="mt-2"
+            >
+              <template #prepend>
+                <v-icon>mdi-information</v-icon>
+              </template>
+
+              <div class="text-subtitle-2 font-weight-bold mb-2">
+                Configuración de Costos:
+              </div>
+
+              <div class="text-body-2">
+                • <strong>Matrícula:</strong> Para programas con pago por concepto de matricula semestral o matricula única<br>
+                • <strong>Colegiatura:</strong> Para programas con pago completo al contado o parcelado<br>
+                • <strong>Titulación:</strong> Costo adicional para obtener el título/impresion de certificados (opcional)
+              </div>
+            </v-alert>
           </v-col>
         </v-row>
       </div>
@@ -762,12 +843,12 @@ onMounted(() => {
             </v-card>
           </v-col>
 
-          <!-- Información Financiera -->
+          <!-- Plan de Pago -->
           <v-col cols="12">
             <v-card variant="outlined">
               <v-card-title class="bg-warning text-white">
-                <v-icon start>mdi-currency-usd</v-icon>
-                Información Financiera
+                <v-icon start>mdi-cash-multiple</v-icon>
+                Plan de Pago
               </v-card-title>
               <v-card-text class="pa-4">
                 <v-row>

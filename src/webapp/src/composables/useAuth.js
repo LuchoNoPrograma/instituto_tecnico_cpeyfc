@@ -8,7 +8,7 @@ export function useAuth() {
   // --- Login con tu endpoint /authenticate ---
   const login = async ({ nombreUsuario, password }) => {
     try {
-      const response = await api.post('/authenticate', {
+      const response = await api.post('/api/authenticate', {
         nombreUsuario,
         password
       })

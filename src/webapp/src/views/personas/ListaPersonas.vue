@@ -108,8 +108,7 @@ onMounted(() => {
         <template #top>
           <v-toolbar flat class="rounded-t-lg">
             <v-toolbar-title class="text-h6 font-weight-bold d-flex align-center">
-              <v-icon class="mr-2" color="primary">mdi-account-group</v-icon>
-              Gestión de Personas
+              Adm. Personas
             </v-toolbar-title>
 
             <v-spacer></v-spacer>
@@ -145,7 +144,7 @@ onMounted(() => {
 
         <template #item.acciones="{ item }">
           <div class="d-flex ga-2">
-            <v-btn
+<!--            <v-btn
               icon="mdi-eye"
               size="small"
               color="info"
@@ -154,7 +153,7 @@ onMounted(() => {
             >
               <v-icon>mdi-eye</v-icon>
               <v-tooltip activator="parent" location="top">Ver detalle</v-tooltip>
-            </v-btn>
+            </v-btn>-->
 
             <v-btn
               icon="mdi-pencil"

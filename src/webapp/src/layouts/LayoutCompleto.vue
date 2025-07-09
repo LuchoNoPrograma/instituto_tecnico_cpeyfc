@@ -23,36 +23,42 @@ const menuItems = computed(() => [
     mostrar: hasPermission('VER_PERSONAS')
   },
   {
-    titulo: 'Programas',
+    titulo: 'Programas aprobados',
     icono: 'mdi-school',
     ruta: '/programas',
     mostrar: hasPermission('VER_PROGRAMAS')
   },
   {
-    titulo: 'Grupos',
+    titulo: 'Grupos con módulos',
     icono: 'mdi-account-group',
     ruta: '/grupos',
     mostrar: hasPermission('VER_PROGRAMAS')
   },
-  {
+  /*{
     titulo: 'Matrículas',
     icono: 'mdi-account-school',
     ruta: '/matriculas',
     mostrar: hasPermission('VER_MATRICULAS')
-  },
+  },*/
   {
+    titulo: 'Ver perfil',
+    icono: 'mdi-account-school',
+    ruta: '/perfil-estudiante',
+    mostrar: hasPermission('VER_MATRICULAS')
+  },
+  /*{
     titulo: 'Ejecución Académica',
     icono: 'mdi-clipboard-play',
     ruta: '/ejecucion',
     mostrar: hasPermission('VER_EJECUCION')
-  },
+  },*/
   {
     titulo: 'Finanzas',
     icono: 'mdi-currency-usd',
     ruta: '/finanzas',
     mostrar: hasPermission('VER_FINANZAS')
   },
-  {
+  /*{
     titulo: 'Certificación',
     icono: 'mdi-certificate',
     ruta: '/certificados',
@@ -69,7 +75,7 @@ const menuItems = computed(() => [
     icono: 'mdi-cog',
     ruta: '/admin',
     mostrar: hasPermission('ADMIN')
-  }
+  }*/
 ]/*.filter(item => item.mostrar)*/)
 
 const cerrarSesion = async () => {
@@ -97,19 +103,15 @@ const verProgramasEjecucion = () => {
     >
       <!-- Header del menú -->
       <v-list-item class="pa-4">
-        <v-list-item-avatar>
-          <v-avatar color="white" size="40">
-            <v-icon color="primary">mdi-school</v-icon>
-          </v-avatar>
-        </v-list-item-avatar>
-        <v-list-item-content>
-          <v-list-item-title class="text-h6 font-weight-bold text-white">
-            CPEYFC
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-caption text-white" style="opacity: 0.8;">
-            {{ usuario?.username || 'Usuario' }}
-          </v-list-item-subtitle>
-        </v-list-item-content>
+        <v-avatar color="white" size="40">
+          <v-icon color="primary">mdi-school</v-icon>
+        </v-avatar>
+        <v-list-item-title class="text-h6 font-weight-bold text-white">
+          CPEYFC
+        </v-list-item-title>
+        <v-list-item-subtitle class="text-caption text-white" style="opacity: 0.8;">
+          {{ usuario?.username || 'Usuario' }}
+        </v-list-item-subtitle>
       </v-list-item>
 
       <v-divider color="white" style="opacity: 0.3;"></v-divider>
@@ -131,13 +133,6 @@ const verProgramasEjecucion = () => {
       <template #append>
         <v-divider color="white" style="opacity: 0.3;"></v-divider>
         <v-list density="compact">
-          <v-list-item
-            prepend-icon="mdi-help-circle"
-            title="Centro de Ayuda"
-            class="menu-item"
-            color="white"
-            @click="$router.push('/ayuda')"
-          ></v-list-item>
           <v-list-item
             prepend-icon="mdi-book-open"
             title="Documentación"
@@ -204,14 +199,12 @@ const verProgramasEjecucion = () => {
 
         <v-list min-width="200">
           <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title class="font-weight-bold">
-                {{ usuario?.username || 'Usuario' }}
-              </v-list-item-title>
-              <v-list-item-subtitle>
-                {{ usuario?.roles?.join(', ') || 'Sin roles' }}
-              </v-list-item-subtitle>
-            </v-list-item-content>
+            <v-list-item-title class="font-weight-bold">
+              {{ usuario?.username || 'Usuario' }}
+            </v-list-item-title>
+            <v-list-item-subtitle>
+              {{ usuario?.roles?.join(', ') || 'Sin roles' }}
+            </v-list-item-subtitle>
           </v-list-item>
 
           <v-divider></v-divider>

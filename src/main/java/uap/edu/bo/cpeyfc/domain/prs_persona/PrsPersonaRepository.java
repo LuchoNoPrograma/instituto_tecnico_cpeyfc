@@ -39,4 +39,7 @@ public interface PrsPersonaRepository extends JpaRepository<PrsPersona, Integer>
                           String correo,
                           LocalDate fecha_nacimiento,
                           Integer user_mod);
+
+  @Query(value = "SELECT * FROM fn_buscar_persona_por_ci(:ci)", nativeQuery = true)
+  Map<String, Object> buscarPersonaPorCi(String ci);
 }
