@@ -51,14 +51,14 @@ const menuItems = computed(() => [
     icono: 'mdi-clipboard-play',
     ruta: '/ejecucion',
     mostrar: hasPermission('VER_EJECUCION')
-  },
+  },*/
   {
     titulo: 'Finanzas',
     icono: 'mdi-currency-usd',
     ruta: '/finanzas',
     mostrar: hasPermission('VER_FINANZAS')
   },
-  {
+  /*{
     titulo: 'Certificación',
     icono: 'mdi-certificate',
     ruta: '/certificados',

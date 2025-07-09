@@ -22,4 +22,7 @@
 
     @Query(value = "SELECT * FROM vista_estudiantes_grupo", nativeQuery = true)
     List<Map<String, Object>> vistaEstudiantesGrupo();
+
+    @Query(value = "SELECT * FROM vista_obligaciones_pago_programa", nativeQuery = true)
+    List<Map<String, Object>> vistaObligacionesPago();
   }

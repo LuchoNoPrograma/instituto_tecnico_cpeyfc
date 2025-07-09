@@ -25,4 +25,12 @@ export default [
       requiresAuth: true,
     }
   },
+  {
+    path: '/finanzas',
+    name: 'Finanzas',
+    component: () => import('@/views/matriculas/Finanzas.vue'),
+    meta: {
+      requiresAuth: true,
+    }
+  },
 ]

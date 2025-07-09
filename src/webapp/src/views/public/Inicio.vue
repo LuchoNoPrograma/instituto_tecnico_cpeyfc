@@ -14,10 +14,10 @@ const abrirWhatsAppPrograma = (programa) => {
 }
 
 const estadisticas = ref({
-  estudiantes: 1250,
-  programas: 15,
-  docentes: 85,
-  egresados: 2340
+  estudiantes: 6,
+  programas: 2,
+  docentes: 4,
+  egresados: 1
 })
 
 const carruselSlides = ref([

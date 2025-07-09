@@ -37,4 +37,9 @@ public class InsMatriculaApi {
       return ResponseEntity.ok(insMatriculaRepository.vistaEstudiantesGrupo());
     }
   }
+
+  @GetMapping("/api/matricula/vista/obligaciones-pago")
+  public ResponseEntity<?> vistaObligacionesPago(){
+    return ResponseEntity.ok(insMatriculaRepository.vistaObligacionesPago());
+  }
 }
