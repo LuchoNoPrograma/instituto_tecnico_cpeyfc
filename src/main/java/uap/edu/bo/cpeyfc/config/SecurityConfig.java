@@ -63,7 +63,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityConfigFilterChain(final HttpSecurity http,
                                                          final UnauthorizedEntryPoint unauthorizedEntryPoint,
-                                                         final JwtRequestFilter jwtRequestFilter) throws Exception {
+                                                         final JwtRequestFilter jwtRequestFilter,
+                                                         final HttpLoggingFilter httpLoggingFilter
+                                                         ) throws Exception {
 
         log.info("Configurando SecurityFilterChain con autorización basada en roles y tareas de BD");
 
@@ -88,6 +90,7 @@ public class SecurityConfig {
           )
           .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
           .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedEntryPoint))
+          .addFilterBefore(httpLoggingFilter, UsernamePasswordAuthenticationFilter.class)
           .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
           .build();
     }
