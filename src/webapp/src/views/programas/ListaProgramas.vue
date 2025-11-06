@@ -347,7 +347,12 @@ const guardarPrograma = async (datos) => {
   try {
     cargando.value = true
     datos.cod_certificado_ceub = datos.cod_certificado_ceub ? datos.cod_certificado_ceub : null
-    const response = await api.post('/api/programa-aprobado', datos)
+    let response;
+    if(esEdicion.value) {
+      response = await api.put('/api/programa-aprobado/'+datos.id_aca_programa_aprobado, datos)
+    }else{
+      response = await api.post('/api/programa-aprobado', datos)
+    }
     await obtenerProgramas()
     cerrarDialog()
     console.log('Programa guardado exitosamente:', response.data)

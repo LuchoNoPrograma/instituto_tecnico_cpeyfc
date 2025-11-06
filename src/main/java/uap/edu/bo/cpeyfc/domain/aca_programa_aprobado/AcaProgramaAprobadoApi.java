@@ -66,8 +66,8 @@ public class AcaProgramaAprobadoApi {
       new BigDecimal(datos.get("precio_matricula").toString()),
       new BigDecimal(datos.get("precio_colegiatura").toString()),
       datos.get("precio_titulacion") != null ? new BigDecimal(datos.get("precio_titulacion").toString()) : null,
-      datos.get("fecha_inicio_vigencia") != null ? LocalDate.parse((String) datos.get("fecha_inicio_vigencia")) : null,
-      datos.get("fecha_fin_vigencia") != null ? LocalDate.parse((String) datos.get("fecha_fin_vigencia")) : null,
+      FechaUtil.toLocalDate(datos.get("fecha_inicio_vigencia")),
+      FechaUtil.toLocalDate(datos.get("fecha_fin_vigencia")),
       (String) datos.get("cod_certificado_ceub"),
       (String) datos.get("cod_sigla_version"),
       userDetails.getIdSegUsuario()

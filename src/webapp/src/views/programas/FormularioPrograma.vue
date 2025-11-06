@@ -376,7 +376,20 @@ const cancelar = () => {
 const cargarDatosPrograma = (programa) => {
   if (!programa) return
 
-  Object.assign(formularioPrograma, programa)
+  formularioPrograma.id_aca_programa = programa.id_aca_programa
+  formularioPrograma.id_aca_modalidad = programa.id_aca_modalidad
+  formularioPrograma.gestion = programa.gestion
+  formularioPrograma.id_aca_plan_estudio = programa.id_aca_plan_estudio
+  formularioPrograma.id_aca_version = programa.id_aca_version
+  formularioPrograma.id_aca_programa_aprobado = programa.id_aca_programa_aprobado
+  formularioPrograma.estado_programa_aprobado = programa.estado_programa_aprobado
+  formularioPrograma.cod_certificado_ceub = programa.cod_certificado_ceub || ''
+  formularioPrograma.precio_matricula = programa.precio_matricula || 0
+  formularioPrograma.precio_colegiatura = programa.precio_colegiatura || 0
+  formularioPrograma.precio_titulacion = programa.precio_titulacion || 0
+  formularioPrograma.fecha_inicio_vigencia = programa.fecha_inicio_vigencia
+  formularioPrograma.fecha_fin_vigencia = programa.fecha_fin_vigencia
+
   busquedaPrograma.value = programa.programa_nombre || ''
 }
 
@@ -633,9 +646,11 @@ onMounted(() => {
             <v-select
               v-model="formularioPrograma.id_aca_version"
               :items="versiones"
+              clearable
               item-title="cod_version"
               item-value="id_aca_version"
               label="Versión"
+              persistent-clear
               variant="outlined"
               prepend-inner-icon="mdi-tag"
               :disabled="cargandoFormulario"
