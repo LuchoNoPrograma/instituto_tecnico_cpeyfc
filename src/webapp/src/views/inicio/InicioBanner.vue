@@ -18,7 +18,7 @@ const scrollHastaSobreNosotros = () => {
       <h1 class="inicio-banner__contenedor-texto mb-5 text-white" data-aos="fade-up" data-aos-duration="500">
         CENTRO DE PROYECTOS ESPECIALES Y FORMACIÓN PERMANENTE
       </h1>
-      <p class="mb-8 text-h3 font-weight-light text-white" data-aos="fade-up" data-aos-duration="800">
+      <p class="mb-2 text-h6 font-weight-medium text-white" data-aos="fade-up" data-aos-duration="800">
         Innovación para el desarrollo continuo.
       </p>
       <div>
@@ -27,7 +27,7 @@ const scrollHastaSobreNosotros = () => {
           color="white"
           icon
           size="x-large"
-          variant="text"
+          variant="tonal"
           @click="scrollHastaSobreNosotros()"
         >
           <v-icon icon="mdi-chevron-down"></v-icon>
@@ -52,9 +52,9 @@ const scrollHastaSobreNosotros = () => {
 }
 
 .inicio-banner__contenedor {
-  left: 50%;
+  left: 40%;
   text-align: center !important;
-  transform: translate(-50%, 50%);
+  transform: translate(-30%, 30%);
   position: absolute;
   z-index: 2;
   padding: 0 1rem;
@@ -82,7 +82,7 @@ const scrollHastaSobreNosotros = () => {
   }
 
   &-btn {
-    font-size: 2.25rem;
+    font-size: 2.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     animation: floatAnimation 2.25s ease infinite;
 

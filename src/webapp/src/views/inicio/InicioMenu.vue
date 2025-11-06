@@ -9,20 +9,20 @@ const drawer = ref(false);
 
 <template>
   <v-app-bar elevation="0" flat height="80" class="border-bottom position-fixed" color="primary" border="0">
+    <v-img :src="logo" max-height="50"></v-img>
     <v-container class="d-flex align-center fill-height">
-      <v-img :src="logo" max-height="50" max-width="180" contain class="mr-4"></v-img>
 
       <v-spacer></v-spacer>
 
       <div class="d-flex align-center ga-2">
         <template v-if="mdAndUp">
-          <v-btn class="btn-header" variant="text" size="large" to="/">Inicio</v-btn>
-          <v-btn class="btn-header" variant="text" size="large" to="/#noticias">Noticias</v-btn>
-          <v-btn class="btn-header" variant="text" size="large" to="/programa-especial-de-titulacion">
+          <v-btn class="btn-header" variant="text" to="/">Inicio</v-btn>
+          <v-btn class="btn-header" variant="text" to="/#noticias">Noticias</v-btn>
+          <v-btn class="btn-header" variant="text" to="/programa-especial-de-titulacion">
             Programa especial de titulación
           </v-btn>
-          <v-btn class="btn-header" variant="text" size="large" to="/escuela-tecnica">Escuela técnica</v-btn>
-          <v-btn class="btn-header" variant="text" size="large" to="/admision-y-permanencia-estudiantil">
+          <v-btn class="btn-header" variant="text" to="/escuela-tecnica">Escuela técnica</v-btn>
+          <v-btn class="btn-header" variant="text" to="/admision-y-permanencia-estudiantil">
             Admisión y permanencia estudiantil
           </v-btn>
         </template>
