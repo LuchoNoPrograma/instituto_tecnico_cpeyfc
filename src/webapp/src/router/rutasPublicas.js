@@ -2,7 +2,7 @@ export default [
   {
     path: '/',
     name: 'Home',
-    component: () => import('@/views/public/Inicio.vue')
+    component: () => import('@/views/inicio/Inicio.vue')
   },
   {
     path: '/about',
