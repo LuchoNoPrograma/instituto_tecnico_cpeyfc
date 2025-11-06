@@ -1,12 +1,19 @@
 package uap.edu.bo.cpeyfc.domain.ins_grupo;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
 import uap.edu.bo.cpeyfc.util.FechaUtil;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
@@ -95,5 +102,35 @@ public class InsGrupoApi {
   @GetMapping("/api/publico/programas-ofertados")
   public ResponseEntity<?> vistaProgramasPublicos(){
     return ResponseEntity.ok(insGrupoRepository.vistaProgramasOfertadosAPublico());
+  }
+
+  @GetMapping("/api/publico/programas/{nombreImagen}/imagen")
+  public ResponseEntity<byte[]> obtenerImagenPrograma(@PathVariable String nombreImagen) {
+    try {
+      // Buscar la imagen en el directorio de recursos
+      Resource resource = new ClassPathResource("static/images/ofertas/" + nombreImagen);
+
+      if (!resource.exists()) {
+        return ResponseEntity.notFound().build();
+      }
+
+      // Leer los bytes de la imagen
+      byte[] imageBytes = Files.readAllBytes(resource.getFile().toPath());
+
+      // Determinar el tipo de contenido basado en la extensión del archivo
+      String contentType = Files.probeContentType(resource.getFile().toPath());
+      if (contentType == null) {
+        contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
+      }
+
+      // Configurar headers
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.parseMediaType(contentType));
+      headers.setContentLength(imageBytes.length);
+
+      return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
+    } catch (IOException e) {
+      return ResponseEntity.notFound().build();
+    }
   }
 }
