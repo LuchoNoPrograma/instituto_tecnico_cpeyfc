@@ -49,6 +49,7 @@ src/webapp/.DS_Store
 src/webapp/dist
 src/webapp/dist-ssr
 src/webapp/coverage
+src/webapp/package-lock.json
 *.local
 src/webapp/cypress/videos/
 src/webapp/cypress/screenshots/
