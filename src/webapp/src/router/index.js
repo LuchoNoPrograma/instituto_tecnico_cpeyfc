@@ -9,6 +9,7 @@ import rutasGrupos from '@/views/grupos/rutasGrupos.js';
 import rutasMatriculas from '@/views/matriculas/rutasMatriculas.js';
 import rutasPlanEstudio from '@/views/plan-estudio/rutasPlanEstudio.js';
 import rutasDocente from '@/views/docente/rutasDocente.js';
+import rutasNoticias from '@/views/noticias/rutasNoticias.js';
 
 const routes = [
   ...rutasPublicas,
@@ -20,6 +21,7 @@ const routes = [
   ...rutasMatriculas,
   ...rutasPlanEstudio,
   ...rutasDocente,
+  ...rutasNoticias,
 
   // Dashboard principal
   {
