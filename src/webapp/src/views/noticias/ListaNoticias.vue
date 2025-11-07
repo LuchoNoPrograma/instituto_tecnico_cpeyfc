@@ -191,14 +191,15 @@ onMounted(() => {
 
         <template #item.orden_prioridad="{ item }">
           <v-chip
-            v-if="item.orden_prioridad > 0"
-            :color="item.orden_prioridad >= 10 ? 'error' : item.orden_prioridad >= 5 ? 'warning' : 'info'"
+            :color="item.orden_prioridad >= 10 ? 'error' : item.orden_prioridad >= 5 ? 'warning' : 'grey'"
             size="small"
             variant="flat"
           >
-            {{ item.orden_prioridad }}
+            <v-icon start size="x-small">
+              {{ item.orden_prioridad >= 10 ? 'mdi-arrow-up' : item.orden_prioridad >= 5 ? 'mdi-minus' : 'mdi-arrow-down' }}
+            </v-icon>
+            {{ item.orden_prioridad >= 10 ? 'Alta' : item.orden_prioridad >= 5 ? 'Media' : 'Baja' }}
           </v-chip>
-          <span v-else class="text-caption text-medium-emphasis">{{ item.orden_prioridad }}</span>
         </template>
 
         <template #item.estado_noticia="{ item }">
