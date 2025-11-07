@@ -52,9 +52,9 @@ const scrollHastaSobreNosotros = () => {
 }
 
 .inicio-banner__contenedor {
-  left: 40%;
+  left: 50%;
   text-align: center !important;
-  transform: translate(-30%, 30%);
+  transform: translate(-50%, 30%);
   position: absolute;
   z-index: 2;
   padding: 0 1rem;
