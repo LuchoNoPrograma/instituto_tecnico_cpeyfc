@@ -106,7 +106,7 @@ public class PubNoticiaApi {
    *   "orden_prioridad": 5
    * }
    *
-   * @param idPubNoticia ID de la noticia a actualizar
+   * @param id_pub_noticia ID de la noticia a actualizar
    * @param datos        Datos actualizados
    * @param userDetails  Usuario autenticado
    * @return Mensaje de confirmación
@@ -142,7 +142,7 @@ public class PubNoticiaApi {
    *   "estado": "ACTIVO" | "INACTIVO" | "ELIMINADO"
    * }
    *
-   * @param idPubNoticia ID de la noticia
+   * @param id_pub_noticia ID de la noticia
    * @param datos        Nuevo estado
    * @param userDetails  Usuario autenticado
    * @return Mensaje de confirmación
