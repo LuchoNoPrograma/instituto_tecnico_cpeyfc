@@ -16,15 +16,15 @@ const drawer = ref(false);
 
       <div class="d-flex align-center ga-2">
         <template v-if="mdAndUp">
-          <v-btn class="btn-header" variant="text" to="/">Inicio</v-btn>
+          <v-btn class="btn-header" variant="text" to="/login">Iniciar sesion</v-btn>
           <v-btn class="btn-header" variant="text" to="/#noticias">Noticias</v-btn>
-          <v-btn class="btn-header" variant="text" to="/programa-especial-de-titulacion">
+<!--          <v-btn class="btn-header" variant="text" to="/programa-especial-de-titulacion">
             Programa especial de titulación
-          </v-btn>
+          </v-btn>-->
           <v-btn class="btn-header" variant="text" to="/escuela-tecnica">Escuela técnica</v-btn>
-          <v-btn class="btn-header" variant="text" to="/admision-y-permanencia-estudiantil">
+<!--          <v-btn class="btn-header" variant="text" to="/admision-y-permanencia-estudiantil">
             Admisión y permanencia estudiantil
-          </v-btn>
+          </v-btn>-->
         </template>
         <template v-else>
           <v-btn icon rounded="sm" variant="text" size="small" @click.stop="drawer = !drawer">

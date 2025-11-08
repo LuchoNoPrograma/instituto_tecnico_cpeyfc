@@ -14,7 +14,7 @@ const scrollHastaSobreNosotros = () => {
 
 <template>
   <div class="inicio-banner">
-    <div class="inicio-banner__contenedor text-center">
+    <div class="pr-lg-4 inicio-banner__contenedor text-md-left text-center">
       <h1 class="inicio-banner__contenedor-texto mb-5 text-white" data-aos="fade-up" data-aos-duration="500">
         CENTRO DE PROYECTOS ESPECIALES Y FORMACIÓN PERMANENTE
       </h1>
@@ -46,21 +46,15 @@ const scrollHastaSobreNosotros = () => {
 </template>
 
 <style lang="scss" scoped>
-.inicio-banner {
-  position: relative;
-  width: 100%;
-}
-
 .inicio-banner__contenedor {
   left: 40%;
   text-align: center !important;
   transform: translate(-30%, 30%);
   position: absolute;
   z-index: 2;
-  padding: 0 1rem;
 
-  @media (min-width: 1440px) {
-    transform: translate(-50%, 90%);
+  @media(min-width: 1440px) {
+    transform: translate(-30%, 90%);
   }
 
   &-texto {
@@ -82,7 +76,7 @@ const scrollHastaSobreNosotros = () => {
   }
 
   &-btn {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     animation: floatAnimation 2.25s ease infinite;
 
@@ -127,38 +121,31 @@ const scrollHastaSobreNosotros = () => {
   opacity: 0.6;
 }
 
-.inicio-banner__carrusel {
-  :deep(.v-window-x-transition-enter-active),
-  :deep(.v-window-x-transition-leave-active),
-  :deep(.v-window-x-reverse-transition-enter-active),
-  :deep(.v-window-x-reverse-transition-leave-active),
-  :deep(.v-window-y-transition-enter-active),
-  :deep(.v-window-y-transition-leave-active),
-  :deep(.v-window-y-reverse-transition-enter-active),
-  :deep(.v-window-y-reverse-transition-leave-active) {
-    transition: opacity 1.3s cubic-bezier(0.2, 0.8, 0.5, 1), transform 1.3s cubic-bezier(0.25, 0.8, 0.5, 1) !important;
-  }
+.landing-page-banner__carrusel {
+  .v-window {
 
-  :deep(.v-window-x-transition-enter),
-  :deep(.v-window-x-transition-leave-to),
-  :deep(.v-window-x-reverse-transition-enter),
-  :deep(.v-window-x-reverse-transition-leave-to),
-  :deep(.v-window-y-transition-enter),
-  :deep(.v-window-y-transition-leave-to),
-  :deep(.v-window-y-reverse-transition-enter),
-  :deep(.v-window-y-reverse-transition-leave-to) {
-    opacity: 0;
-  }
+    &-x-transition,
+    &-x-reverse-transition,
+    &-y-transition,
+    &-y-reverse-transition {
 
-  :deep(.v-window-x-transition-enter-to),
-  :deep(.v-window-x-transition-leave),
-  :deep(.v-window-x-reverse-transition-enter-to),
-  :deep(.v-window-x-reverse-transition-leave),
-  :deep(.v-window-y-transition-enter-to),
-  :deep(.v-window-y-transition-leave),
-  :deep(.v-window-y-reverse-transition-enter-to),
-  :deep(.v-window-y-reverse-transition-leave) {
-    opacity: 1;
+      &-enter-active,
+      &-leave-active {
+        transition: opacity 1.3s cubic-bezier(0.2, 0.8, 0.5, 1), transform 1.3s cubic-bezier(0.25, 0.8, 0.5, 1) !important;
+      }
+
+      &-enter,
+      &-leave-to {
+        /* v-leave-to in <2.1.8 */
+        opacity: 0;
+      }
+
+      &-enter-to,
+      &-leave {
+        /* v-leave in <2.1.8 */
+        opacity: 1;
+      }
+    }
   }
 }
 </style>

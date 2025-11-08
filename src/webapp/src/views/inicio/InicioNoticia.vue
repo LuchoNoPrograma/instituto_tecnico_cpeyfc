@@ -8,7 +8,7 @@ const listaCarrusel = ref([])
 
 onMounted(async () => {
   try {
-    const response = await api.get('/publico/noticia/carrusel')
+    const response = await api.get('/api/publico/noticia/carrusel')
     listaNoticia.value = response.data
 
     // Dividir noticias en chunks de 2 para el carrusel
