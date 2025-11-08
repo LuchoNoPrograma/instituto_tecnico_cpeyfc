@@ -68,6 +68,17 @@ public interface PubNoticiaRepository extends JpaRepository<PubNoticia, Integer>
                            Integer p_orden_prioridad,
                            Integer p_user_reg);
 
+  @Query(nativeQuery = true, value = """
+      SELECT * FROM fn_obtener_noticias_paginadas(:page, :size, :busqueda, :estado, :id_unidad)
+      """)
+  List<Map<String, Object>> obtenerNoticiasPaginadas(
+    Integer page,
+    Integer size,
+    String busqueda,
+    String estado,
+    Integer id_unidad
+  );
+
   /**
    * Función: fn_actualizar_noticia
    * Actualiza los datos de una noticia existente

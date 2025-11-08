@@ -404,3 +404,118 @@ ORDER BY
 LIMIT 10;
 
 COMMENT ON VIEW vista_noticias_carrusel IS 'Top 10 noticias optimizadas para carrusel web público';
+
+-- Vista para listado administrativo con paginación
+CREATE OR REPLACE VIEW vista_noticias_admin AS
+SELECT
+  pn.id_pub_noticia,
+  pn.id_aca_unidad,
+  au.nombre_unidad,
+  pn.titulo,
+  pn.resumen,
+  pn.imagen_uri,
+  pn.enlace_externo,
+  pn.fecha_noticia,
+  pn.es_destacada,
+  pn.orden_prioridad,
+  pn.estado_noticia,
+  pn.fecha_reg,
+  pn.fecha_mod,
+  su.nombre_usuario as usuario_registro
+FROM pub_noticia pn
+       INNER JOIN aca_unidad au ON pn.id_aca_unidad = au.id_aca_unidad
+       LEFT JOIN seg_usuario su ON pn.user_reg = su.id_seg_usuario
+WHERE pn.estado_noticia != 'ELIMINADO'
+ORDER BY
+  pn.es_destacada DESC,
+  pn.orden_prioridad DESC,
+  pn.fecha_noticia DESC;
+
+-- Vista para listado administrativo con paginación
+CREATE OR REPLACE VIEW vista_pub_noticias_admin AS
+SELECT
+  pn.id_pub_noticia,
+  pn.id_aca_unidad,
+  au.nombre_unidad,
+  pn.titulo,
+  pn.resumen,
+  pn.imagen_uri,
+  pn.enlace_externo,
+  pn.fecha_noticia,
+  pn.es_destacada,
+  pn.orden_prioridad,
+  pn.estado_noticia,
+  pn.fecha_reg,
+  pn.fecha_mod,
+  su.nombre_usuario as usuario_registro
+FROM pub_noticia pn
+       INNER JOIN aca_unidad au ON pn.id_aca_unidad = au.id_aca_unidad
+       LEFT JOIN seg_usuario su ON pn.user_reg = su.id_seg_usuario
+WHERE pn.estado_noticia != 'ELIMINADO'
+ORDER BY
+  pn.es_destacada DESC,
+  pn.orden_prioridad DESC,
+  pn.fecha_noticia DESC;
+
+-- Función para obtener noticias con paginación
+CREATE OR REPLACE FUNCTION fn_obtener_noticias_paginadas(
+  p_page INTEGER,
+  p_size INTEGER,
+  p_busqueda VARCHAR DEFAULT NULL,
+  p_estado VARCHAR DEFAULT NULL,
+  p_id_unidad INTEGER DEFAULT NULL
+)
+  RETURNS TABLE(
+                 id_pub_noticia INTEGER,
+                 id_aca_unidad INTEGER,
+                 nombre_unidad VARCHAR,
+                 titulo VARCHAR,
+                 resumen TEXT,
+                 imagen_uri VARCHAR,
+                 enlace_externo VARCHAR,
+                 fecha_noticia DATE,
+                 es_destacada BOOLEAN,
+                 orden_prioridad INTEGER,
+                 estado_noticia VARCHAR,
+                 fecha_reg TIMESTAMP,
+                 usuario_registro VARCHAR,
+                 total_registros BIGINT
+               ) AS $$
+DECLARE
+  v_offset INTEGER;
+BEGIN
+  v_offset := (p_page - 1) * p_size;
+
+  RETURN QUERY
+    WITH datos AS (
+      SELECT
+        vn.*,
+        COUNT(*) OVER() as total
+      FROM vista_pub_noticias_admin vn
+      WHERE
+        (p_busqueda IS NULL OR
+         vn.titulo ILIKE '%' || p_busqueda || '%' OR
+         vn.resumen ILIKE '%' || p_busqueda || '%')
+        AND (p_estado IS NULL OR vn.estado_noticia = p_estado)
+        AND (p_id_unidad IS NULL OR vn.id_aca_unidad = p_id_unidad)
+    )
+    SELECT
+      d.id_pub_noticia,
+      d.id_aca_unidad,
+      d.nombre_unidad,
+      d.titulo,
+      d.resumen,
+      d.imagen_uri,
+      d.enlace_externo,
+      d.fecha_noticia,
+      d.es_destacada,
+      d.orden_prioridad,
+      d.estado_noticia,
+      d.fecha_reg,
+      d.usuario_registro,
+      d.total
+    FROM datos d
+    LIMIT p_size
+      OFFSET v_offset;
+END;
+$$ LANGUAGE plpgsql;

@@ -2,131 +2,136 @@ package uap.edu.bo.cpeyfc.domain.pub_noticia;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import uap.edu.bo.cpeyfc.crud.RepositorioGenericoCrud;
+import org.springframework.web.multipart.MultipartFile;
+import uap.edu.bo.cpeyfc.domain.archivo.ArchivoService;
 
+
+import java.io.IOException;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Service: PubNoticiaService
- * Descripción: Servicio para gestión de noticias institucionales del carrusel web
- */
 @Service
 @RequiredArgsConstructor
 public class PubNoticiaService {
-
-  private final RepositorioGenericoCrud repositorio;
   private final PubNoticiaRepository pubNoticiaRepository;
+  private final ArchivoService archivoService;
 
-  /**
-   * Obtiene listado completo de noticias activas para administración
-   *
-   * @return Lista de noticias activas ordenadas por prioridad y fecha
-   */
   public List<Map<String, Object>> vistaNoticiasActivas() {
     return pubNoticiaRepository.vistaNoticiasActivas();
   }
 
-  /**
-   * Obtiene las últimas 10 noticias para el carrusel web público
-   *
-   * @return Top 10 noticias destacadas para carrusel
-   */
   public List<Map<String, Object>> vistaNoticiasCarrusel() {
     return pubNoticiaRepository.vistaNoticiasCarrusel();
   }
 
-  /**
-   * Registra una nueva noticia institucional
-   *
-   * @param idAcaUnidad     ID de la unidad que publica
-   * @param titulo          Título de la noticia
-   * @param resumen         Resumen o descripción breve
-   * @param imagenUri       URI de la imagen de portada (opcional)
-   * @param enlaceExterno   URL externa (opcional)
-   * @param fechaNoticia    Fecha de publicación
-   * @param esDestacada     Si debe destacarse en el carrusel
-   * @param ordenPrioridad  Orden de prioridad
-   * @param userReg         ID del usuario que registra
-   * @return ID de la noticia creada
-   */
-  public Integer registrarNoticia(Integer idAcaUnidad,
-                                  String titulo,
-                                  String resumen,
-                                  String imagenUri,
-                                  String enlaceExterno,
-                                  LocalDate fechaNoticia,
-                                  Boolean esDestacada,
-                                  Integer ordenPrioridad,
-                                  Integer userReg) {
-    return pubNoticiaRepository.registrarNoticia(
-        idAcaUnidad,
-        titulo,
-        resumen,
-        imagenUri,
-        enlaceExterno,
-        fechaNoticia,
-        esDestacada,
-        ordenPrioridad,
-        userReg
+  public Map<String, Object> obtenerNoticiasPaginadas(Integer page,
+                                                      Integer size,
+                                                      String busqueda,
+                                                      String estado,
+                                                      Integer idUnidad) {
+    List<Map<String, Object>> resultados = pubNoticiaRepository.obtenerNoticiasPaginadas(
+      page, size, busqueda, estado, idUnidad
     );
+
+    // Convertir a Maps mutables y agregar imagen_url
+    List<Map<String, Object>> noticiasConUrl = resultados.stream()
+      .map(noticia -> {
+        Map<String, Object> noticiaConUrl = new HashMap<>(noticia);
+        String imagenUri = (String) noticia.get("imagen_uri");
+        if (imagenUri != null && !imagenUri.isEmpty()) {
+          noticiaConUrl.put("imagen_url", "/api/" + imagenUri);
+        }
+        return noticiaConUrl;
+      })
+      .toList();
+
+    Long totalRegistros = noticiasConUrl.isEmpty() ? 0L :
+      ((Number) noticiasConUrl.get(0).get("total_registros")).longValue();
+
+    int totalPages = (int) Math.ceil((double) totalRegistros / size);
+
+    Map<String, Object> respuesta = new HashMap<>();
+    respuesta.put("data", noticiasConUrl);
+    respuesta.put("pagination", Map.of(
+      "page", page,
+      "size", size,
+      "total", totalRegistros,
+      "total_pages", totalPages,
+      "has_next", page < totalPages,
+      "has_previous", page > 1
+    ));
+
+    return respuesta;
   }
 
-  /**
-   * Actualiza los datos de una noticia existente
-   *
-   * @param idPubNoticia    ID de la noticia a actualizar
-   * @param idAcaUnidad     ID de la unidad que publica
-   * @param titulo          Título de la noticia
-   * @param resumen         Resumen o descripción breve
-   * @param imagenUri       URI de la imagen de portada (opcional)
-   * @param enlaceExterno   URL externa (opcional)
-   * @param fechaNoticia    Fecha de publicación
-   * @param esDestacada     Si debe destacarse en el carrusel
-   * @param ordenPrioridad  Orden de prioridad
-   * @param userMod         ID del usuario que modifica
-   * @return Mensaje de confirmación
-   */
-  public String actualizarNoticia(Integer idPubNoticia,
+
+  public Integer registrarNoticia(MultipartFile imagen,
                                   Integer idAcaUnidad,
                                   String titulo,
                                   String resumen,
-                                  String imagenUri,
                                   String enlaceExterno,
                                   LocalDate fechaNoticia,
                                   Boolean esDestacada,
                                   Integer ordenPrioridad,
-                                  Integer userMod) {
-    return pubNoticiaRepository.actualizarNoticia(
-        idPubNoticia,
-        idAcaUnidad,
-        titulo,
-        resumen,
-        imagenUri,
-        enlaceExterno,
-        fechaNoticia,
-        esDestacada,
-        ordenPrioridad,
-        userMod
+                                  Integer userReg) throws IOException {
+
+    String imagenUri = archivoService.guardarArchivo(imagen, "images/noticias");
+
+    return pubNoticiaRepository.registrarNoticia(
+      idAcaUnidad,
+      titulo,
+      resumen,
+      imagenUri,
+      enlaceExterno,
+      fechaNoticia,
+      esDestacada,
+      ordenPrioridad,
+      userReg
     );
   }
 
-  /**
-   * Cambia el estado de una noticia (ACTIVO/INACTIVO/ELIMINADO)
-   *
-   * @param idPubNoticia ID de la noticia
-   * @param nuevoEstado  Nuevo estado (ACTIVO, INACTIVO, ELIMINADO)
-   * @param userMod      ID del usuario que modifica
-   * @return Mensaje de confirmación
-   */
+  public String actualizarNoticia(MultipartFile imagenNueva,
+                                  Integer idPubNoticia,
+                                  Integer idAcaUnidad,
+                                  String titulo,
+                                  String resumen,
+                                  String imagenUriAntigua,
+                                  String enlaceExterno,
+                                  LocalDate fechaNoticia,
+                                  Boolean esDestacada,
+                                  Integer ordenPrioridad,
+                                  Integer userMod) throws IOException {
+
+    String imagenUri = imagenUriAntigua;
+
+    if (imagenNueva != null && !imagenNueva.isEmpty()) {
+      imagenUri = archivoService.guardarArchivo(imagenNueva, "noticias");
+      archivoService.eliminarArchivo(imagenUriAntigua);
+    }
+
+    return pubNoticiaRepository.actualizarNoticia(
+      idPubNoticia,
+      idAcaUnidad,
+      titulo,
+      resumen,
+      imagenUri,
+      enlaceExterno,
+      fechaNoticia,
+      esDestacada,
+      ordenPrioridad,
+      userMod
+    );
+  }
+
   public String cambiarEstadoNoticia(Integer idPubNoticia,
                                      String nuevoEstado,
                                      Integer userMod) {
     return pubNoticiaRepository.cambiarEstadoNoticia(
-        idPubNoticia,
-        nuevoEstado,
-        userMod
+      idPubNoticia,
+      nuevoEstado,
+      userMod
     );
   }
 }
