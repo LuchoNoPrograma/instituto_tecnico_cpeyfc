@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { api } from '@/services/api'
-import formatoFecha from '@/helpers/formatos'
 import InicioCursoCard from '@/views/inicio/InicioCursoCard.vue'
 
 const listaCurso = ref([])
