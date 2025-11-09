@@ -9,7 +9,8 @@ import {
   validarFormulario
 } from '@/helpers/validations'
 import { api } from '@/services/api'
-import imagenNoDisponible from '@/assets/images/img_default.png'
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
 // Props
 const props = defineProps({
@@ -43,7 +44,11 @@ const cargandoFormulario = ref(false)
 const unidades = ref([])
 const archivoImagen = ref(null)
 const previewImagen = ref(null)
-const arrastrando = ref(false)
+
+// Estados del cropper
+const dialogCropper = ref(false)
+const imagenOriginal = ref(null)
+const cropperRef = ref(null)
 
 // Opciones de prioridad
 const opcionesPrioridad = [
@@ -77,10 +82,6 @@ const textoBoton = computed(() =>
 
 const tieneImagen = computed(() => previewImagen.value !== null && previewImagen.value !== '')
 
-const obtenerImagenPreview = computed(() => {
-  return previewImagen.value || imagenNoDisponible
-})
-
 // Cargar datos
 const cargarUnidades = async () => {
   try {
@@ -91,8 +92,8 @@ const cargarUnidades = async () => {
   }
 }
 
-// Manejo de imágenes
-const procesarArchivo = (file) => {
+// Manejo de imágenes con cropper
+const onArchivoSeleccionado = (file) => {
   if (!file) return
 
   if (!(file instanceof File)) {
@@ -113,18 +114,37 @@ const procesarArchivo = (file) => {
     return
   }
 
-  archivoImagen.value = file
-
-  // Preview
+  // Cargar imagen para el cropper
   const reader = new FileReader()
   reader.onload = (e) => {
-    previewImagen.value = e.target.result
+    imagenOriginal.value = e.target.result
+    dialogCropper.value = true
   }
   reader.readAsDataURL(file)
 }
 
-const onArchivoSeleccionado = (file) => {
-  procesarArchivo(file)
+const confirmarRecorte = async () => {
+  const { canvas } = cropperRef.value.getResult()
+
+  if (canvas) {
+    // Convertir canvas a blob
+    canvas.toBlob((blob) => {
+      // Crear archivo desde blob
+      const archivoRecortado = new File([blob], 'noticia.jpg', { type: 'image/jpeg' })
+      archivoImagen.value = archivoRecortado
+
+      // Generar preview
+      const urlPreview = canvas.toDataURL('image/jpeg', 0.9)
+      previewImagen.value = urlPreview
+
+      dialogCropper.value = false
+    }, 'image/jpeg', 0.9)
+  }
+}
+
+const cancelarRecorte = () => {
+  dialogCropper.value = false
+  imagenOriginal.value = null
 }
 
 const editarImagen = () => {
@@ -185,11 +205,16 @@ const cargarDatosNoticia = (noticia) => {
   formularioNoticia.titulo = noticia.titulo
   formularioNoticia.resumen = noticia.resumen
   formularioNoticia.enlace_externo = noticia.enlace_externo || ''
-  formularioNoticia.fecha_noticia = noticia.fecha_noticia ? new Date(noticia.fecha_noticia) : new Date()
+
+
+  if (noticia.fecha_noticia) {
+    const fechaParts = noticia.fecha_noticia.split('-') // "2025-11-08"
+    formularioNoticia.fecha_noticia = new Date(fechaParts[0], fechaParts[1] - 1, fechaParts[2])
+  }
+
   formularioNoticia.es_destacada = noticia.es_destacada || false
   formularioNoticia.orden_prioridad = noticia.orden_prioridad || 0
 
-  // 👇 Solo asignar si realmente hay imagen
   if (noticia.imagen_url || noticia.imagen_uri) {
     previewImagen.value = noticia.imagen_url || noticia.imagen_uri
   } else {
@@ -237,12 +262,11 @@ onMounted(() => {
       <div v-if="tieneImagen" class="imagen-preview-container">
         <v-img
           :src="previewImagen"
-          aspect-ratio="16/9"
+          aspect-ratio="4/3"
           cover
           class="imagen-preview"
         >
           <template #error>
-            <!-- Si la imagen falla, mostrar el file-upload -->
             <div class="error-fallback">
               <v-file-upload
                 v-model="archivoImagen"
@@ -260,7 +284,7 @@ onMounted(() => {
           </template>
         </v-img>
 
-        <!-- Overlay solo con botón editar -->
+        <!-- Overlay con botón editar -->
         <div class="imagen-overlay">
           <v-btn
             icon="mdi-pencil"
@@ -292,11 +316,12 @@ onMounted(() => {
         >
           <template #hint>
             <div class="text-center mt-2">
-              PNG, JPG, WEBP, GIF • Máximo 10MB
+              PNG, JPG, WEBP, GIF • Máximo 10MB • Se recortará a formato 16:9
             </div>
           </template>
         </v-file-upload>
       </div>
+
       <input
         id="file-input-hidden"
         type="file"
@@ -494,6 +519,54 @@ onMounted(() => {
         {{ textoBoton }}
       </v-btn>
     </v-card-actions>
+
+    <!-- Dialog del Cropper -->
+    <v-dialog
+      v-model="dialogCropper"
+      max-width="900px"
+      persistent
+    >
+      <v-card>
+        <v-card-title class="bg-primary text-white pa-4">
+          <v-icon start>mdi-crop</v-icon>
+          Ajustar Imagen (Formato 16:9)
+        </v-card-title>
+
+        <v-card-text class="pa-6">
+          <div class="cropper-container">
+            <Cropper
+              ref="cropperRef"
+              class="cropper"
+              :src="imagenOriginal"
+              :stencil-props="{
+                aspectRatio: 16/9
+              }"
+            />
+          </div>
+          <div class="text-caption text-center text-medium-emphasis mt-4">
+            Arrastra y ajusta la imagen para seleccionar el área que deseas mostrar
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn
+            variant="text"
+            @click="cancelarRecorte"
+          >
+            Cancelar
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            @click="confirmarRecorte"
+          >
+            <v-icon start>mdi-check</v-icon>
+            Confirmar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -521,7 +594,6 @@ onMounted(() => {
 
     .imagen-preview-container {
       position: relative;
-      max-height: 400px;
       overflow: hidden;
 
       .imagen-preview {
@@ -561,6 +633,16 @@ onMounted(() => {
     max-height: 60vh;
     overflow-y: auto;
   }
+
+  .cropper-container {
+    height: 500px;
+    background: #f5f5f5;
+
+    .cropper {
+      height: 100%;
+      background: #f5f5f5;
+    }
+  }
 }
 
 @media (max-width: 600px) {
@@ -578,6 +660,10 @@ onMounted(() => {
       .v-btn {
         width: 100%;
       }
+    }
+
+    .cropper-container {
+      height: 300px;
     }
   }
 }

@@ -1,5 +1,6 @@
 <script setup>
 import formatoFecha from '@/helpers/formatos'
+import imagenNoDisponible from '@/assets/images/img_default.png'
 
 const props = defineProps({
   noticia: {
@@ -7,6 +8,10 @@ const props = defineProps({
     required: true
   }
 })
+
+const obtenerImagen = () => {
+  return props.noticia.imagen_url || props.noticia.imagen_uri || imagenNoDisponible
+}
 
 const openLink = () => {
   if (props.noticia.enlace_externo) {
@@ -16,52 +21,65 @@ const openLink = () => {
 </script>
 
 <template>
-  <v-card class="noticia-card" elevation="4" rounded="lg" height="100%">
+  <v-card class="noticia-card" elevation="4" rounded="lg">
+    <!-- Imagen -->
     <v-img
-      v-if="noticia.imagen_uri"
-      :src="noticia.imagen_uri"
-      height="200"
+      :src="obtenerImagen()"
+      aspect-ratio="16/9"
       cover
       class="noticia-imagen"
     >
-      <v-chip
-        v-if="noticia.es_destacada"
-        color="error"
-        size="small"
-        class="ma-2"
-      >
-        Destacada
-      </v-chip>
+      <template #error>
+        <v-img :src="imagenNoDisponible" height="275" cover></v-img>
+      </template>
+
+      <!-- Badges -->
+      <div class="badges-overlay pa-2">
+        <v-chip
+          v-if="noticia.es_destacada"
+          color="warning"
+          size="small"
+          class="mr-1"
+        >
+          <v-icon start size="small">mdi-star</v-icon>
+          Destacada
+        </v-chip>
+      </div>
     </v-img>
 
-    <v-card-title class="text-h5 font-weight-bold">
-      {{ noticia.titulo }}
-    </v-card-title>
-
-    <v-card-subtitle class="mt-2">
-      <div class="d-flex align-center gap-2">
-        <v-icon icon="mdi-calendar" size="small"></v-icon>
-        {{ formatoFecha.completo(noticia.fecha_noticia) }}
+    <!-- Contenido -->
+    <v-card-text class="pa-4">
+      <!-- Título -->
+      <div class="text-h6 font-weight-medium noticia-titulo">
+        {{ noticia.titulo }}
       </div>
-      <div v-if="noticia.nombre_unidad" class="mt-1">
-        <v-icon icon="mdi-domain" size="small"></v-icon>
+
+      <!-- Resumen -->
+      <div class="text-body-2 text-medium-emphasis mb-2 noticia-resumen">
+        {{ noticia.resumen }}
+      </div>
+
+      <!-- Info adicional -->
+      <div class="d-flex align-center ga-2 mb-2">
+        <v-icon size="small">mdi-calendar</v-icon>
+        {{ formatoFecha.literario(noticia.fecha_noticia) }}
+      </div>
+
+      <div class="d-flex align-center ga-2 mb-3">
+        <v-icon size="small">mdi-domain</v-icon>
         {{ noticia.nombre_unidad }}
       </div>
-    </v-card-subtitle>
-
-    <v-card-text>
-      <p class="text-body-2 text-truncate-3">
-        {{ noticia.resumen }}
-      </p>
     </v-card-text>
 
-    <v-card-actions class="pa-4">
+    <!-- Acciones -->
+    <v-card-actions class="pa-2">
       <v-btn
         v-if="noticia.enlace_externo"
         color="primary"
-        variant="text"
+        variant="elevated"
         append-icon="mdi-arrow-right"
         @click="openLink"
+        block
       >
         Leer más
       </v-btn>
@@ -71,19 +89,47 @@ const openLink = () => {
 
 <style scoped lang="scss">
 .noticia-card {
+  display: flex;
+  flex-direction: column;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
   }
-}
 
-.text-truncate-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  .noticia-imagen {
+    position: relative;
+
+    .badges-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), transparent);
+    }
+  }
+
+  .v-card-text {
+    flex-grow: 1;
+  }
+
+  .noticia-titulo {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+    min-height: 2.8em;
+  }
+
+  .noticia-resumen {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+    min-height: 4.5em;
+  }
 }
 </style>

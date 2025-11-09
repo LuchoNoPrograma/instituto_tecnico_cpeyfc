@@ -12,7 +12,6 @@ import VueDevTools from 'vite-plugin-vue-devtools';
 // Utilities
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
-import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -22,7 +21,9 @@ export default defineConfig({
     Vue({
       template: { transformAssetUrls },
     }),
-    VueDevTools(),
+    VueDevTools({
+      launchEditor: 'idea',
+    }),
     // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
     Vuetify({
       autoImport: true,
@@ -30,7 +31,6 @@ export default defineConfig({
         configFile: 'src/styles/settings.scss',
       },
     }),
-    vueDevTools(),
     Components(),
     Fonts({
       google: {

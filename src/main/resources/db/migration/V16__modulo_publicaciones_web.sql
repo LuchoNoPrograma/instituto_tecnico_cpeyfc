@@ -431,32 +431,6 @@ ORDER BY
   pn.orden_prioridad DESC,
   pn.fecha_noticia DESC;
 
--- Vista para listado administrativo con paginación
-CREATE OR REPLACE VIEW vista_pub_noticias_admin AS
-SELECT
-  pn.id_pub_noticia,
-  pn.id_aca_unidad,
-  au.nombre_unidad,
-  pn.titulo,
-  pn.resumen,
-  pn.imagen_uri,
-  pn.enlace_externo,
-  pn.fecha_noticia,
-  pn.es_destacada,
-  pn.orden_prioridad,
-  pn.estado_noticia,
-  pn.fecha_reg,
-  pn.fecha_mod,
-  su.nombre_usuario as usuario_registro
-FROM pub_noticia pn
-       INNER JOIN aca_unidad au ON pn.id_aca_unidad = au.id_aca_unidad
-       LEFT JOIN seg_usuario su ON pn.user_reg = su.id_seg_usuario
-WHERE pn.estado_noticia != 'ELIMINADO'
-ORDER BY
-  pn.es_destacada DESC,
-  pn.orden_prioridad DESC,
-  pn.fecha_noticia DESC;
-
 -- Función para obtener noticias con paginación
 CREATE OR REPLACE FUNCTION fn_obtener_noticias_paginadas(
   p_page INTEGER,
@@ -491,7 +465,7 @@ BEGIN
       SELECT
         vn.*,
         COUNT(*) OVER() as total
-      FROM vista_pub_noticias_admin vn
+      FROM vista_noticias_admin vn
       WHERE
         (p_busqueda IS NULL OR
          vn.titulo ILIKE '%' || p_busqueda || '%' OR
@@ -519,3 +493,7 @@ BEGIN
       OFFSET v_offset;
 END;
 $$ LANGUAGE plpgsql;
+
+SELECT * FROM fn_registrar_unidad('Escuela Técnica', 's/d', 1);
+SELECT * FROM fn_registrar_unidad('Programa Especial de Titulación PET', 's/d', 1);
+SELECT * FROM fn_registrar_unidad('Gabinete Psicopedagógico', 's/d', 1);

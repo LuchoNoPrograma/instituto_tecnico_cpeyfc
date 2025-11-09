@@ -4,6 +4,8 @@ import { api } from '@/services/api'
 import FormularioNoticia from '@/views/noticias/FormularioNoticia.vue'
 import formatoFecha from '@/helpers/formatos.js'
 import imagenNoDisponible from '@/assets/images/img_default.png'
+import {showConfirmar, showError, showModificado, showRegistrado} from '@/utils/sweetalert.js';
+import {useDebounceBusqueda} from '@/helpers/debounce.js';
 
 // Estados de datos
 const noticias = ref([])
@@ -13,7 +15,7 @@ const busqueda = ref('')
 // Paginación
 const paginacion = ref({
   page: 1,
-  size: 12,
+  size: 9,
   total: 0,
   total_pages: 0,
   has_next: false,
@@ -21,8 +23,9 @@ const paginacion = ref({
 })
 
 // Estados de dialog
-const dialogFormulario = ref(false)
-const noticiaSeleccionada = ref(null)
+const dialogFormulario = ref(false);
+const noticiaSeleccionada = ref(null);
+const busquedaCargando = ref(false);
 const esEdicion = computed(() => !!noticiaSeleccionada.value)
 
 // Funciones de obtención de datos
@@ -105,42 +108,68 @@ const guardarNoticia = async (formData) => {
           }
         }
       )
+      showModificado('La noticia ha sido actualizada correctamente')
     } else {
       await api.post('/api/noticia', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       })
+      showRegistrado('La noticia ha sido publicada exitosamente')
     }
 
     await obtenerNoticias()
     cerrarDialog()
-    console.log('Noticia guardada exitosamente')
   } catch (error) {
     console.error('Error al guardar noticia:', error)
-    alert('Error al guardar la noticia: ' + (error.response?.data?.message || error.message))
+    showError(error.response?.data?.message || 'No se pudo guardar la noticia')
   } finally {
     cargando.value = false
   }
 }
 
 const cambiarEstadoNoticia = async (noticia, nuevoEstado) => {
-  const confirmacion = nuevoEstado === 'ELIMINADO'
-    ? '¿Está seguro de eliminar esta noticia?'
-    : `¿Cambiar el estado a ${nuevoEstado}?`
+  const mensajes = {
+    'ELIMINADO': {
+      titulo: '¿Eliminar noticia?',
+      mensaje: 'Esta acción no se puede deshacer',
+      textoConfirmar: 'Sí, eliminar',
+      tipo: 'delete'
+    },
+    'ACTIVO': {
+      titulo: '¿Activar noticia?',
+      mensaje: 'La noticia será visible en el carrusel',
+      textoConfirmar: 'Sí, activar',
+      tipo: 'update'
+    },
+    'INACTIVO': {
+      titulo: '¿Desactivar noticia?',
+      mensaje: 'La noticia no será visible en el carrusel',
+      textoConfirmar: 'Sí, desactivar',
+      tipo: 'update'
+    }
+  }
 
-  if (!confirm(confirmacion)) return
+  const config = mensajes[nuevoEstado]
+  const resultado = await showConfirmar({
+    titulo: config.titulo,
+    mensaje: config.mensaje,
+    textoConfirmar: config.textoConfirmar,
+    tipo: config.tipo
+  })
+
+  if (!resultado.isConfirmed) return
 
   try {
     await api.patch(`/api/noticia/${noticia.id_pub_noticia}/estado`, {
       estado: nuevoEstado
     })
 
+    showModificado('El estado ha sido actualizado correctamente')
     await obtenerNoticias()
-    console.log('Estado actualizado exitosamente')
   } catch (error) {
     console.error('Error al cambiar estado:', error)
-    alert('Error al cambiar el estado: ' + (error.response?.data?.message || error.message))
+    showError(error.response?.data?.message || 'No se pudo cambiar el estado')
   }
 }
 
@@ -150,11 +179,16 @@ const cambiarPagina = (nuevaPagina) => {
   obtenerNoticias()
 }
 
-// Watch para búsqueda
 watch(busqueda, () => {
+  busquedaCargando.value = true
   paginacion.value.page = 1
-  obtenerNoticias()
 })
+
+useDebounceBusqueda(busqueda, () => {
+  obtenerNoticias().finally(() => {
+    busquedaCargando.value = false
+  })
+}, 500)
 
 onMounted(() => {
   obtenerNoticias()
@@ -187,6 +221,7 @@ onMounted(() => {
               hide-details
               class="search-field"
               clearable
+              :loading="busquedaCargando"
             ></v-text-field>
 
             <v-btn
@@ -199,6 +234,25 @@ onMounted(() => {
               Nueva Noticia
             </v-btn>
           </div>
+        </div>
+        <v-divider class="mb-2 mt-3"></v-divider>
+        <div class="d-flex align-center justify-space-between">
+          <div class="text-body-2 text-medium-emphasis">
+            Mostrando {{ ((paginacion.page - 1) * paginacion.size) + 1 }} -
+            {{ Math.min(paginacion.page * paginacion.size, paginacion.total) }}
+            de {{ paginacion.total }} noticias
+          </div>
+
+          <v-pagination
+            v-model="paginacion.page"
+            :length="paginacion.total_pages"
+            :total-visible="5"
+            @update:model-value="cambiarPagina"
+            :disabled="cargando"
+            rounded="circle"
+            color="primary"
+            variant="elevated"
+          ></v-pagination>
         </div>
       </v-card-text>
     </v-card>
@@ -216,7 +270,7 @@ onMounted(() => {
         {{ busqueda ? 'No se encontraron noticias' : 'No hay noticias registradas' }}
       </div>
       <div class="text-body-2 text-medium-emphasis mt-2">
-        {{ busqueda ? 'Intenta con otros términos de búsqueda' : 'Comienza creando tu primera noticia' }}
+        {{ busqueda ? 'Intenta con otros términos de búsqueda' : 'Comience creando su primera noticia' }}
       </div>
       <v-btn
         v-if="!busqueda"
@@ -236,11 +290,12 @@ onMounted(() => {
         v-for="noticia in noticias"
         :key="noticia.id_pub_noticia"
         cols="12"
-        sm="6"
+        xs="12"
+        sm="12"
         md="4"
-        lg="3"
+        lg="4"
       >
-        <v-card class="noticia-card rounded-lg" elevation="2" hover>
+        <v-card class="noticia-card rounded-lg" elevation="2">
           <!-- Imagen -->
           <v-img
             :src="obtenerImagenUrl(noticia)"
@@ -286,22 +341,22 @@ onMounted(() => {
           <!-- Contenido -->
           <v-card-text class="pa-4">
             <!-- Título -->
-            <div class="text-h6 font-weight-medium mb-2 noticia-titulo">
+            <div class="text-h6 font-weight-medium noticia-titulo">
               {{ noticia.titulo }}
             </div>
 
             <!-- Resumen -->
-            <div class="text-body-2 text-medium-emphasis mb-3 noticia-resumen">
+            <div class="text-body-2 text-medium-emphasis mb-2 noticia-resumen">
               {{ noticia.resumen }}
             </div>
 
             <!-- Info adicional -->
-            <div class="d-flex align-center ga-2 mb-2 text-caption text-medium-emphasis">
+            <div class="d-flex align-center ga-2 mb-2">
               <v-icon size="small">mdi-calendar</v-icon>
               {{ formatoFecha.ddMMaaaa(noticia.fecha_noticia) }}
             </div>
 
-            <div class="d-flex align-center ga-2 mb-3 text-caption text-medium-emphasis">
+            <div class="d-flex align-center ga-2 mb-3">
               <v-icon size="small">mdi-domain</v-icon>
               {{ noticia.nombre_unidad }}
             </div>
@@ -391,6 +446,8 @@ onMounted(() => {
           @update:model-value="cambiarPagina"
           :disabled="cargando"
           rounded="circle"
+          color="primary"
+          variant="elevated"
         ></v-pagination>
       </v-card-text>
     </v-card>
@@ -428,16 +485,9 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
-  }
 
   .noticia-imagen {
     position: relative;
-    height: 20em;
 
     .badges-container {
       position: absolute;

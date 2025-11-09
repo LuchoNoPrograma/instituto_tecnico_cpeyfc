@@ -15,7 +15,7 @@ const abrirModalInicio = (modal) => {
 </script>
 
 <template>
-  <div class="py-8">
+  <div class="py-4">
     <div id="sobre-nosotros"></div>
     <v-container>
       <div class="d-flex ga-3 justify-center flex-wrap">

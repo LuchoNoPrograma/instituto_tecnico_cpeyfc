@@ -1,5 +1,6 @@
 package uap.edu.bo.cpeyfc.domain.archivo;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,7 +16,8 @@ import java.util.UUID;
 @Service
 public class ArchivoService {
 
-  private static final Path RUTA_BASE = Paths.get("src/main/resources/static");
+  @Value("${app.uploads.path}")
+  private String uploadsPath;
 
   public String guardarArchivo(MultipartFile archivo, String carpeta) throws IOException {
     if (archivo == null || archivo.isEmpty()) {
@@ -24,7 +26,10 @@ public class ArchivoService {
 
     validarArchivo(archivo);
 
-    Path directorioDestino = RUTA_BASE.resolve(carpeta);
+    // Obtener la ruta del proyecto
+    Path proyectoPath = Paths.get("").toAbsolutePath();
+    Path directorioDestino = proyectoPath.resolve(uploadsPath).resolve(carpeta);
+
     Files.createDirectories(directorioDestino);
 
     String nombreArchivo = generarNombreUnico(archivo.getOriginalFilename());
@@ -32,14 +37,19 @@ public class ArchivoService {
 
     Files.copy(archivo.getInputStream(), archivoDestino, StandardCopyOption.REPLACE_EXISTING);
 
-    return "/" + carpeta + "/" + nombreArchivo;
+    return "/uploads/" + carpeta + "/" + nombreArchivo;
   }
 
   public void eliminarArchivo(String rutaArchivo) {
     if (rutaArchivo == null || rutaArchivo.isEmpty()) return;
 
     try {
-      Path archivo = RUTA_BASE.resolve(rutaArchivo.substring(1));
+      // Remover el prefijo /uploads/
+      String pathRelativo = rutaArchivo.startsWith("/uploads/")
+        ? rutaArchivo.substring(9)
+        : rutaArchivo;
+
+      Path archivo = Paths.get(uploadsPath, pathRelativo);
       Files.deleteIfExists(archivo);
     } catch (IOException e) {
       System.err.println("No se pudo eliminar el archivo: " + rutaArchivo);

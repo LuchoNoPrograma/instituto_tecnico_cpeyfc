@@ -117,6 +117,16 @@ export const formatoFecha = {
    */
   restar: (fecha, cantidad, unidad) => {
     return moment(fecha).subtract(cantidad, unidad).format('DD/MM/YYYY')
+  },
+
+  /**
+   * Formato literario: 15 de enero de 2024
+   * @param {string|Date|moment} fecha - Fecha a formatear
+   * @returns {string} Fecha formateada literaria
+   */
+  literario: (fecha) => {
+    if (!fecha) return ''
+    return moment(fecha).format('DD [de] MMMM [de] YYYY')
   }
 }
 

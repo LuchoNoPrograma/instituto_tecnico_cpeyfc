@@ -23,7 +23,18 @@ public class PubNoticiaService {
   }
 
   public List<Map<String, Object>> vistaNoticiasCarrusel() {
-    return pubNoticiaRepository.vistaNoticiasCarrusel();
+    List<Map<String, Object>> resultados = pubNoticiaRepository.vistaNoticiasCarrusel();
+
+    return resultados.stream()
+      .map(noticia -> {
+        Map<String, Object> noticiaConUrl = new HashMap<>(noticia);
+        String imagenUri = (String) noticia.get("imagen_uri");
+        if (imagenUri != null && !imagenUri.isEmpty()) {
+          noticiaConUrl.put("imagen_url", "/api" + imagenUri);
+        }
+        return noticiaConUrl;
+      })
+      .toList();
   }
 
   public Map<String, Object> obtenerNoticiasPaginadas(Integer page,
@@ -41,7 +52,7 @@ public class PubNoticiaService {
         Map<String, Object> noticiaConUrl = new HashMap<>(noticia);
         String imagenUri = (String) noticia.get("imagen_uri");
         if (imagenUri != null && !imagenUri.isEmpty()) {
-          noticiaConUrl.put("imagen_url", "/api/" + imagenUri);
+          noticiaConUrl.put("imagen_url", "/api" + imagenUri);
         }
         return noticiaConUrl;
       })
@@ -107,7 +118,7 @@ public class PubNoticiaService {
     String imagenUri = imagenUriAntigua;
 
     if (imagenNueva != null && !imagenNueva.isEmpty()) {
-      imagenUri = archivoService.guardarArchivo(imagenNueva, "noticias");
+      imagenUri = archivoService.guardarArchivo(imagenNueva, "images/noticias");
       archivoService.eliminarArchivo(imagenUriAntigua);
     }
 
