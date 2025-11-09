@@ -30,6 +30,20 @@ public class PubNoticiaApi {
     return ResponseEntity.ok(pubNoticiaService.vistaNoticiasCarrusel());
   }
 
+  @GetMapping("/api/publico/noticia/{id}")
+  public ResponseEntity<?> obtenerNoticiaPorId(@PathVariable Integer id) {
+    Map<String, Object> noticia = pubNoticiaService.obtenerNoticiaPorId(id);
+
+    if (noticia == null || noticia.isEmpty()) {
+      return ResponseEntity.status(404).body(Map.of(
+        "success", false,
+        "message", "Noticia no encontrada o no está activa"
+      ));
+    }
+
+    return ResponseEntity.ok(noticia);
+  }
+
   @GetMapping("/api/noticia")
   public ResponseEntity<Map<String, Object>> obtenerNoticiasPaginadas(
     @RequestParam(defaultValue = "1") Integer page,

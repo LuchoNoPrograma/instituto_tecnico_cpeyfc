@@ -32,6 +32,31 @@ public interface PubNoticiaRepository extends JpaRepository<PubNoticia, Integer>
   List<Map<String, Object>> vistaNoticiasCarrusel();
 
   /**
+   * Obtiene una noticia específica por su ID para vista pública
+   *
+   * @param p_id_pub_noticia ID de la noticia a consultar
+   * @return Map con los datos de la noticia
+   */
+  @Query(nativeQuery = true, value = """
+      SELECT
+        n.id_pub_noticia,
+        n.id_aca_unidad,
+        u.nombre_unidad,
+        n.titulo,
+        n.resumen,
+        n.imagen_uri,
+        n.enlace_externo,
+        n.fecha_noticia,
+        n.orden_prioridad,
+        n.estado
+      FROM pub_noticia n
+      INNER JOIN aca_unidad u ON n.id_aca_unidad = u.id_aca_unidad
+      WHERE n.id_pub_noticia = :p_id_pub_noticia
+        AND n.estado = 'ACTIVO'
+      """)
+  Map<String, Object> obtenerNoticiaPorId(Integer p_id_pub_noticia);
+
+  /**
    * Función: fn_registrar_noticia
    * Registra una nueva noticia institucional
    *

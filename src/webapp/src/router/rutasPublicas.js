@@ -13,5 +13,10 @@ export default [
     path: '/inscripciones',
     name: 'Inscripciones',
     component: () => import('@/views/public/Inscripciones.vue')
+  },
+  {
+    path: '/noticias/:id/:slug?',
+    name: 'NoticiaDetalle',
+    component: () => import('@/views/noticias/NoticiaDetalle.vue')
   }
 ]

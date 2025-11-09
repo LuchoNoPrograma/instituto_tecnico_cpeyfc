@@ -37,6 +37,21 @@ public class PubNoticiaService {
       .toList();
   }
 
+  public Map<String, Object> obtenerNoticiaPorId(Integer idPubNoticia) {
+    Map<String, Object> noticia = pubNoticiaRepository.obtenerNoticiaPorId(idPubNoticia);
+
+    if (noticia != null && !noticia.isEmpty()) {
+      Map<String, Object> noticiaConUrl = new HashMap<>(noticia);
+      String imagenUri = (String) noticia.get("imagen_uri");
+      if (imagenUri != null && !imagenUri.isEmpty()) {
+        noticiaConUrl.put("imagen_url", "/api" + imagenUri);
+      }
+      return noticiaConUrl;
+    }
+
+    return null;
+  }
+
   public Map<String, Object> obtenerNoticiasPaginadas(Integer page,
                                                       Integer size,
                                                       String busqueda,

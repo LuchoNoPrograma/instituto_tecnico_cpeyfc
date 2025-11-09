@@ -11,6 +11,7 @@ import {
 import { api } from '@/services/api'
 import { Cropper } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
+import TiptapEditor from '@/components/TiptapEditor.vue'
 
 // Props
 const props = defineProps({
@@ -33,9 +34,7 @@ const formularioNoticia = reactive({
   titulo: '',
   resumen: '',
   imagen_uri: '',
-  enlace_externo: '',
   fecha_noticia: new Date(),
-  es_destacada: false,
   orden_prioridad: 0
 })
 
@@ -67,8 +66,7 @@ const esquemaReglas = computed(() => ({
   },
   resumen: {
     esRequerido,
-    longitudMinima: longitudMinima(20),
-    longitudMaxima: longitudMaxima(2000)
+    longitudMinima: longitudMinima(20)
   },
   fecha_noticia: { esRequerido }
 }))
@@ -173,9 +171,7 @@ const guardar = async () => {
       id_aca_unidad: formularioNoticia.id_aca_unidad,
       titulo: formularioNoticia.titulo,
       resumen: formularioNoticia.resumen,
-      enlace_externo: formularioNoticia.enlace_externo || null,
       fecha_noticia: formularioNoticia.fecha_noticia,
-      es_destacada: formularioNoticia.es_destacada,
       orden_prioridad: formularioNoticia.orden_prioridad
     }
 
@@ -204,15 +200,12 @@ const cargarDatosNoticia = (noticia) => {
   formularioNoticia.id_aca_unidad = noticia.id_aca_unidad
   formularioNoticia.titulo = noticia.titulo
   formularioNoticia.resumen = noticia.resumen
-  formularioNoticia.enlace_externo = noticia.enlace_externo || ''
-
 
   if (noticia.fecha_noticia) {
     const fechaParts = noticia.fecha_noticia.split('-') // "2025-11-08"
     formularioNoticia.fecha_noticia = new Date(fechaParts[0], fechaParts[1] - 1, fechaParts[2])
   }
 
-  formularioNoticia.es_destacada = noticia.es_destacada || false
   formularioNoticia.orden_prioridad = noticia.orden_prioridad || 0
 
   if (noticia.imagen_url || noticia.imagen_uri) {
@@ -228,9 +221,7 @@ const limpiarFormulario = () => {
     titulo: '',
     resumen: '',
     imagen_uri: '',
-    enlace_externo: '',
     fecha_noticia: new Date(),
-    es_destacada: false,
     orden_prioridad: 0
   })
   archivoImagen.value = null
@@ -383,23 +374,20 @@ onMounted(() => {
           </v-col>
         </v-row>
 
-        <!-- Contenido Principal -->
-        <v-textarea
-          v-model="formularioNoticia.resumen"
-          :error-messages="obtenerErroresCampo($v.resumen)"
-          label="Contenido de la noticia"
-          placeholder="Escribe aquí el contenido completo de tu noticia..."
-          variant="outlined"
-          :disabled="cargandoFormulario"
-          counter="2000"
-          rows="8"
-          auto-grow
-          class="mb-4"
-        >
-          <template #prepend-inner>
-            <v-icon>mdi-text</v-icon>
-          </template>
-        </v-textarea>
+        <!-- Contenido Principal con Editor Rich Text -->
+        <div class="mb-4">
+          <label class="text-subtitle-2 text-medium-emphasis mb-2 d-block">
+            Contenido de la noticia *
+          </label>
+          <TiptapEditor
+            v-model="formularioNoticia.resumen"
+            placeholder="Escribe aquí el contenido completo de tu noticia con formato..."
+            :disabled="cargandoFormulario"
+          />
+          <div v-if="$v.resumen.$errors.length" class="text-error text-caption mt-1">
+            {{ $v.resumen.$errors[0].$message }}
+          </div>
+        </div>
 
         <!-- Configuración Avanzada -->
         <v-expansion-panels class="mb-4">
@@ -452,43 +440,6 @@ onMounted(() => {
                   </v-select>
                 </v-col>
 
-                <!-- Enlace Externo -->
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="formularioNoticia.enlace_externo"
-                    label="Enlace externo (opcional)"
-                    placeholder="https://..."
-                    variant="outlined"
-                    :disabled="cargandoFormulario"
-                  >
-                    <template #prepend-inner>
-                      <v-icon>mdi-link</v-icon>
-                    </template>
-                  </v-text-field>
-                </v-col>
-
-                <!-- Destacada -->
-                <v-col cols="12">
-                  <v-card variant="outlined" class="pa-4">
-                    <div class="d-flex align-center justify-space-between">
-                      <div class="d-flex align-center">
-                        <v-icon color="warning" class="mr-3" size="large">mdi-star</v-icon>
-                        <div>
-                          <div class="text-subtitle-1 font-weight-medium">Noticia Destacada</div>
-                          <div class="text-caption text-medium-emphasis">
-                            Aparecerá primero en el carrusel
-                          </div>
-                        </div>
-                      </div>
-                      <v-switch
-                        v-model="formularioNoticia.es_destacada"
-                        color="warning"
-                        hide-details
-                        :disabled="cargandoFormulario"
-                      ></v-switch>
-                    </div>
-                  </v-card>
-                </v-col>
               </v-row>
             </v-expansion-panel-text>
           </v-expansion-panel>
