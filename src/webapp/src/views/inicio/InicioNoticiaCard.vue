@@ -1,6 +1,8 @@
 <script setup>
+import { ref, computed } from 'vue'
 import formatoFecha from '@/helpers/formatos'
 import imagenNoDisponible from '@/assets/images/img_default.png'
+import InicioNoticiaDetalle from './InicioNoticiaDetalle.vue'
 
 const props = defineProps({
   noticia: {
@@ -9,11 +11,20 @@ const props = defineProps({
   }
 })
 
+// Estado del modal
+const mostrarDetalle = ref(false)
+
 const obtenerImagen = () => {
   return props.noticia.imagen_url || props.noticia.imagen_uri || imagenNoDisponible
 }
 
-const openLink = () => {
+const tieneEnlaceExterno = computed(() => !!props.noticia.enlace_externo)
+
+const abrirDetalle = () => {
+  mostrarDetalle.value = true
+}
+
+const abrirEnlaceExterno = () => {
   if (props.noticia.enlace_externo) {
     window.open(props.noticia.enlace_externo, '_blank')
   }
@@ -72,18 +83,41 @@ const openLink = () => {
     </v-card-text>
 
     <!-- Acciones -->
-    <v-card-actions class="pa-2">
-      <v-btn
-        v-if="noticia.enlace_externo"
-        color="primary"
-        variant="elevated"
-        append-icon="mdi-arrow-right"
-        @click="openLink"
-        block
-      >
-        Leer más
-      </v-btn>
+    <v-card-actions class="pa-3">
+      <v-row dense>
+        <!-- Botón "Leer más" - siempre visible -->
+        <v-col cols="12" :sm="tieneEnlaceExterno ? 6 : 12">
+          <v-btn
+            color="primary"
+            variant="elevated"
+            append-icon="mdi-book-open-page-variant"
+            @click="abrirDetalle"
+            block
+          >
+            Leer más
+          </v-btn>
+        </v-col>
+
+        <!-- Botón "Enlace externo" - solo si existe -->
+        <v-col v-if="tieneEnlaceExterno" cols="12" sm="6">
+          <v-btn
+            color="secondary"
+            variant="outlined"
+            append-icon="mdi-open-in-new"
+            @click="abrirEnlaceExterno"
+            block
+          >
+            Ver enlace
+          </v-btn>
+        </v-col>
+      </v-row>
     </v-card-actions>
+
+    <!-- Modal de detalle -->
+    <InicioNoticiaDetalle
+      v-model="mostrarDetalle"
+      :noticia="noticia"
+    />
   </v-card>
 </template>
 
