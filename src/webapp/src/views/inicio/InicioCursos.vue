@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { api } from '@/services/api'
-import formatoFecha from '@/helpers/formatos'
 import InicioCursoCard from '@/views/inicio/InicioCursoCard.vue'
 
 const listaCurso = ref([])
@@ -49,7 +48,7 @@ onMounted(async () => {
       duracion: calcularDuracion(programa.carga_horaria, programa.plan_anho),
       modalidad: programa.nombre_modalidad,
       imagen: programa.imagen_url || obtenerImagenPorDefecto(programa.nombre_area),
-      fechaInscripcion: formatoFecha.ddMMaaaa(programa.fecha_fin_inscripcion),
+      fechaInscripcion: programa.fecha_fin_inscripcion,
       area: programa.nombre_area,
       estado: programa.estado_inscripcion,
       diasRestantes: programa.dias_restantes_inscripcion,
@@ -68,7 +67,7 @@ onMounted(async () => {
 
 <template>
   <section class="programas-section">
-    <v-container fluid class="px-md-6 px-sm-4 px-3">
+    <v-container>
       <div class="section-header" data-aos="fade-up">
         <h2 class="section-title">Nuestros Programas</h2>
         <p class="section-subtitle">

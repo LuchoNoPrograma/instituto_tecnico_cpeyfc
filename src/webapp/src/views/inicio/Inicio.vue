@@ -35,9 +35,9 @@ const whatsappLink = `https://web.whatsapp.com/send?phone=${phone}&text=${encode
 
       <inicio-info></inicio-info>
 
-      <inicio-noticia></inicio-noticia>
-
       <inicio-cursos></inicio-cursos>
+
+      <inicio-noticia></inicio-noticia>
 
       <inicio-footer></inicio-footer>
 

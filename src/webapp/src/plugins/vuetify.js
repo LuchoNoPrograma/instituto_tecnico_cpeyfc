@@ -3,6 +3,7 @@ import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
 import { es } from 'vuetify/locale'
 import { VDateInput } from 'vuetify/labs/VDateInput'
+import { VFileUpload } from 'vuetify/labs/VFileUpload'
 
 // Paleta de colores CPEYFC
 const colors = {
@@ -37,7 +38,8 @@ const colors = {
 
 export default createVuetify({
   components: {
-    VDateInput
+    VDateInput,
+    VFileUpload
   },
   // Idioma español
   locale: {

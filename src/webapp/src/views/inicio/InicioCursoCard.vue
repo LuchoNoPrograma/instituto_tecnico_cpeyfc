@@ -2,6 +2,7 @@
 import imgDefault from '@/assets/images/img_default.png'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import formatoFecha from '@/helpers/formatos.js';
 
 const props = defineProps({
   programa: {
@@ -20,9 +21,7 @@ const programaTieneImagen = computed(() => !!props.programa.imagen)
 
 const imagenPrograma = computed(() => {
   if (!programaTieneImagen.value) return imgDefault
-  // Si imagen_url es una URL completa, usarla directamente
   if (props.programa.imagen.startsWith('http')) return props.programa.imagen
-  // Si es un nombre de archivo, construir la ruta al endpoint
   return `/api/publico/programas/${props.programa.imagen}/imagen`
 })
 
@@ -62,7 +61,17 @@ const inscribirme = () => {
         </template>
       </v-img>
 
-      <!-- Chip de estado solo si inscripciones cerradas -->
+      <!-- Chip de área académica - lado derecho superior -->
+      <v-chip
+        class="programa-card__chip-area"
+        color="primary"
+        variant="elevated"
+      >
+        <v-icon icon="mdi-book-open-variant" start size="small"></v-icon>
+        {{ programa.area }}
+      </v-chip>
+
+      <!-- Chip de estado inscripciones cerradas - lado izquierdo superior -->
       <v-chip
         v-if="inscripcionesCerradas"
         class="programa-card__chip-estado"
@@ -76,34 +85,18 @@ const inscribirme = () => {
 
     <!-- Contenido -->
     <v-card-text class="pa-4">
-      <!-- Título del programa -->
-      <h3 class="text-h6 font-weight-bold mb-2 programa-card__titulo">
+      <!-- Título del programa (sin margin) -->
+      <h3 class="text-h6 font-weight-bold programa-card__titulo">
         {{ programa.nombre }}
       </h3>
 
-      <!-- Área académica -->
-      <div class="d-flex align-center mb-2">
-        <v-icon icon="mdi-book-open-variant" size="small" class="mr-2 text-primary"></v-icon>
-        <span class="text-body-2 text-grey-darken-2">
-          <span class="font-weight-medium">Área:</span> {{ programa.area }}
-        </span>
-      </div>
-
-      <v-divider class="my-3"></v-divider>
+      <v-divider class="mb-2"></v-divider>
 
       <!-- Modalidad -->
       <div class="d-flex align-center mb-2">
         <v-icon icon="mdi-school" size="small" class="mr-2 text-grey-darken-1"></v-icon>
         <span class="text-body-2 text-grey-darken-2">
           <span class="font-weight-medium">Modalidad:</span> {{ programa.modalidad }}
-        </span>
-      </div>
-
-      <!-- Carga horaria (usando duracion del mapeo) -->
-      <div class="d-flex align-center mb-2">
-        <v-icon icon="mdi-clock-outline" size="small" class="mr-2 text-grey-darken-1"></v-icon>
-        <span class="text-body-2 text-grey-darken-2">
-          <span class="font-weight-medium">Duración:</span> {{ programa.duracion }}
         </span>
       </div>
 
@@ -115,7 +108,7 @@ const inscribirme = () => {
         </span>
       </div>
 
-      <v-divider class="my-3"></v-divider>
+      <v-divider class="mb-2"></v-divider>
 
       <!-- Inscripciones abiertas hasta -->
       <div class="mb-2">
@@ -123,7 +116,7 @@ const inscribirme = () => {
           Inscripciones abiertas hasta:
         </p>
         <p class="text-body-1 font-weight-bold text-primary">
-          {{ programa.fechaInscripcion }}
+          {{ formatoFecha.literario(programa.fechaInscripcion) }}
         </p>
       </div>
 
@@ -197,10 +190,18 @@ const inscribirme = () => {
     }
   }
 
-  &__chip-estado {
+  &__chip-area {
     position: absolute;
     top: 12px;
     right: 12px;
+    z-index: 2;
+    font-weight: 600;
+  }
+
+  &__chip-estado {
+    position: absolute;
+    top: 12px;
+    left: 12px;
     z-index: 2;
     font-weight: 600;
   }

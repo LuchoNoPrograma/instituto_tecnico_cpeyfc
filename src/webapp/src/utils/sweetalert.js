@@ -206,3 +206,5 @@ export const showToastInfo = (mensaje) => {
     title: mensaje
   })
 }
+
+

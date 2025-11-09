@@ -30,6 +30,7 @@
     "particles.js": "^2.0.0",
     "sweetalert2": "^11.22.2",
     "vue": "^3.5.13",
+    "vue-advanced-cropper": "^2.8.9",
     "vue-chartjs": "^5.3.2",
     "vuetify": "^3.10.8"
   },
