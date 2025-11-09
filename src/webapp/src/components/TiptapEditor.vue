@@ -152,7 +152,7 @@ const confirmarRecorte = async () => {
       const formData = new FormData()
       formData.append('file', blob, archivoImagen.value.name)
 
-      const response = await api.post('/api/upload/imagen-noticia', formData, {
+      const response = await api.post('/api/noticia/upload/imagen', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
 

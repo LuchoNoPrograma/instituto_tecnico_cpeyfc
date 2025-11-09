@@ -37,23 +37,7 @@ public interface PubNoticiaRepository extends JpaRepository<PubNoticia, Integer>
    * @param p_id_pub_noticia ID de la noticia a consultar
    * @return Map con los datos de la noticia
    */
-  @Query(nativeQuery = true, value = """
-      SELECT
-        n.id_pub_noticia,
-        n.id_aca_unidad,
-        u.nombre_unidad,
-        n.titulo,
-        n.resumen,
-        n.imagen_uri,
-        n.enlace_externo,
-        n.fecha_noticia,
-        n.orden_prioridad,
-        n.estado
-      FROM pub_noticia n
-      INNER JOIN aca_unidad u ON n.id_aca_unidad = u.id_aca_unidad
-      WHERE n.id_pub_noticia = :p_id_pub_noticia
-        AND n.estado = 'ACTIVO'
-      """)
+  @Query(nativeQuery = true, value = "SELECT * FROM vista_noticias_activas WHERE id_pub_noticia = ?1")
   Map<String, Object> obtenerNoticiaPorId(Integer p_id_pub_noticia);
 
   /**
