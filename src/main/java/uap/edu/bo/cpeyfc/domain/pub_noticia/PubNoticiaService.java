@@ -96,7 +96,7 @@ public class PubNoticiaService {
   public Integer registrarNoticia(MultipartFile imagen,
                                   Integer idAcaUnidad,
                                   String titulo,
-                                  String resumen,
+                                  String contenido,
                                   String enlaceExterno,
                                   LocalDate fechaNoticia,
                                   Boolean esDestacada,
@@ -105,10 +105,16 @@ public class PubNoticiaService {
 
     String imagenUri = archivoService.guardarArchivo(imagen, "images/noticias");
 
+    // Procesar imágenes base64 en el contenido HTML
+    String contenidoProcesado = archivoService.procesarImagenesBase64EnHTML(
+      contenido,
+      "images/noticias"
+    );
+
     return pubNoticiaRepository.registrarNoticia(
       idAcaUnidad,
       titulo,
-      resumen,
+      contenidoProcesado,
       imagenUri,
       enlaceExterno,
       fechaNoticia,
@@ -122,7 +128,7 @@ public class PubNoticiaService {
                                   Integer idPubNoticia,
                                   Integer idAcaUnidad,
                                   String titulo,
-                                  String resumen,
+                                  String contenido,
                                   String imagenUriAntigua,
                                   String enlaceExterno,
                                   LocalDate fechaNoticia,
@@ -137,11 +143,17 @@ public class PubNoticiaService {
       archivoService.eliminarArchivo(imagenUriAntigua);
     }
 
+    // Procesar imágenes base64 en el contenido HTML
+    String contenidoProcesado = archivoService.procesarImagenesBase64EnHTML(
+      contenido,
+      "images/noticias"
+    );
+
     return pubNoticiaRepository.actualizarNoticia(
       idPubNoticia,
       idAcaUnidad,
       titulo,
-      resumen,
+      contenidoProcesado,
       imagenUri,
       enlaceExterno,
       fechaNoticia,

@@ -24,8 +24,8 @@ const imagenNoticia = computed(() => {
 })
 
 const contenidoHTML = computed(() => {
-  if (!noticia.value?.resumen) return ''
-  return DOMPurify.sanitize(noticia.value.resumen, {
+  if (!noticia.value?.contenido) return ''
+  return DOMPurify.sanitize(noticia.value.contenido, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre'],
     ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class', 'style']
   })
@@ -97,7 +97,7 @@ const actualizarMetaTags = () => {
 
   // Open Graph para Facebook, WhatsApp, etc.
   updateMetaTag('og:title', noticia.value.titulo)
-  updateMetaTag('og:description', extractPlainText(noticia.value.resumen).substring(0, 200))
+  updateMetaTag('og:description', (noticia.value.resumen || '').substring(0, 200))
   updateMetaTag('og:image', imagenNoticia.value)
   updateMetaTag('og:url', window.location.href)
   updateMetaTag('og:type', 'article')
@@ -105,7 +105,7 @@ const actualizarMetaTags = () => {
   // Twitter Cards
   updateMetaTag('twitter:card', 'summary_large_image')
   updateMetaTag('twitter:title', noticia.value.titulo)
-  updateMetaTag('twitter:description', extractPlainText(noticia.value.resumen).substring(0, 200))
+  updateMetaTag('twitter:description', (noticia.value.resumen || '').substring(0, 200))
   updateMetaTag('twitter:image', imagenNoticia.value)
 }
 

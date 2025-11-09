@@ -32,7 +32,7 @@ const emit = defineEmits(['guardar', 'cancelar'])
 const formularioNoticia = reactive({
   id_aca_unidad: null,
   titulo: '',
-  resumen: '',
+  contenido: '',
   imagen_uri: '',
   fecha_noticia: new Date(),
   orden_prioridad: 0
@@ -64,7 +64,7 @@ const esquemaReglas = computed(() => ({
     longitudMinima: longitudMinima(5),
     longitudMaxima: longitudMaxima(255)
   },
-  resumen: {
+  contenido: {
     esRequerido,
     longitudMinima: longitudMinima(20)
   },
@@ -170,7 +170,7 @@ const guardar = async () => {
     const datos = {
       id_aca_unidad: formularioNoticia.id_aca_unidad,
       titulo: formularioNoticia.titulo,
-      resumen: formularioNoticia.resumen,
+      contenido: formularioNoticia.contenido,
       fecha_noticia: formularioNoticia.fecha_noticia,
       orden_prioridad: formularioNoticia.orden_prioridad
     }
@@ -199,7 +199,7 @@ const cargarDatosNoticia = (noticia) => {
 
   formularioNoticia.id_aca_unidad = noticia.id_aca_unidad
   formularioNoticia.titulo = noticia.titulo
-  formularioNoticia.resumen = noticia.resumen
+  formularioNoticia.contenido = noticia.contenido
 
   if (noticia.fecha_noticia) {
     const fechaParts = noticia.fecha_noticia.split('-') // "2025-11-08"
@@ -219,7 +219,7 @@ const limpiarFormulario = () => {
   Object.assign(formularioNoticia, {
     id_aca_unidad: null,
     titulo: '',
-    resumen: '',
+    contenido: '',
     imagen_uri: '',
     fecha_noticia: new Date(),
     orden_prioridad: 0
@@ -380,12 +380,12 @@ onMounted(() => {
             Contenido de la noticia *
           </label>
           <TiptapEditor
-            v-model="formularioNoticia.resumen"
+            v-model="formularioNoticia.contenido"
             placeholder="Escribe aquí el contenido completo de tu noticia con formato..."
             :disabled="cargandoFormulario"
           />
-          <div v-if="$v.resumen.$errors.length" class="text-error text-caption mt-1">
-            {{ $v.resumen.$errors[0].$message }}
+          <div v-if="$v.contenido.$errors.length" class="text-error text-caption mt-1">
+            {{ $v.contenido.$errors[0].$message }}
           </div>
         </div>
 
