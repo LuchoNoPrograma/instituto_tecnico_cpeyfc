@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
@@ -28,7 +28,6 @@ const cargandoPlan = ref(false)
 const cargando = ref(false)
 const mostrarFormulario = ref(false)
 const pasoFormulario = ref(1)
-const groupHeaders = ref({})
 
 const formularioInscripcion = ref({
   ci: '',
@@ -110,28 +109,6 @@ const competenciasPrograma = ref([
   'Atención al Cliente'
 ])
 
-const headersModulos = [
-  { title: '#', key: 'orden', width: '80px', sortable: false },
-  { title: 'Sigla', key: 'sigla', width: '120px', sortable: false },
-  { title: 'Nombre del Módulo', key: 'nombre_modulo', sortable: false },
-  { title: 'Horas', key: 'carga_horaria', width: '100px', sortable: false },
-  { title: 'Créditos', key: 'creditos', width: '100px', sortable: false },
-  { title: 'Competencia', key: 'competencia', sortable: false }
-]
-
-// Función para autoexpandir grupos
-const autoExpandirGrupos = () => {
-  setTimeout(() => {
-    Object.values(groupHeaders.value).forEach(groupData => {
-      if (groupData?.toggleGroup && groupData?.isGroupOpen && groupData?.item) {
-        if (!groupData.isGroupOpen(groupData.item)) {
-          groupData.toggleGroup(groupData.item)
-        }
-      }
-    })
-  }, 100)
-}
-
 const obtenerDetallePrograma = async () => {
   if (!programaId.value) {
     router.push('/')
@@ -162,10 +139,6 @@ const obtenerPlanEstudios = async () => {
   try {
     const response = await api.get(`/api/programa-aprobado/plan-estudio/${programaId.value}`)
     planEstudios.value = response.data
-
-    nextTick(() => {
-      autoExpandirGrupos()
-    })
   } catch (error) {
     console.error('Error al obtener plan de estudios:', error)
     planEstudios.value = []
@@ -458,126 +431,123 @@ onMounted(() => {
             </v-col>
           </v-row>
 
-          <!-- Módulos del Programa -->
+          <!-- Plan de Estudios -->
           <v-row class="mt-4">
             <v-col cols="12">
               <v-card class="info-card" elevation="3">
-                <v-card-title class="bg-orange-darken-2 text-white">
+                <v-card-title class="bg-primary text-white">
                   <v-icon start>mdi-book-multiple</v-icon>
                   Plan de Estudios
                 </v-card-title>
-                <v-card-text>
+                <v-card-text class="pa-4">
 
                   <!-- Loading del plan -->
-                  <div v-if="cargandoPlan" class="text-center py-4">
+                  <div v-if="cargandoPlan" class="text-center py-8">
                     <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
                     <p class="mt-2">Cargando plan de estudios...</p>
                   </div>
 
                   <!-- Plan de estudios -->
                   <div v-else-if="planEstudios.length > 0">
-
-                    <!-- Tabla de módulos -->
-                    <v-data-table
-                      :headers="headersModulos"
-                      :items="planEstudios"
-                      :group-by="[{ key: 'nivel', order: 'asc' }]"
-                      class="elevation-1"
-                      density="compact"
-                      :items-per-page="-1"
-                      hide-default-footer
-                    >
-                      <template v-slot:top>
-                        <v-row class="bg-orange-lighten-5 ma-0 pa-0">
-                          <v-col cols="4">
-                            <div class="text-center">
-                              <div class="text-h6 text-primary">{{ planEstudios.length }}</div>
-                              <div class="text-caption">Módulos</div>
-                            </div>
-                          </v-col>
-                          <v-col cols="4">
-                            <div class="text-center">
-                              <div class="text-h6 text-primary">{{ planEstudios.reduce((sum, m) => sum + m.carga_horaria, 0) }}</div>
-                              <div class="text-caption">Horas Total</div>
-                            </div>
-                          </v-col>
-                          <v-col cols="4">
-                            <div class="text-center">
-                              <div class="text-h6 text-primary">{{ planEstudios.reduce((sum, m) => sum + parseFloat(m.creditos), 0) }}</div>
-                              <div class="text-caption">Créditos</div>
-                            </div>
-                          </v-col>
-                        </v-row>
-                      </template>
-
-                      <!-- Header de grupo -->
-                      <template v-slot:group-header="{ item, columns, toggleGroup, isGroupOpen }">
-                        <template :ref="(el) => { groupHeaders[item.value] = { item, toggleGroup, isGroupOpen } }" />
-                        <tr class="grupo-nivel">
-                          <td :colspan="columns.length" class="pa-3 bg-orange-lighten-5">
-                            <v-btn
-                              variant="elevated"
-                              size="small"
-                              color="orange-darken-2"
-                              :icon="isGroupOpen(item) ? 'mdi-chevron-down' : 'mdi-chevron-right'"
-                              @click="toggleGroup(item)"
-                            ></v-btn>
-                            <strong class="text-orange-darken-2 ml-4">
-                              <v-icon class="me-1">mdi-book-open-page-variant</v-icon>
-                              Nivel {{ item.value }} - ({{ planEstudios.filter(m => m.nivel === item.value).length }} módulos)
-                            </strong>
-                          </td>
-                        </tr>
-                      </template>
-
-                      <!-- Columna de orden -->
-                      <template v-slot:item.orden="{ item }">
-                        {{ item.orden }}
-                      </template>
-
-                      <!-- Columna de sigla -->
-                      <template v-slot:item.sigla="{ item }">
-                        <v-chip size="small" color="orange" variant="elevated">
-                          {{ item.sigla }}
-                        </v-chip>
-                      </template>
-
-                      <!-- Columna de carga horaria -->
-                      <template v-slot:item.carga_horaria="{ item }">
-                        <span class="text-body-2">{{ item.carga_horaria }}h</span>
-                      </template>
-
-                      <!-- Columna de créditos -->
-                      <template v-slot:item.creditos="{ item }">
-                        <span class="text-body-2">{{ item.creditos }}</span>
-                      </template>
-
-                      <!-- Columna de competencia -->
-                      <template v-slot:item.competencia="{ item }">
-                        <div class="text-caption text-grey" style="max-width: 300px;">
-                          {{ item.competencia || 'No especificada' }}
+                    <!-- Resumen estadístico -->
+                    <v-row class="mb-4">
+                      <v-col cols="4">
+                        <div class="stat-card text-center pa-3">
+                          <div class="text-h5 font-weight-bold text-primary">{{ planEstudios.length }}</div>
+                          <div class="text-caption text-grey-darken-1">Módulos</div>
                         </div>
-                      </template>
-                    </v-data-table>
+                      </v-col>
+                      <v-col cols="4">
+                        <div class="stat-card text-center pa-3">
+                          <div class="text-h5 font-weight-bold text-primary">{{ planEstudios.reduce((sum, m) => sum + m.carga_horaria, 0) }}</div>
+                          <div class="text-caption text-grey-darken-1">Horas Totales</div>
+                        </div>
+                      </v-col>
+                      <v-col cols="4">
+                        <div class="stat-card text-center pa-3">
+                          <div class="text-h5 font-weight-bold text-primary">{{ planEstudios.reduce((sum, m) => sum + parseFloat(m.creditos), 0) }}</div>
+                          <div class="text-caption text-grey-darken-1">Créditos</div>
+                        </div>
+                      </v-col>
+                    </v-row>
+
+                    <!-- Acordeones por nivel -->
+                    <v-expansion-panels variant="accordion" class="plan-expansion">
+                      <v-expansion-panel
+                        v-for="nivel in [...new Set(planEstudios.map(m => m.nivel))].sort()"
+                        :key="nivel"
+                        elevation="0"
+                      >
+                        <v-expansion-panel-title class="nivel-header">
+                          <div class="d-flex align-center">
+                            <v-icon class="me-2" size="20">mdi-book-open-variant</v-icon>
+                            <span class="font-weight-medium">Nivel {{ nivel }}</span>
+                            <v-chip size="small" variant="tonal" color="primary" class="ml-2">
+                              {{ planEstudios.filter(m => m.nivel === nivel).length }} módulos
+                            </v-chip>
+                          </div>
+                        </v-expansion-panel-title>
+
+                        <v-expansion-panel-text>
+                          <v-list lines="two" density="compact" class="modulos-list">
+                            <v-list-item
+                              v-for="modulo in planEstudios.filter(m => m.nivel === nivel)"
+                              :key="modulo.sigla"
+                              class="modulo-item"
+                            >
+                              <template #prepend>
+                                <v-avatar size="32" color="primary" variant="tonal">
+                                  <span class="text-caption font-weight-bold">{{ modulo.orden }}</span>
+                                </v-avatar>
+                              </template>
+
+                              <v-list-item-title class="font-weight-medium mb-1">
+                                {{ modulo.nombre_modulo }}
+                              </v-list-item-title>
+
+                              <v-list-item-subtitle class="text-caption">
+                                <v-chip size="x-small" variant="outlined" class="mr-1">
+                                  {{ modulo.sigla }}
+                                </v-chip>
+                                <span class="text-grey-darken-1">
+                                  • {{ modulo.carga_horaria }}h • {{ modulo.creditos }} créditos
+                                </span>
+                              </v-list-item-subtitle>
+
+                              <template #append v-if="modulo.competencia">
+                                <v-tooltip location="left">
+                                  <template #activator="{ props }">
+                                    <v-icon v-bind="props" size="20" color="grey">mdi-information-outline</v-icon>
+                                  </template>
+                                  <span style="max-width: 300px; display: block;">{{ modulo.competencia }}</span>
+                                </v-tooltip>
+                              </template>
+                            </v-list-item>
+                          </v-list>
+                        </v-expansion-panel-text>
+                      </v-expansion-panel>
+                    </v-expansion-panels>
                   </div>
 
                   <!-- Sin plan de estudios -->
-                  <div v-else class="text-center py-6">
+                  <div v-else class="text-center py-8">
                     <v-icon size="48" color="grey-lighten-1">mdi-book-outline</v-icon>
                     <p class="mt-2 text-grey">Plan de estudios no disponible</p>
                   </div>
 
-                  <v-divider class="my-4"></v-divider>
-
-                  <div class="text-center">
-                    <h4 class="mb-3">🏆 Certificación</h4>
-                    <p class="text-body-2 mb-3">
-                      Al completar exitosamente el programa, recibirás un <strong>Diploma de Técnico Superior</strong>
-                      avalado por la Universidad Amazónica de Pando, reconocido a nivel nacional.
-                    </p>
-                    <v-chip color="green" variant="elevated" prepend-icon="mdi-certificate">
-                      Certificación Oficial UAP
-                    </v-chip>
+                  <!-- Certificación -->
+                  <div v-if="planEstudios.length > 0" class="mt-6 pa-4 bg-green-lighten-5 rounded">
+                    <div class="text-center">
+                      <v-icon size="40" color="green" class="mb-2">mdi-certificate-outline</v-icon>
+                      <h4 class="text-h6 font-weight-bold mb-2">Certificación Oficial</h4>
+                      <p class="text-body-2 mb-3">
+                        Al completar el programa, recibirás un <strong>Diploma de Técnico Superior</strong>
+                        avalado por la Universidad Amazónica de Pando, con reconocimiento a nivel nacional.
+                      </p>
+                      <v-chip color="green" variant="elevated" prepend-icon="mdi-seal">
+                        Certificación UAP
+                      </v-chip>
+                    </div>
                   </div>
                 </v-card-text>
               </v-card>
@@ -853,14 +823,6 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.v-data-table {
-  border-radius: 8px;
-
-  .v-data-table__tr:hover {
-    background-color: rgba(255, 152, 0, 0.04) !important;
-  }
-}
-
 .detalle-programa {
   min-height: 100vh;
   background: #f8f9fa;
@@ -925,6 +887,65 @@ onMounted(() => {
       text-align: justify;
       color: #444;
     }
+  }
+
+  // Estilos para plan de estudios
+  .stat-card {
+    background: rgba(var(--v-theme-primary), 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(var(--v-theme-primary), 0.1);
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(var(--v-theme-primary), 0.08);
+      transform: translateY(-2px);
+    }
+  }
+
+  .plan-expansion {
+    :deep(.v-expansion-panel) {
+      margin-bottom: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 8px !important;
+
+      &:before {
+        box-shadow: none;
+      }
+    }
+
+    :deep(.v-expansion-panel-title) {
+      min-height: 56px;
+      padding: 16px;
+      font-size: 0.95rem;
+
+      &:hover {
+        background-color: rgba(var(--v-theme-primary), 0.04);
+      }
+    }
+
+    :deep(.v-expansion-panel-text__wrapper) {
+      padding: 0;
+    }
+  }
+
+  .modulos-list {
+    background: transparent;
+
+    :deep(.v-list-item) {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background-color: rgba(var(--v-theme-primary), 0.02);
+      }
+    }
+  }
+
+  .modulo-item {
+    padding: 12px 16px;
   }
 
   .formulario-inscripcion {
