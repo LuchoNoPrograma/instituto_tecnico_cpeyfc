@@ -247,81 +247,6 @@ onMounted(() => {
 
 <template>
   <div class="formulario-noticia-pro">
-    <!-- Zona de Imagen Principal -->
-    <div class="imagen-section">
-      <!-- Preview Grande (solo si hay imagen) -->
-      <div v-if="tieneImagen" class="imagen-preview-container">
-        <v-img
-          :src="previewImagen"
-          aspect-ratio="4/3"
-          cover
-          class="imagen-preview"
-        >
-          <template #error>
-            <div class="error-fallback">
-              <v-file-upload
-                v-model="archivoImagen"
-                label="Error al cargar imagen - Selecciona otra"
-                variant="outlined"
-                prepend-icon="mdi-image-plus"
-                accept="image/*"
-                :disabled="cargandoFormulario"
-                show-size
-                scrim
-                @update:model-value="onArchivoSeleccionado"
-                class="ma-4 w-100"
-              />
-            </div>
-          </template>
-        </v-img>
-
-        <!-- Overlay con botón editar -->
-        <div class="imagen-overlay">
-          <v-btn
-            icon="mdi-pencil"
-            color="white"
-            size="large"
-            @click="editarImagen"
-            :disabled="cargandoFormulario"
-          >
-            <v-icon>mdi-pencil</v-icon>
-            <v-tooltip activator="parent" location="bottom">Cambiar imagen</v-tooltip>
-          </v-btn>
-        </div>
-      </div>
-
-      <!-- File Upload visible cuando NO hay imagen -->
-      <div v-else class="file-upload-container">
-        <v-file-upload
-          v-model="archivoImagen"
-          label="Seleccionar imagen de portada"
-          variant="outlined"
-          prepend-icon="mdi-image-plus"
-          accept="image/*"
-          :disabled="cargandoFormulario"
-          show-size
-          scrim
-          chips
-          @update:model-value="onArchivoSeleccionado"
-          class="ma-6 w-100"
-        >
-          <template #hint>
-            <div class="text-center mt-2">
-              PNG, JPG, WEBP, GIF • Máximo 10MB • Se recortará a formato 16:9
-            </div>
-          </template>
-        </v-file-upload>
-      </div>
-
-      <input
-        id="file-input-hidden"
-        type="file"
-        accept="image/*"
-        style="display: none"
-        @change="(e) => onArchivoSeleccionado(e.target.files[0])"
-      >
-    </div>
-
     <!-- Contenido del formulario -->
     <v-card-text class="pa-6">
       <v-form>
@@ -374,6 +299,82 @@ onMounted(() => {
           </v-col>
         </v-row>
 
+        <!-- Portada -->
+        <div class="mb-4">
+          <label class="text-subtitle-2 text-medium-emphasis mb-2 d-block">
+            <v-icon size="small" class="mr-1">mdi-image</v-icon>
+            Portada
+          </label>
+
+          <!-- Preview Grande (solo si hay imagen) -->
+          <div v-if="tieneImagen" class="imagen-preview-container">
+            <v-img
+              :src="previewImagen"
+              aspect-ratio="16/9"
+              cover
+              class="imagen-preview"
+            >
+              <template #error>
+                <div class="error-fallback">
+                  <v-file-upload
+                    v-model="archivoImagen"
+                    label="Error al cargar imagen - Selecciona otra"
+                    variant="outlined"
+                    prepend-icon="mdi-image-plus"
+                    accept="image/*"
+                    :disabled="cargandoFormulario"
+                    show-size
+                    @update:model-value="onArchivoSeleccionado"
+                    class="ma-4 w-100"
+                  />
+                </div>
+              </template>
+            </v-img>
+
+            <!-- Overlay con botón editar -->
+            <div class="imagen-overlay">
+              <v-btn
+                icon="mdi-pencil"
+                color="white"
+                size="large"
+                @click="editarImagen"
+                :disabled="cargandoFormulario"
+              >
+                <v-icon>mdi-pencil</v-icon>
+                <v-tooltip activator="parent" location="bottom">Cambiar imagen</v-tooltip>
+              </v-btn>
+            </div>
+          </div>
+
+          <!-- File Upload visible cuando NO hay imagen -->
+          <v-file-upload
+            v-else
+            v-model="archivoImagen"
+            label="Seleccionar imagen de portada"
+            variant="outlined"
+            prepend-icon="mdi-image-plus"
+            accept="image/*"
+            :disabled="cargandoFormulario"
+            show-size
+            chips
+            @update:model-value="onArchivoSeleccionado"
+          >
+            <template #hint>
+              <div class="text-center mt-2">
+                PNG, JPG, WEBP, GIF • Máximo 10MB
+              </div>
+            </template>
+          </v-file-upload>
+
+          <input
+            id="file-input-hidden"
+            type="file"
+            accept="image/*"
+            style="display: none"
+            @change="(e) => onArchivoSeleccionado(e.target.files[0])"
+          >
+        </div>
+
         <!-- Contenido Principal con Editor Rich Text -->
         <div class="mb-4">
           <label class="text-subtitle-2 text-medium-emphasis mb-2 d-block">
@@ -384,68 +385,11 @@ onMounted(() => {
             placeholder="Escribe aquí el contenido completo de tu noticia con formato..."
             :disabled="cargandoFormulario"
             upload-endpoint="/api/noticia/upload/imagen"
-            :enable-image-crop="true"
           />
           <div v-if="$v.contenido.$errors.length" class="text-error text-caption mt-1">
             {{ $v.contenido.$errors[0].$message }}
           </div>
         </div>
-
-        <!-- Configuración Avanzada -->
-        <v-expansion-panels class="mb-4">
-          <v-expansion-panel>
-            <v-expansion-panel-title>
-              <div class="d-flex align-center">
-                <v-icon class="mr-2">mdi-cog</v-icon>
-                Configuración Avanzada
-              </div>
-            </v-expansion-panel-title>
-            <v-expansion-panel-text>
-              <v-row>
-                <!-- Prioridad -->
-                <v-col cols="12" md="6">
-                  <v-select
-                    v-model="formularioNoticia.orden_prioridad"
-                    :items="opcionesPrioridad"
-                    item-title="titulo"
-                    item-value="valor"
-                    label="Prioridad"
-                    variant="outlined"
-                    :disabled="cargandoFormulario"
-                  >
-                    <template #prepend-inner>
-                      <v-icon>mdi-priority-high</v-icon>
-                    </template>
-
-                    <template #item="{ props, item }">
-                      <v-list-item v-bind="props">
-                        <template #prepend>
-                          <v-icon :color="item.raw.color">{{ item.raw.icono }}</v-icon>
-                        </template>
-                        <template #title>
-                          <span :class="`text-${item.raw.color}`">{{ item.raw.titulo }}</span>
-                        </template>
-                        <template #subtitle>
-                          {{ item.raw.descripcion }}
-                        </template>
-                      </v-list-item>
-                    </template>
-
-                    <template #selection="{ item }">
-                      <div class="d-flex align-center">
-                        <v-icon :color="item.raw.color" size="small" class="mr-2">
-                          {{ item.raw.icono }}
-                        </v-icon>
-                        <span>{{ item.raw.titulo }}</span>
-                      </div>
-                    </template>
-                  </v-select>
-                </v-col>
-
-              </v-row>
-            </v-expansion-panel-text>
-          </v-expansion-panel>
-        </v-expansion-panels>
       </v-form>
     </v-card-text>
 
@@ -525,15 +469,13 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .formulario-noticia-pro {
-  .imagen-section {
+  .imagen-preview-container {
     position: relative;
-    background: #f5f5f5;
+    overflow: hidden;
+    border-radius: 8px;
 
-    .file-upload-container {
-      min-height: 200px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .imagen-preview {
+      width: 100%;
     }
 
     .error-fallback {
@@ -545,31 +487,22 @@ onMounted(() => {
       background: rgba(var(--v-theme-error), 0.1);
     }
 
-    .imagen-preview-container {
-      position: relative;
-      overflow: hidden;
+    .imagen-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
 
-      .imagen-preview {
-        width: 100%;
-      }
-
-      .imagen-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-
-        &:hover {
-          opacity: 1;
-        }
+      &:hover {
+        opacity: 1;
       }
     }
   }
@@ -582,18 +515,12 @@ onMounted(() => {
     }
   }
 
-  .v-card-text {
-    max-height: 60vh;
-    overflow-y: auto;
-  }
-
   .cropper-container {
     height: 500px;
-    background: #f5f5f5;
+    background: rgba(var(--v-theme-surface-variant), 1);
 
     .cropper {
       height: 100%;
-      background: #f5f5f5;
     }
   }
 }

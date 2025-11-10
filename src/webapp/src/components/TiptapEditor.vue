@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onBeforeUnmount } from 'vue'
+import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -30,10 +30,6 @@ const props = defineProps({
   uploadEndpoint: {
     type: String,
     required: true
-  },
-  enableImageCrop: {
-    type: Boolean,
-    default: true
   }
 })
 
@@ -42,13 +38,18 @@ const emit = defineEmits(['update:modelValue'])
 
 // Estados
 const fileInputRef = ref(null)
-const dialogCropper = ref(false)
+const cropOverlay = ref(false)
 const imagenOriginal = ref(null)
 const cropperRef = ref(null)
-const imagenPendiente = ref(null)
+const currentImageNode = ref(null)
+const currentImagePos = ref(null)
 const uploadingImage = ref(false)
+const contextMenu = ref(false)
+const contextMenuX = ref(0)
+const contextMenuY = ref(0)
+const selectedImageElement = ref(null)
 
-// Extensión de imagen personalizada con resize
+// Extensión de imagen personalizada con resize en 4 esquinas
 const CustomImage = Image.extend({
   addAttributes() {
     return {
@@ -93,23 +94,34 @@ const CustomImage = Image.extend({
       img.style.borderRadius = '8px'
       img.style.cursor = 'pointer'
 
-      // Resize handles
+      // Variables de resize
       let isResizing = false
-      let startX, startWidth
+      let startX, startY, startWidth, startHeight, aspectRatio
 
-      const createResizeHandle = () => {
+      // Crear 4 handles de resize en las esquinas
+      const handles = []
+      const positions = [
+        { name: 'nw', cursor: 'nw-resize', top: '-5px', left: '-5px' },
+        { name: 'ne', cursor: 'ne-resize', top: '-5px', right: '-5px' },
+        { name: 'sw', cursor: 'sw-resize', bottom: '-5px', left: '-5px' },
+        { name: 'se', cursor: 'se-resize', bottom: '-5px', right: '-5px' }
+      ]
+
+      positions.forEach(pos => {
         const handle = document.createElement('div')
-        handle.classList.add('resize-handle')
+        handle.classList.add('resize-handle', `resize-handle-${pos.name}`)
         handle.style.cssText = `
           position: absolute;
-          right: -5px;
-          bottom: -5px;
+          ${pos.top ? `top: ${pos.top};` : ''}
+          ${pos.bottom ? `bottom: ${pos.bottom};` : ''}
+          ${pos.left ? `left: ${pos.left};` : ''}
+          ${pos.right ? `right: ${pos.right};` : ''}
           width: 12px;
           height: 12px;
           background: rgb(var(--v-theme-primary));
           border: 2px solid white;
           border-radius: 50%;
-          cursor: nwse-resize;
+          cursor: ${pos.cursor};
           display: none;
           box-shadow: 0 2px 4px rgba(0,0,0,0.2);
           z-index: 10;
@@ -120,40 +132,64 @@ const CustomImage = Image.extend({
           e.stopPropagation()
           isResizing = true
           startX = e.clientX
+          startY = e.clientY
           startWidth = img.offsetWidth
+          startHeight = img.offsetHeight
+          aspectRatio = startWidth / startHeight
 
-          document.addEventListener('mousemove', handleMouseMove)
-          document.addEventListener('mouseup', handleMouseUp)
+          const handleResize = (e) => {
+            if (!isResizing) return
+
+            let deltaX = 0
+            let deltaY = 0
+
+            // Calcular delta según la esquina
+            if (pos.name === 'se') {
+              deltaX = e.clientX - startX
+              deltaY = e.clientY - startY
+            } else if (pos.name === 'sw') {
+              deltaX = -(e.clientX - startX)
+              deltaY = e.clientY - startY
+            } else if (pos.name === 'ne') {
+              deltaX = e.clientX - startX
+              deltaY = -(e.clientY - startY)
+            } else if (pos.name === 'nw') {
+              deltaX = -(e.clientX - startX)
+              deltaY = -(e.clientY - startY)
+            }
+
+            // Usar el mayor delta y mantener proporción
+            const maxDelta = Math.max(deltaX, deltaY)
+            const newWidth = Math.max(100, Math.min(startWidth + maxDelta, 800))
+            const newHeight = newWidth / aspectRatio
+
+            img.style.width = newWidth + 'px'
+            img.style.height = newHeight + 'px'
+          }
+
+          const stopResize = () => {
+            if (isResizing) {
+              isResizing = false
+              const pos = getPos()
+              if (typeof pos === 'number') {
+                editor.commands.updateAttributes('image', {
+                  width: img.offsetWidth,
+                  height: img.offsetHeight
+                })
+              }
+              document.removeEventListener('mousemove', handleResize)
+              document.removeEventListener('mouseup', stopResize)
+            }
+          }
+
+          document.addEventListener('mousemove', handleResize)
+          document.addEventListener('mouseup', stopResize)
         })
 
-        return handle
-      }
+        handles.push(handle)
+      })
 
-      const handleMouseMove = (e) => {
-        if (!isResizing) return
-        const deltaX = e.clientX - startX
-        const newWidth = Math.max(100, Math.min(startWidth + deltaX, 800))
-        img.style.width = newWidth + 'px'
-      }
-
-      const handleMouseUp = () => {
-        if (isResizing) {
-          isResizing = false
-          // Actualizar el nodo con el nuevo tamaño
-          const pos = getPos()
-          if (typeof pos === 'number') {
-            editor.commands.updateAttributes('image', {
-              width: img.offsetWidth
-            })
-          }
-          document.removeEventListener('mousemove', handleMouseMove)
-          document.removeEventListener('mouseup', handleMouseUp)
-        }
-      }
-
-      const resizeHandle = createResizeHandle()
-
-      // Container wrapper para posicionar el handle
+      // Container wrapper
       const container = document.createElement('div')
       container.style.cssText = `
         position: relative;
@@ -162,10 +198,10 @@ const CustomImage = Image.extend({
       `
 
       container.appendChild(img)
-      container.appendChild(resizeHandle)
+      handles.forEach(handle => container.appendChild(handle))
       dom.appendChild(container)
 
-      // Mostrar/ocultar resize handle al hacer click en imagen
+      // Click en imagen para mostrar handles
       img.addEventListener('click', (e) => {
         e.stopPropagation()
         if (!editor.isEditable) return
@@ -175,20 +211,40 @@ const CustomImage = Image.extend({
           h.style.display = 'none'
         })
 
-        // Mostrar este handle
-        resizeHandle.style.display = 'block'
+        // Mostrar handles de esta imagen
+        handles.forEach(handle => {
+          handle.style.display = 'block'
+        })
       })
 
-      // Ocultar handle al hacer click fuera
-      const hideHandle = (e) => {
+      // Click derecho para menú contextual
+      img.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!editor.isEditable) return
+
+        // Guardar referencia a la imagen y nodo
+        selectedImageElement.value = img
+        currentImageNode.value = node
+        currentImagePos.value = getPos()
+
+        // Mostrar menú contextual
+        contextMenuX.value = e.clientX
+        contextMenuY.value = e.clientY
+        contextMenu.value = true
+      })
+
+      // Ocultar handles al hacer click fuera
+      const hideHandles = (e) => {
         if (!container.contains(e.target)) {
-          resizeHandle.style.display = 'none'
+          handles.forEach(handle => {
+            handle.style.display = 'none'
+          })
         }
       }
 
-      // Agregar listener para clicks globales
       setTimeout(() => {
-        document.addEventListener('click', hideHandle)
+        document.addEventListener('click', hideHandles)
       }, 0)
 
       return {
@@ -197,10 +253,11 @@ const CustomImage = Image.extend({
           if (updatedNode.type.name !== 'image') return false
           img.src = updatedNode.attrs.src
           if (updatedNode.attrs.width) img.style.width = updatedNode.attrs.width + 'px'
+          if (updatedNode.attrs.height) img.style.height = updatedNode.attrs.height + 'px'
           return true
         },
         destroy: () => {
-          document.removeEventListener('click', hideHandle)
+          document.removeEventListener('click', hideHandles)
         }
       }
     }
@@ -215,7 +272,9 @@ const editor = useEditor({
     StarterKit.configure({
       heading: {
         levels: [1, 2, 3]
-      }
+      },
+      blockquote: false,
+      horizontalRule: false
     }),
     CustomImage,
     Underline,
@@ -274,41 +333,11 @@ const onArchivoSeleccionado = (event) => {
     return
   }
 
-  if (props.enableImageCrop) {
-    // Abrir cropper
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      imagenOriginal.value = e.target.result
-      imagenPendiente.value = file
-      dialogCropper.value = true
-    }
-    reader.readAsDataURL(file)
-  } else {
-    // Subir directamente
-    subirImagen(file)
-  }
+  // Subir directamente sin crop
+  subirImagen(file)
 
   // Limpiar input
   event.target.value = ''
-}
-
-const confirmarRecorte = async () => {
-  const { canvas } = cropperRef.value.getResult()
-
-  if (canvas) {
-    canvas.toBlob(async (blob) => {
-      const archivoRecortado = new File([blob], 'image.jpg', { type: 'image/jpeg' })
-      await subirImagen(archivoRecortado)
-      dialogCropper.value = false
-      imagenOriginal.value = null
-    }, 'image/jpeg', 0.9)
-  }
-}
-
-const cancelarRecorte = () => {
-  dialogCropper.value = false
-  imagenOriginal.value = null
-  imagenPendiente.value = null
 }
 
 const subirImagen = async (file) => {
@@ -351,6 +380,59 @@ const insertarEnlace = () => {
 
 const eliminarEnlace = () => {
   editor.value.chain().focus().unsetLink().run()
+}
+
+// Método para recortar imagen desde menú contextual
+const recortarImagen = () => {
+  contextMenu.value = false
+
+  if (selectedImageElement.value) {
+    // Cargar imagen para crop
+    imagenOriginal.value = selectedImageElement.value.src
+    cropOverlay.value = true
+  }
+}
+
+const confirmarRecorte = async () => {
+  const { canvas } = cropperRef.value.getResult()
+
+  if (canvas && currentImagePos.value !== null) {
+    canvas.toBlob(async (blob) => {
+      try {
+        // Subir imagen recortada
+        const formData = new FormData()
+        formData.append('file', blob, 'cropped-image.jpg')
+
+        const response = await api.post(props.uploadEndpoint, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+
+        if (response.data.success && response.data.url) {
+          // Actualizar la imagen en el editor
+          editor.value.commands.updateAttributes('image', {
+            src: response.data.url
+          })
+        }
+
+        cropOverlay.value = false
+        imagenOriginal.value = null
+        selectedImageElement.value = null
+        currentImageNode.value = null
+        currentImagePos.value = null
+      } catch (error) {
+        console.error('Error al subir imagen recortada:', error)
+        alert('Error al guardar la imagen recortada')
+      }
+    }, 'image/jpeg', 0.9)
+  }
+}
+
+const cancelarRecorte = () => {
+  cropOverlay.value = false
+  imagenOriginal.value = null
+  selectedImageElement.value = null
+  currentImageNode.value = null
+  currentImagePos.value = null
 }
 
 onBeforeUnmount(() => {
@@ -538,27 +620,8 @@ onBeforeUnmount(() => {
 
       <v-divider vertical class="mx-2"></v-divider>
 
-      <!-- Otros -->
+      <!-- Deshacer/Rehacer -->
       <v-btn-group density="compact" variant="outlined">
-        <v-btn
-          size="small"
-          :class="{ 'active': editor.isActive('blockquote') }"
-          @click="editor.chain().focus().toggleBlockquote().run()"
-          :disabled="disabled"
-        >
-          <v-icon>mdi-format-quote-close</v-icon>
-          <v-tooltip activator="parent" location="bottom">Cita</v-tooltip>
-        </v-btn>
-
-        <v-btn
-          size="small"
-          @click="editor.chain().focus().setHorizontalRule().run()"
-          :disabled="disabled"
-        >
-          <v-icon>mdi-minus</v-icon>
-          <v-tooltip activator="parent" location="bottom">Línea horizontal</v-tooltip>
-        </v-btn>
-
         <v-btn
           size="small"
           @click="editor.chain().focus().undo().run()"
@@ -596,29 +659,41 @@ onBeforeUnmount(() => {
       @change="onArchivoSeleccionado"
     >
 
-    <!-- Dialog Cropper -->
-    <v-dialog v-model="dialogCropper" max-width="800px" persistent>
-      <v-card>
-        <v-card-title class="bg-primary text-white pa-4">
-          <v-icon start>mdi-crop</v-icon>
-          Recortar Imagen
-        </v-card-title>
+    <!-- Menú contextual -->
+    <v-menu
+      v-model="contextMenu"
+      :style="{ position: 'absolute', left: contextMenuX + 'px', top: contextMenuY + 'px' }"
+      location="bottom"
+    >
+      <v-list density="compact">
+        <v-list-item @click="recortarImagen">
+          <template #prepend>
+            <v-icon>mdi-crop</v-icon>
+          </template>
+          <v-list-item-title>Recortar</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
 
-        <v-card-text class="pa-6">
-          <div class="cropper-container">
-            <Cropper
-              ref="cropperRef"
-              class="cropper"
-              :src="imagenOriginal"
-            />
-          </div>
-          <div class="text-caption text-center text-medium-emphasis mt-4">
-            Arrastra y ajusta la imagen como desees. Puedes recortar libremente.
-          </div>
-        </v-card-text>
+    <!-- Overlay de crop in-place -->
+    <div v-if="cropOverlay" class="crop-overlay" @click.self="cancelarRecorte">
+      <div class="crop-container">
+        <div class="crop-header">
+          <span class="text-h6">Recortar Imagen</span>
+          <v-btn icon size="small" variant="text" @click="cancelarRecorte">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </div>
 
-        <v-card-actions class="pa-4">
-          <v-spacer></v-spacer>
+        <div class="cropper-wrapper">
+          <Cropper
+            ref="cropperRef"
+            class="cropper"
+            :src="imagenOriginal"
+          />
+        </div>
+
+        <div class="crop-actions">
           <v-btn variant="text" @click="cancelarRecorte">
             Cancelar
           </v-btn>
@@ -626,9 +701,9 @@ onBeforeUnmount(() => {
             <v-icon start>mdi-check</v-icon>
             Confirmar
           </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -667,12 +742,54 @@ onBeforeUnmount(() => {
     }
   }
 
-  .cropper-container {
-    height: 500px;
-    background: rgba(var(--v-theme-surface-variant), 1);
+  .crop-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
 
-    .cropper {
-      height: 100%;
+    .crop-container {
+      background: rgba(var(--v-theme-surface), 1);
+      border-radius: 8px;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+
+      .crop-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: rgb(var(--v-theme-primary));
+        color: white;
+      }
+
+      .cropper-wrapper {
+        height: 60vh;
+        background: rgba(var(--v-theme-surface-variant), 1);
+        padding: 20px;
+
+        .cropper {
+          height: 100%;
+        }
+      }
+
+      .crop-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 16px 20px;
+        border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+      }
     }
   }
 }
@@ -730,14 +847,6 @@ onBeforeUnmount(() => {
     }
   }
 
-  blockquote {
-    border-left: 4px solid rgb(var(--v-theme-primary));
-    padding-left: 1.5em;
-    margin: 1.5em 0;
-    font-style: italic;
-    color: rgba(var(--v-theme-on-surface), 0.7);
-  }
-
   a {
     color: rgb(var(--v-theme-primary));
     text-decoration: underline;
@@ -745,12 +854,6 @@ onBeforeUnmount(() => {
     &:hover {
       text-decoration: none;
     }
-  }
-
-  hr {
-    margin: 2em 0;
-    border: none;
-    border-top: 2px solid rgba(var(--v-border-color), var(--v-border-opacity));
   }
 
   code {
@@ -784,8 +887,8 @@ onBeforeUnmount(() => {
       gap: 4px;
     }
 
-    .cropper-container {
-      height: 300px;
+    .crop-overlay .crop-container .cropper-wrapper {
+      height: 50vh;
     }
   }
 }
