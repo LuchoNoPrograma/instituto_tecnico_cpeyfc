@@ -408,9 +408,11 @@ const confirmarRecorte = async () => {
         })
 
         if (response.data.success && response.data.url) {
-          // Actualizar la imagen en el editor
+          // Actualizar la imagen en el editor sin width/height para evitar distorsión
           editor.value.commands.updateAttributes('image', {
-            src: response.data.url
+            src: response.data.url,
+            width: null,
+            height: null
           })
         }
 
@@ -666,7 +668,7 @@ onBeforeUnmount(() => {
       location="bottom"
     >
       <v-list density="compact">
-        <v-list-item @click="recortarImagen">
+        <v-list-item @click="recortarImagen" :disabled="uploadingImage">
           <template #prepend>
             <v-icon>mdi-crop</v-icon>
           </template>
