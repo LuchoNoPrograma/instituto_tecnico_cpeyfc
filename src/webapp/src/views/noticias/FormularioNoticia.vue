@@ -383,6 +383,8 @@ onMounted(() => {
             v-model="formularioNoticia.contenido"
             placeholder="Escribe aquí el contenido completo de tu noticia con formato..."
             :disabled="cargandoFormulario"
+            upload-endpoint="/api/noticia/upload/imagen"
+            :enable-image-crop="true"
           />
           <div v-if="$v.contenido.$errors.length" class="text-error text-caption mt-1">
             {{ $v.contenido.$errors[0].$message }}
