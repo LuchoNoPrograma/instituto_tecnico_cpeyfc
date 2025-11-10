@@ -590,16 +590,16 @@ onMounted(() => {
     <!-- Dialog de Formulario de Inscripción -->
     <v-dialog
       v-model="mostrarFormulario"
-      max-width="1080"
+      max-width="900"
       persistent
       scrollable
       class="mx-2"
     >
       <v-card class="formulario-inscripcion" :loading="buscandoPersona">
-        <!-- Header del formulario -->
-        <v-card-title class="bg-primary text-white d-flex align-center pa-3 pa-md-4">
-          <v-icon start size="24" class="d-none d-md-inline">mdi-account-plus</v-icon>
-          <span class="text-h6 text-md-h5 flex-grow-1 text-center text-md-start">Formulario de Inscripción Online</span>
+        <!-- Header Compacto -->
+        <v-card-title class="bg-primary text-white d-flex align-center pa-3">
+          <v-icon start size="20">mdi-account-plus</v-icon>
+          <span class="text-subtitle-1 text-md-h6 flex-grow-1">Preinscripción - {{ programa?.nombre_programa }}</span>
           <v-btn
             icon
             variant="text"
@@ -611,274 +611,230 @@ onMounted(() => {
           </v-btn>
         </v-card-title>
 
-        <!-- Información del programa en el formulario -->
-        <v-card-subtitle class="pa-3 pa-md-4 bg-grey-lighten-5">
-          <div class="d-flex align-center">
-            <v-img
-              :src="programa?.imagen_url"
-              height="50"
-              width="60"
-              cover
-              class="rounded me-3 d-none d-sm-block"
-            ></v-img>
-            <div class="text-center text-sm-start flex-grow-1">
-              <h3 class="programa-form-titulo text-body-1 text-md-h6">{{ programa?.nombre_programa }}</h3>
-              <div class="text-caption">
-                <v-icon size="12" class="me-1">mdi-calendar</v-icon>
-                Inscripción hasta: {{ programa?.fechaInscripcion }}
-              </div>
-            </div>
-          </div>
-        </v-card-subtitle>
+        <!-- Tabs Compactos -->
+        <v-tabs
+          v-model="pasoFormulario"
+          bg-color="grey-lighten-4"
+          color="primary"
+          align-tabs="center"
+          density="compact"
+          class="stepper-tabs"
+        >
+          <v-tab :value="1" :disabled="pasoFormulario !== 1">
+            <v-icon start size="18">mdi-card-account-details</v-icon>
+            Verificar CI
+          </v-tab>
+          <v-tab :value="2" :disabled="pasoFormulario !== 2">
+            <v-icon start size="18">mdi-account-edit</v-icon>
+            Datos Personales
+          </v-tab>
+        </v-tabs>
 
-        <!-- Stepper Compacto -->
-        <div class="stepper-container pa-1 pa-md-2 bg-grey-lighten-5">
-          <v-stepper
-            v-model="pasoFormulario"
-            alt-labels
-            class="elevation-0"
-            :mobile="$vuetify.display.mobile"
-            mobile-breakpoint="sm"
-          >
-            <v-stepper-header class="px-2" style="min-height: 60px;">
-              <v-stepper-item
-                :complete="pasoFormulario > 1"
-                :value="1"
-                title="Verificación"
-                subtitle="CI"
-              >
-                <template #icon>
-                  <v-icon size="16">mdi-account-search</v-icon>
-                </template>
-              </v-stepper-item>
-
-              <v-divider></v-divider>
-
-              <v-stepper-item
-                :value="2"
-                title="Datos Personales"
-                subtitle="Información"
-              >
-                <template #icon>
-                  <v-icon size="16">mdi-account-edit</v-icon>
-                </template>
-              </v-stepper-item>
-            </v-stepper-header>
-          </v-stepper>
-        </div>
-
-        <v-card-text class="pa-3 pa-md-6">
+        <!-- Contenido del formulario con transiciones -->
+        <v-window v-model="pasoFormulario" class="formulario-window">
           <!-- Paso 1: Verificación CI -->
-          <div v-if="pasoFormulario === 1" class="paso-verificacion">
-            <div class="text-center mb-4 mb-md-6">
-              <v-icon size="40" color="primary" class="mb-3">mdi-card-account-details</v-icon>
-              <h3 class="text-h6">Ingresa tu número de identidad</h3>
-              <p class="text-grey text-body-2">En caso de ser usuario nuevo debe llenar sus datos solo por única vez</p>
-            </div>
+          <v-window-item :value="1">
+            <v-card-text class="pa-4 pa-md-6">
+              <div class="text-center mb-4">
+                <v-icon size="48" color="primary" class="mb-2">mdi-card-account-details</v-icon>
+                <h3 class="text-h6 mb-2">Ingresa tu Cédula de Identidad</h3>
+                <p class="text-grey text-body-2">
+                  Si eres usuario nuevo, deberás llenar tus datos solo por única vez
+                </p>
+              </div>
 
-            <v-row justify="center">
-              <v-col cols="12" sm="12" md="12">
-                <v-text-field
-                  v-model="formularioInscripcion.ci"
-                  label="Cédula de Identidad *"
-                  placeholder="Escriba su número de identidad"
+              <v-row justify="center">
+                <v-col cols="12" md="10">
+                  <v-text-field
+                    v-model="formularioInscripcion.ci"
+                    label="Cédula de Identidad *"
+                    placeholder="Ej: 1234567"
+                    variant="outlined"
+                    density="comfortable"
+                    :error-messages="obtenerErroresCampo($v.ci)"
+                    prepend-inner-icon="mdi-card-account-details"
+                    @blur="$v.ci.$touch"
+                    @keyup.enter="continuarConDatos"
+                    autofocus
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+
+              <div class="d-flex justify-center ga-2 mt-4">
+                <v-btn
                   variant="outlined"
-                  density="comfortable"
-                  :error-messages="obtenerErroresCampo($v.ci)"
-                  prepend-inner-icon="mdi-card-account-details"
-                  class="mb-4"
-                  @blur="$v.ci.$touch"
-                ></v-text-field>
-
-                <div class="text-center mt-4 mt-md-6">
-                  <v-btn
-                    color="primary"
-                    size="large"
-                    variant="elevated"
-                    @click="continuarConDatos"
-                    prepend-icon="mdi-arrow-right"
-                    :disabled="$v.ci.$invalid"
-                    :loading="buscandoPersona"
-                  >
-                    {{ buscandoPersona ? 'Buscando...' : 'Continuar' }}
-                  </v-btn>
-                </div>
-              </v-col>
-            </v-row>
-          </div>
+                  @click="mostrarFormulario = false"
+                  :disabled="buscandoPersona"
+                >
+                  Cancelar
+                </v-btn>
+                <v-btn
+                  color="primary"
+                  size="large"
+                  variant="elevated"
+                  @click="continuarConDatos"
+                  append-icon="mdi-arrow-right"
+                  :disabled="$v.ci.$invalid"
+                  :loading="buscandoPersona"
+                >
+                  Continuar
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-window-item>
 
           <!-- Paso 2: Datos Personales -->
-          <div v-if="pasoFormulario === 2" class="paso-datos">
-            <div class="mb-4">
-              <h3 class="text-h6">Información Personal</h3>
-              <p class="text-grey text-body-2">Registre y verifique su información personal</p>
-            </div>
+          <v-window-item :value="2">
+            <v-card-text class="pa-4 pa-md-6">
+              <div class="mb-4">
+                <h3 class="text-h6 mb-1">Información Personal</h3>
+                <p class="text-grey text-body-2">
+                  Complete y verifique sus datos personales
+                </p>
+              </div>
 
-            <v-alert
-              type="info"
-              variant="tonal"
-              class="mb-4"
-              prepend-icon="mdi-information"
-            >
-              Por favor complete y verifique detalladamente sus datos personales
-            </v-alert>
+              <v-form @submit.prevent="enviarInscripcion">
+                <!-- Cédula (readonly) -->
+                <v-row dense>
+                  <v-col cols="12">
+                    <v-text-field
+                      :model-value="formularioInscripcion.ci"
+                      label="Cédula de Identidad"
+                      variant="outlined"
+                      readonly
+                      density="comfortable"
+                      prepend-inner-icon="mdi-card-account-details"
+                      bg-color="grey-lighten-3"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
 
-            <v-form @submit.prevent="enviarInscripcion">
-              <!-- Cédula (readonly) -->
-              <v-row>
-                <v-col cols="12">
-                  <v-text-field
-                    :model-value="formularioInscripcion.ci"
-                    label="Cédula de Identidad"
-                    variant="outlined"
-                    readonly
-                    density="comfortable"
-                    prepend-inner-icon="mdi-card-account-details"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
+                <!-- Nombres y apellidos -->
+                <v-row dense>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model="formularioInscripcion.nombre"
+                      label="Nombre(s) *"
+                      variant="outlined"
+                      density="comfortable"
+                      :error-messages="obtenerErroresCampo($v.nombre)"
+                      @blur="$v.nombre.$touch"
+                    ></v-text-field>
+                  </v-col>
 
-              <!-- Nombres y apellidos -->
-              <v-row>
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="formularioInscripcion.nombre"
-                    label="Nombre(s) *"
-                    variant="outlined"
-                    density="comfortable"
-                    :error-messages="obtenerErroresCampo($v.nombre)"
-                    @blur="$v.nombre.$touch"
-                  ></v-text-field>
-                </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model="formularioInscripcion.ap_paterno"
+                      label="Apellido Paterno *"
+                      variant="outlined"
+                      density="comfortable"
+                      :error-messages="obtenerErroresCampo($v.ap_paterno)"
+                      @blur="$v.ap_paterno.$touch"
+                    ></v-text-field>
+                  </v-col>
 
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="formularioInscripcion.ap_paterno"
-                    label="Apellido Paterno *"
-                    variant="outlined"
-                    density="comfortable"
-                    :error-messages="obtenerErroresCampo($v.ap_paterno)"
-                    @blur="$v.ap_paterno.$touch"
-                  ></v-text-field>
-                </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model="formularioInscripcion.ap_materno"
+                      label="Apellido Materno"
+                      variant="outlined"
+                      density="comfortable"
+                      :error-messages="obtenerErroresCampo($v.ap_materno)"
+                      @blur="$v.ap_materno.$touch"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
 
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="formularioInscripcion.ap_materno"
-                    label="Apellido Materno"
-                    variant="outlined"
-                    density="comfortable"
-                    :error-messages="obtenerErroresCampo($v.ap_materno)"
-                    @blur="$v.ap_materno.$touch"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
+                <!-- Fecha nacimiento y contacto -->
+                <v-row dense>
+                  <v-col cols="12" md="4">
+                    <v-date-input
+                      v-model="formularioInscripcion.fecha_nacimiento"
+                      label="Fecha Nacimiento *"
+                      variant="outlined"
+                      density="comfortable"
+                      :error-messages="obtenerErroresCampo($v.fecha_nacimiento)"
+                      :max="new Date().toISOString().split('T')[0]"
+                      @blur="$v.fecha_nacimiento.$touch"
+                    ></v-date-input>
+                  </v-col>
 
-              <!-- fecha nacimiento y celular -->
-              <v-row>
-                <v-col cols="12" md="4">
-                  <v-date-input
-                    v-model="formularioInscripcion.fecha_nacimiento"
-                    label="Fecha Nacimiento *"
-                    variant="outlined"
-                    density="comfortable"
-                    :error-messages="obtenerErroresCampo($v.fecha_nacimiento)"
-                    :max="new Date().toISOString().split('T')[0]"
-                    @blur="$v.fecha_nacimiento.$touch"
-                  ></v-date-input>
-                </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model="formularioInscripcion.celular"
+                      label="Celular *"
+                      variant="outlined"
+                      density="comfortable"
+                      :error-messages="obtenerErroresCampo($v.celular)"
+                      prepend-inner-icon="mdi-phone"
+                      placeholder="7xxxxxxx"
+                      @blur="$v.celular.$touch"
+                    ></v-text-field>
+                  </v-col>
 
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="formularioInscripcion.celular"
-                    label="Celular *"
-                    variant="outlined"
-                    density="comfortable"
-                    :error-messages="obtenerErroresCampo($v.celular)"
-                    prepend-inner-icon="mdi-phone"
-                    placeholder="7xxxxxxx"
-                    @blur="$v.celular.$touch"
-                  ></v-text-field>
-                </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model="formularioInscripcion.correo"
+                      label="Correo Electrónico *"
+                      type="email"
+                      variant="outlined"
+                      density="comfortable"
+                      :error-messages="obtenerErroresCampo($v.correo)"
+                      prepend-inner-icon="mdi-email"
+                      placeholder="usuario@ejemplo.com"
+                      @blur="$v.correo.$touch"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </v-form>
 
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="formularioInscripcion.correo"
-                    label="Correo Electrónico *"
-                    type="email"
-                    variant="outlined"
-                    density="comfortable"
-                    :error-messages="obtenerErroresCampo($v.correo)"
-                    prepend-inner-icon="mdi-email"
-                    placeholder="usuario@ejemplo.com"
-                    @blur="$v.correo.$touch"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-            </v-form>
+              <!-- Info adicional -->
+              <v-alert
+                type="info"
+                variant="tonal"
+                density="compact"
+                class="mt-4"
+              >
+                <span class="text-body-2">
+                  <strong>Nota:</strong> Los campos marcados con (*) son obligatorios
+                </span>
+              </v-alert>
 
-            <!-- Información adicional -->
-            <v-row>
-              <v-col cols="12">
-                <v-alert
-                  type="info"
-                  variant="tonal"
-                  density="compact"
-                  class="mb-2"
+              <!-- Botones de acción -->
+              <div class="d-flex justify-space-between mt-6">
+                <v-btn
+                  variant="outlined"
+                  @click="pasoFormulario = 1"
+                  prepend-icon="mdi-arrow-left"
+                  :disabled="enviandoFormulario"
                 >
-                  <template #prepend>
-                    <v-icon>mdi-information</v-icon>
-                  </template>
-                  <strong>Campos obligatorios:</strong> Los marcados con (*) son requeridos
-                </v-alert>
-              </v-col>
-            </v-row>
+                  Anterior
+                </v-btn>
 
-            <!-- Botones en card-text -->
-            <div class="d-flex flex-column flex-sm-row justify-end ga-2 mt-6">
-              <v-btn
-                variant="outlined"
-                @click="pasoFormulario = 1"
-                prepend-icon="mdi-arrow-left"
-                class="order-2 order-sm-1"
-                :disabled="enviandoFormulario"
-              >
-                Anterior
-              </v-btn>
+                <div class="d-flex ga-2">
+                  <v-btn
+                    variant="outlined"
+                    @click="mostrarFormulario = false"
+                    :disabled="enviandoFormulario"
+                  >
+                    Cancelar
+                  </v-btn>
 
-              <v-btn
-                variant="outlined"
-                @click="mostrarFormulario = false"
-                class="order-3 order-sm-2"
-                :disabled="enviandoFormulario"
-              >
-                Cancelar
-              </v-btn>
-
-              <v-btn
-                color="primary"
-                variant="elevated"
-                @click="enviarInscripcion"
-                :loading="enviandoFormulario"
-                :disabled="$v.$invalid"
-                prepend-icon="mdi-send"
-                class="order-1 order-sm-3"
-              >
-                Enviar Inscripción
-              </v-btn>
-            </div>
-          </div>
-
-          <!-- Botones paso 1 -->
-          <div v-if="pasoFormulario === 1" class="d-flex justify-center mt-4">
-            <v-btn
-              variant="outlined"
-              @click="mostrarFormulario = false"
-            >
-              Cancelar
-            </v-btn>
-          </div>
-        </v-card-text>
+                  <v-btn
+                    color="primary"
+                    variant="elevated"
+                    @click="enviarInscripcion"
+                    :loading="enviandoFormulario"
+                    :disabled="$v.$invalid"
+                    append-icon="mdi-send"
+                  >
+                    Enviar Preinscripción
+                  </v-btn>
+                </div>
+              </div>
+            </v-card-text>
+          </v-window-item>
+        </v-window>
       </v-card>
     </v-dialog>
 
@@ -973,16 +929,45 @@ onMounted(() => {
 
   .formulario-inscripcion {
     border-radius: 12px;
+    overflow: hidden;
 
-    .programa-form-titulo {
-      color: #1976D2;
-      font-weight: 600;
-      line-height: 1.2;
-      word-wrap: break-word;
+    .stepper-tabs {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+      :deep(.v-tab) {
+        text-transform: none;
+        font-weight: 500;
+        letter-spacing: 0;
+        min-width: 140px;
+
+        &.v-tab--selected {
+          color: rgb(var(--v-theme-primary));
+          font-weight: 600;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+        }
+      }
+    }
+
+    .formulario-window {
+      min-height: 400px;
+
+      :deep(.v-window__container) {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
     }
 
     .v-alert {
       border-radius: 8px;
+    }
+
+    .v-row.dense {
+      > .v-col {
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
     }
   }
 
