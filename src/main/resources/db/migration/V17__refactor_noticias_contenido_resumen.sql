@@ -323,3 +323,71 @@ BEGIN
 
   RAISE NOTICE 'Migración V10 completada exitosamente. Todas las noticias tienen resumen generado.';
 END $$;
+
+
+DROP FUNCTION fn_obtener_noticias_paginadas(p_page INTEGER, p_size INTEGER, p_busqueda VARCHAR, p_estado VARCHAR, p_id_unidad INTEGER);
+CREATE OR REPLACE FUNCTION fn_obtener_noticias_paginadas(
+  p_page INTEGER,
+  p_size INTEGER,
+  p_busqueda VARCHAR DEFAULT NULL,
+  p_estado VARCHAR DEFAULT NULL,
+  p_id_unidad INTEGER DEFAULT NULL
+)
+  RETURNS TABLE(
+                 id_pub_noticia INTEGER,
+                 id_aca_unidad INTEGER,
+                 nombre_unidad VARCHAR,
+                 titulo VARCHAR,
+                 resumen TEXT,
+                 contenido TEXT,
+                 imagen_uri VARCHAR,
+                 enlace_externo VARCHAR,
+                 fecha_noticia DATE,
+                 es_destacada BOOLEAN,
+                 orden_prioridad INTEGER,
+                 estado_noticia VARCHAR,
+                 fecha_reg TIMESTAMP,
+                 usuario_registro VARCHAR,
+                 total_registros BIGINT
+               ) AS $$
+DECLARE
+  v_offset INTEGER;
+BEGIN
+  v_offset := (p_page - 1) * p_size;
+
+  RETURN QUERY
+    WITH datos AS (
+      SELECT
+        vn.*,
+        COUNT(*) OVER() as total
+      FROM vista_noticias_admin vn
+      WHERE
+        (p_busqueda IS NULL OR
+         vn.titulo ILIKE '%' || p_busqueda || '%' OR
+         vn.resumen ILIKE '%' || p_busqueda || '%')
+        AND (p_estado IS NULL OR vn.estado_noticia = p_estado)
+        AND (p_id_unidad IS NULL OR vn.id_aca_unidad = p_id_unidad)
+    )
+    SELECT
+      d.id_pub_noticia,
+      d.id_aca_unidad,
+      d.nombre_unidad,
+      d.titulo,
+      d.resumen,
+      d.contenido,
+      d.imagen_uri,
+      d.enlace_externo,
+      d.fecha_noticia,
+      d.es_destacada,
+      d.orden_prioridad,
+      d.estado_noticia,
+      d.fecha_reg,
+      d.usuario_registro,
+      d.total
+    FROM datos d
+    LIMIT p_size
+      OFFSET v_offset;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION fn_obtener_noticias_paginadas IS 'Obtiene noticias paginadas con filtros (incluye contenido HTML y resumen texto plano)';
