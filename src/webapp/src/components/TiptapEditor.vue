@@ -48,6 +48,7 @@ const contextMenu = ref(false)
 const contextMenuX = ref(0)
 const contextMenuY = ref(0)
 const selectedImageElement = ref(null)
+const menuActivatorRef = ref(null)
 
 // Extensión de imagen personalizada con resize en 4 esquinas
 const CustomImage = Image.extend({
@@ -89,10 +90,11 @@ const CustomImage = Image.extend({
       if (node.attrs.height) img.style.height = node.attrs.height + 'px'
       img.style.maxWidth = '100%'
       img.style.height = 'auto'
-      img.style.margin = '1.5em auto'
+      img.style.margin = 'auto'
       img.style.display = 'block'
       img.style.borderRadius = '8px'
       img.style.cursor = 'pointer'
+      img.style.border = '2px solid transparent'
 
       // Variables de resize
       let isResizing = false
@@ -116,15 +118,15 @@ const CustomImage = Image.extend({
           ${pos.bottom ? `bottom: ${pos.bottom};` : ''}
           ${pos.left ? `left: ${pos.left};` : ''}
           ${pos.right ? `right: ${pos.right};` : ''}
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
           background: rgb(var(--v-theme-primary));
           border: 2px solid white;
           border-radius: 50%;
           cursor: ${pos.cursor};
           display: none;
           box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          z-index: 10;
+
         `
 
         handle.addEventListener('mousedown', (e) => {
@@ -207,6 +209,7 @@ const CustomImage = Image.extend({
         if (!editor.isEditable) return
 
         // Ocultar todos los handles
+        img.style.border = '2px solid rgb(var(--v-theme-primary))';
         document.querySelectorAll('.resize-handle').forEach(h => {
           h.style.display = 'none'
         })
@@ -217,26 +220,35 @@ const CustomImage = Image.extend({
         })
       })
 
-      // Click derecho para menú contextual
       img.addEventListener('contextmenu', (e) => {
         e.preventDefault()
         e.stopPropagation()
         if (!editor.isEditable) return
+
+        // Cerrar menú si ya está abierto (para actualizar posición)
+        if (contextMenu.value) {
+          contextMenu.value = false
+        }
 
         // Guardar referencia a la imagen y nodo
         selectedImageElement.value = img
         currentImageNode.value = node
         currentImagePos.value = getPos()
 
-        // Mostrar menú contextual
+        // Posicionar el activator invisible
         contextMenuX.value = e.clientX
         contextMenuY.value = e.clientY
-        contextMenu.value = true
+
+        // Mostrar menú después de que el activator se posicione
+        nextTick(() => {
+          contextMenu.value = true
+        })
       })
 
       // Ocultar handles al hacer click fuera
       const hideHandles = (e) => {
         if (!container.contains(e.target)) {
+          img.style.border = '2px solid transparent'
           handles.forEach(handle => {
             handle.style.display = 'none'
           })
@@ -661,13 +673,29 @@ onBeforeUnmount(() => {
       @change="onArchivoSeleccionado"
     >
 
+    <!-- Activator invisible para el menú contextual -->
+    <div
+      ref="menuActivatorRef"
+      :style="{
+        position: 'fixed',
+        left: contextMenuX + 'px',
+        top: contextMenuY + 'px',
+        width: '1px',
+        height: '1px',
+        pointerEvents: 'none',
+        zIndex: 9998
+      }"
+    ></div>
+
     <!-- Menú contextual -->
     <v-menu
       v-model="contextMenu"
-      :style="{ position: 'absolute', left: contextMenuX + 'px', top: contextMenuY + 'px' }"
-      location="bottom"
+      :activator="menuActivatorRef"
+      location="start"
+      :offset="0"
+      :close-on-content-click="true"
     >
-      <v-list density="compact">
+      <v-list density="compact" min-width="180">
         <v-list-item @click="recortarImagen" :disabled="uploadingImage">
           <template #prepend>
             <v-icon>mdi-crop</v-icon>
@@ -745,6 +773,7 @@ onBeforeUnmount(() => {
   }
 
   .crop-overlay {
+    width: 100%;
     position: fixed;
     top: 0;
     left: 0;
@@ -759,6 +788,7 @@ onBeforeUnmount(() => {
     .crop-container {
       background: rgba(var(--v-theme-surface), 1);
       border-radius: 8px;
+      width: 100%;
       max-width: 90vw;
       max-height: 90vh;
       display: flex;

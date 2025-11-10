@@ -1,11 +1,11 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos'
 import imagenNoDisponible from '@/assets/images/img_default.png'
 import logoInstitucion from '@/assets/images/logo.png'
-import DOMPurify from 'dompurify'
+import InicioHeader from '@/views/inicio/InicioHeader.vue';
 
 const route = useRoute()
 const router = useRouter()
@@ -25,10 +25,7 @@ const imagenNoticia = computed(() => {
 
 const contenidoHTML = computed(() => {
   if (!noticia.value?.contenido) return ''
-  return DOMPurify.sanitize(noticia.value.contenido, {
-    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'code', 'pre'],
-    ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt', 'title', 'class', 'style']
-  })
+  return noticia.value.contenido
 })
 
 const breadcrumbs = computed(() => [
@@ -48,6 +45,17 @@ const breadcrumbs = computed(() => [
   }
 ])
 
+// Watcher
+watch(() => route.params.id, async (newId, oldId) => {
+  if (newId !== oldId) {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    await Promise.all([
+      cargarNoticia(),
+      cargarNoticiasRecientes()
+    ])
+  }
+}, { immediate: false })
+
 // Métodos
 const cargarNoticia = async () => {
   cargandoNoticia.value = true
@@ -57,8 +65,6 @@ const cargarNoticia = async () => {
     const id = route.params.id
     const response = await api.get(`/api/publico/noticia/${id}`)
     noticia.value = response.data
-
-    // Actualizar meta tags para compartir
     actualizarMetaTags()
   } catch (err) {
     console.error('Error al cargar noticia:', err)
@@ -76,10 +82,8 @@ const cargarNoticiasRecientes = async () => {
       params: { limit: 4 }
     })
 
-    // Filtrar la noticia actual y limitar a 3
     const idActual = parseInt(route.params.id)
     const recientes = response.data.filter(n => n.id_pub_noticia !== idActual)
-
     noticiasRecientes.value = recientes.slice(0, 3)
   } catch (err) {
     console.error('Error al cargar noticias recientes:', err)
@@ -92,17 +96,14 @@ const cargarNoticiasRecientes = async () => {
 const actualizarMetaTags = () => {
   if (!noticia.value) return
 
-  // Actualizar título de la página
   document.title = `${noticia.value.titulo} | Instituto Técnico CPEyFC`
 
-  // Open Graph para Facebook, WhatsApp, etc.
   updateMetaTag('og:title', noticia.value.titulo)
   updateMetaTag('og:description', (noticia.value.resumen || '').substring(0, 200))
   updateMetaTag('og:image', imagenNoticia.value)
   updateMetaTag('og:url', window.location.href)
   updateMetaTag('og:type', 'article')
 
-  // Twitter Cards
   updateMetaTag('twitter:card', 'summary_large_image')
   updateMetaTag('twitter:title', noticia.value.titulo)
   updateMetaTag('twitter:description', (noticia.value.resumen || '').substring(0, 200))
@@ -111,7 +112,7 @@ const actualizarMetaTags = () => {
 
 const updateMetaTag = (property, content) => {
   let element = document.querySelector(`meta[property="${property}"]`) ||
-                document.querySelector(`meta[name="${property}"]`)
+    document.querySelector(`meta[name="${property}"]`)
 
   if (!element) {
     element = document.createElement('meta')
@@ -124,12 +125,6 @@ const updateMetaTag = (property, content) => {
   }
 
   element.setAttribute('content', content)
-}
-
-const extractPlainText = (html) => {
-  const div = document.createElement('div')
-  div.innerHTML = html
-  return div.textContent || div.innerText || ''
 }
 
 const volverNoticias = () => {
@@ -153,12 +148,6 @@ const generarSlug = (titulo) => {
     .substring(0, 100)
 }
 
-const compartirFacebook = () => {
-  const url = window.location.href
-  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'width=600,height=400')
-}
-
-// Lifecycle
 onMounted(async () => {
   await Promise.all([
     cargarNoticia(),
@@ -168,25 +157,10 @@ onMounted(async () => {
 </script>
 
 <template>
+  <inicio-header></inicio-header>
   <div class="noticia-detalle">
-    <!-- Hero Image -->
-    <section class="hero-section">
-      <v-img
-        :src="imagenNoticia"
-        aspect-ratio="21/9"
-        cover
-        class="hero-image"
-      >
-        <template #error>
-          <v-img :src="imagenNoDisponible" aspect-ratio="21/9" cover></v-img>
-        </template>
-
-        <div class="hero-overlay"></div>
-      </v-img>
-    </section>
-
     <!-- Main Content -->
-    <v-container class="mt-8 mb-12">
+    <v-container class="noticia-container">
       <!-- Loading State -->
       <div v-if="cargandoNoticia" class="text-center my-12">
         <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
@@ -214,9 +188,22 @@ onMounted(async () => {
         <v-row>
           <!-- Main Article Column -->
           <v-col cols="12" lg="8">
-            <article class="article-content">
+            <article class="article-wrapper">
+              <div class="article-portada">
+                <v-img
+                  :src="imagenNoticia"
+                  aspect-ratio="16/9"
+                  cover
+                  class="portada-imagen"
+                >
+                  <template #error>
+                    <v-img :src="imagenNoDisponible" aspect-ratio="16/9" cover></v-img>
+                  </template>
+                </v-img>
+              </div>
+
               <!-- Título -->
-              <h1 class="article-title">{{ noticia.titulo }}</h1>
+              <h1 class="article-title mt-4">{{ noticia.titulo }}</h1>
 
               <!-- Metadata Bar -->
               <div class="article-meta">
@@ -254,29 +241,17 @@ onMounted(async () => {
 
                   <!-- Redes sociales -->
                   <div class="d-flex align-center ga-3">
-                    <span class="text-body-2 text-medium-emphasis">Compartir:</span>
-                    <v-btn
-                      icon
-                      size="small"
-                      variant="outlined"
-                      color="primary"
-                      @click="compartirFacebook"
-                    >
-                      <v-icon>mdi-facebook</v-icon>
-                      <v-tooltip activator="parent" location="bottom">
-                        Compartir en Facebook
-                      </v-tooltip>
-                    </v-btn>
+                    <span class="text-body-2 text-medium-emphasis">Visitar:</span>
 
                     <v-btn
                       icon
                       size="small"
                       variant="outlined"
                       color="primary"
-                      :href="`https://www.facebook.com/info.cpe.fp.uap/`"
+                      href="https://www.facebook.com/info.cpe.fp.uap/"
                       target="_blank"
                     >
-                      <v-icon>mdi-open-in-new</v-icon>
+                      <v-icon>mdi-facebook</v-icon>
                       <v-tooltip activator="parent" location="bottom">
                         Visitar Facebook
                       </v-tooltip>
@@ -368,6 +343,7 @@ onMounted(async () => {
   background: #ffffff;
   min-height: 100vh;
 
+  // Hero Section
   .hero-section {
     position: relative;
     width: 100%;
@@ -388,7 +364,16 @@ onMounted(async () => {
     }
   }
 
-  .article-content {
+  // Container más amplio
+  .noticia-container {
+    max-width: 1400px !important; // 👈 Más ancho que el default de Vuetify
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+  }
+
+  // Article Wrapper - Ocupa el 100% de su columna
+  .article-wrapper {
+    width: 100%;
     background: white;
 
     .article-title {
@@ -414,14 +399,12 @@ onMounted(async () => {
       }
     }
 
+    // Article Body - CLAVE: No colapsa con imágenes pequeñas
     .article-body {
       font-size: 1.1rem;
       line-height: 1.8;
       color: #333;
 
-      :deep(p) {
-        margin-bottom: 1.2em;
-      }
 
       :deep(h1),
       :deep(h2),
@@ -463,6 +446,7 @@ onMounted(async () => {
         }
       }
 
+      // Imágenes respetan sus atributos width/height
       :deep(img) {
         max-width: 100%;
         height: auto;
@@ -487,6 +471,29 @@ onMounted(async () => {
         padding: 1em 1.5em;
         border-radius: 4px;
       }
+
+      :deep(code) {
+        background: rgba(var(--v-theme-surface-variant), 1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9em;
+      }
+
+      :deep(pre) {
+        background: #2d2d2d;
+        color: #f8f8f2;
+        padding: 1em;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1em 0;
+
+        code {
+          background: none;
+          padding: 0;
+          color: inherit;
+        }
+      }
     }
 
     .article-footer {
@@ -503,6 +510,7 @@ onMounted(async () => {
     }
   }
 
+  // Sidebar Content
   .sidebar-content {
     .sidebar-sticky {
       position: sticky;
@@ -546,13 +554,22 @@ onMounted(async () => {
   }
 }
 
+// Responsive
+@media (max-width: 1264px) {
+  .noticia-detalle {
+    .hero-section {
+      max-height: 400px;
+    }
+  }
+}
+
 @media (max-width: 960px) {
   .noticia-detalle {
     .hero-section {
       max-height: 300px;
     }
 
-    .article-content {
+    .article-wrapper {
       .article-title {
         font-size: 1.8rem;
       }
@@ -579,7 +596,7 @@ onMounted(async () => {
       max-height: 250px;
     }
 
-    .article-content {
+    .article-wrapper {
       .article-title {
         font-size: 1.5rem;
       }

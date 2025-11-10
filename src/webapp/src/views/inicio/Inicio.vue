@@ -3,7 +3,7 @@ import { onMounted } from 'vue';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import InicioBanner from '@/views/inicio/InicioBanner.vue';
-import InicioMenu from '@/views/inicio/InicioMenu.vue';
+import InicioHeader from '@/views/inicio/InicioHeader.vue';
 import InicioInfo from '@/views/inicio/InicioInfo.vue';
 import InicioNoticia from '@/views/inicio/InicioNoticia.vue';
 import InicioCursos from '@/views/inicio/InicioCursos.vue';
@@ -26,7 +26,7 @@ const whatsappLink = `https://web.whatsapp.com/send?phone=${phone}&text=${encode
 
 <template>
   <v-layout class="bg-containerBg">
-    <inicio-menu></inicio-menu>
+    <inicio-header></inicio-header>
 
     <v-main class="ma-0">
       <inicio-banner></inicio-banner>

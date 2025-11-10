@@ -455,7 +455,7 @@ onMounted(() => {
     <!-- Dialog para formulario -->
     <v-dialog
       v-model="dialogFormulario"
-      max-width="800px"
+      max-width="920px"
       persistent
       scrollable
     >
