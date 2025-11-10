@@ -81,6 +81,10 @@ const $v = useVuelidate(reglasValidacion, formularioInscripcion)
 const enviandoFormulario = ref(false)
 
 const programaId = computed(() => route.query.programa)
+const nivelesExpandidos = computed(() =>
+  [...new Set(planEstudios.value.map(m => m.nivel))]
+)
+
 
 const requisitosPrograma = ref([
   {
@@ -472,10 +476,16 @@ onMounted(() => {
                     </v-row>
 
                     <!-- Acordeones por nivel -->
-                    <v-expansion-panels variant="accordion" class="plan-expansion">
+                    <v-expansion-panels
+                      variant="accordion"
+                      class="plan-expansion"
+                      :model-value="nivelesExpandidos"
+                      multiple
+                    >
                       <v-expansion-panel
                         v-for="nivel in [...new Set(planEstudios.map(m => m.nivel))].sort()"
                         :key="nivel"
+                        :value="nivel"
                         elevation="0"
                       >
                         <v-expansion-panel-title class="nivel-header">
@@ -640,7 +650,6 @@ onMounted(() => {
                 </v-btn>
                 <v-btn
                   color="primary"
-                  size="large"
                   variant="elevated"
                   @click="continuarConDatos"
                   append-icon="mdi-arrow-right"
