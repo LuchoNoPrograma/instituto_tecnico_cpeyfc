@@ -37,6 +37,21 @@ public class PubNoticiaService {
       .toList();
   }
 
+  public Map<String, Object> obtenerNoticiaPorId(Integer idPubNoticia) {
+    Map<String, Object> noticia = pubNoticiaRepository.obtenerNoticiaPorId(idPubNoticia);
+
+    if (noticia != null && !noticia.isEmpty()) {
+      Map<String, Object> noticiaConUrl = new HashMap<>(noticia);
+      String imagenUri = (String) noticia.get("imagen_uri");
+      if (imagenUri != null && !imagenUri.isEmpty()) {
+        noticiaConUrl.put("imagen_url", "/api" + imagenUri);
+      }
+      return noticiaConUrl;
+    }
+
+    return null;
+  }
+
   public Map<String, Object> obtenerNoticiasPaginadas(Integer page,
                                                       Integer size,
                                                       String busqueda,
@@ -81,7 +96,7 @@ public class PubNoticiaService {
   public Integer registrarNoticia(MultipartFile imagen,
                                   Integer idAcaUnidad,
                                   String titulo,
-                                  String resumen,
+                                  String contenido,
                                   String enlaceExterno,
                                   LocalDate fechaNoticia,
                                   Boolean esDestacada,
@@ -90,10 +105,16 @@ public class PubNoticiaService {
 
     String imagenUri = archivoService.guardarArchivo(imagen, "images/noticias");
 
+    // Procesar imágenes base64 en el contenido HTML
+    String contenidoProcesado = archivoService.procesarImagenesBase64EnHTML(
+      contenido,
+      "images/noticias"
+    );
+
     return pubNoticiaRepository.registrarNoticia(
       idAcaUnidad,
       titulo,
-      resumen,
+      contenidoProcesado,
       imagenUri,
       enlaceExterno,
       fechaNoticia,
@@ -107,7 +128,7 @@ public class PubNoticiaService {
                                   Integer idPubNoticia,
                                   Integer idAcaUnidad,
                                   String titulo,
-                                  String resumen,
+                                  String contenido,
                                   String imagenUriAntigua,
                                   String enlaceExterno,
                                   LocalDate fechaNoticia,
@@ -122,11 +143,17 @@ public class PubNoticiaService {
       archivoService.eliminarArchivo(imagenUriAntigua);
     }
 
+    // Procesar imágenes base64 en el contenido HTML
+    String contenidoProcesado = archivoService.procesarImagenesBase64EnHTML(
+      contenido,
+      "images/noticias"
+    );
+
     return pubNoticiaRepository.actualizarNoticia(
       idPubNoticia,
       idAcaUnidad,
       titulo,
-      resumen,
+      contenidoProcesado,
       imagenUri,
       enlaceExterno,
       fechaNoticia,

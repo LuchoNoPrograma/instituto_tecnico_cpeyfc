@@ -1,6 +1,10 @@
 <script setup>
+import { useRouter } from 'vue-router'
 import formatoFecha from '@/helpers/formatos'
+import { generarSlug } from '@/helpers/slug'
 import imagenNoDisponible from '@/assets/images/img_default.png'
+
+const router = useRouter()
 
 const props = defineProps({
   noticia: {
@@ -13,10 +17,9 @@ const obtenerImagen = () => {
   return props.noticia.imagen_url || props.noticia.imagen_uri || imagenNoDisponible
 }
 
-const openLink = () => {
-  if (props.noticia.enlace_externo) {
-    window.open(props.noticia.enlace_externo, '_blank')
-  }
+const leerMas = () => {
+  const slug = generarSlug(props.noticia.titulo)
+  router.push(`/noticias/${props.noticia.id_pub_noticia}/${slug}`)
 }
 </script>
 
@@ -33,18 +36,6 @@ const openLink = () => {
         <v-img :src="imagenNoDisponible" height="275" cover></v-img>
       </template>
 
-      <!-- Badges -->
-      <div class="badges-overlay pa-2">
-        <v-chip
-          v-if="noticia.es_destacada"
-          color="warning"
-          size="small"
-          class="mr-1"
-        >
-          <v-icon start size="small">mdi-star</v-icon>
-          Destacada
-        </v-chip>
-      </div>
     </v-img>
 
     <!-- Contenido -->
@@ -74,11 +65,10 @@ const openLink = () => {
     <!-- Acciones -->
     <v-card-actions class="pa-2">
       <v-btn
-        v-if="noticia.enlace_externo"
         color="primary"
         variant="elevated"
         append-icon="mdi-arrow-right"
-        @click="openLink"
+        @click="leerMas"
         block
       >
         Leer más

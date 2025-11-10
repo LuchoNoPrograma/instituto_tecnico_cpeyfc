@@ -32,12 +32,21 @@ public interface PubNoticiaRepository extends JpaRepository<PubNoticia, Integer>
   List<Map<String, Object>> vistaNoticiasCarrusel();
 
   /**
+   * Obtiene una noticia específica por su ID para vista pública
+   *
+   * @param p_id_pub_noticia ID de la noticia a consultar
+   * @return Map con los datos de la noticia
+   */
+  @Query(nativeQuery = true, value = "SELECT * FROM vista_noticias_activas WHERE id_pub_noticia = ?1")
+  Map<String, Object> obtenerNoticiaPorId(Integer p_id_pub_noticia);
+
+  /**
    * Función: fn_registrar_noticia
    * Registra una nueva noticia institucional
    *
    * @param p_id_aca_unidad     ID de la unidad que publica
    * @param p_titulo            Título de la noticia
-   * @param p_resumen           Resumen o descripción breve
+   * @param p_contenido         Contenido HTML de la noticia
    * @param p_imagen_uri        URI de la imagen de portada (opcional)
    * @param p_enlace_externo    URL externa (opcional)
    * @param p_fecha_noticia     Fecha de publicación
@@ -50,7 +59,7 @@ public interface PubNoticiaRepository extends JpaRepository<PubNoticia, Integer>
         SELECT fn_registrar_noticia(
             :p_id_aca_unidad,
             :p_titulo,
-            :p_resumen,
+            :p_contenido,
             :p_imagen_uri,
             :p_enlace_externo,
             :p_fecha_noticia,
@@ -60,7 +69,7 @@ public interface PubNoticiaRepository extends JpaRepository<PubNoticia, Integer>
         """, nativeQuery = true)
   Integer registrarNoticia(Integer p_id_aca_unidad,
                            String p_titulo,
-                           String p_resumen,
+                           String p_contenido,
                            String p_imagen_uri,
                            String p_enlace_externo,
                            LocalDate p_fecha_noticia,
@@ -86,7 +95,7 @@ public interface PubNoticiaRepository extends JpaRepository<PubNoticia, Integer>
    * @param p_id_pub_noticia    ID de la noticia a actualizar
    * @param p_id_aca_unidad     ID de la unidad que publica
    * @param p_titulo            Título de la noticia
-   * @param p_resumen           Resumen o descripción breve
+   * @param p_contenido         Contenido HTML de la noticia
    * @param p_imagen_uri        URI de la imagen de portada (opcional)
    * @param p_enlace_externo    URL externa (opcional)
    * @param p_fecha_noticia     Fecha de publicación
@@ -100,7 +109,7 @@ public interface PubNoticiaRepository extends JpaRepository<PubNoticia, Integer>
             :p_id_pub_noticia,
             :p_id_aca_unidad,
             :p_titulo,
-            :p_resumen,
+            :p_contenido,
             :p_imagen_uri,
             :p_enlace_externo,
             :p_fecha_noticia,
@@ -111,7 +120,7 @@ public interface PubNoticiaRepository extends JpaRepository<PubNoticia, Integer>
   String actualizarNoticia(Integer p_id_pub_noticia,
                            Integer p_id_aca_unidad,
                            String p_titulo,
-                           String p_resumen,
+                           String p_contenido,
                            String p_imagen_uri,
                            String p_enlace_externo,
                            LocalDate p_fecha_noticia,

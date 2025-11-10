@@ -6,9 +6,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import uap.edu.bo.cpeyfc.domain.archivo.ArchivoService;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
 import uap.edu.bo.cpeyfc.util.FechaUtil;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import java.util.Map;
 public class PubNoticiaApi {
 
   private final PubNoticiaService pubNoticiaService;
+  private final ArchivoService archivoService;
   private final ObjectMapper objectMapper;
 
   @GetMapping("/api/noticia/vista/noticias-activas")
@@ -28,6 +31,20 @@ public class PubNoticiaApi {
   @GetMapping("/api/publico/noticia/carrusel")
   public ResponseEntity<List<Map<String, Object>>> vistaNoticiasCarrusel() {
     return ResponseEntity.ok(pubNoticiaService.vistaNoticiasCarrusel());
+  }
+
+  @GetMapping("/api/publico/noticia/{id}")
+  public ResponseEntity<?> obtenerNoticiaPorId(@PathVariable Integer id) {
+    Map<String, Object> noticia = pubNoticiaService.obtenerNoticiaPorId(id);
+
+    if (noticia == null || noticia.isEmpty()) {
+      return ResponseEntity.status(404).body(Map.of(
+        "success", false,
+        "message", "Noticia no encontrada o no está activa"
+      ));
+    }
+
+    return ResponseEntity.ok(noticia);
   }
 
   @GetMapping("/api/noticia")
@@ -59,7 +76,7 @@ public class PubNoticiaApi {
         file,
         (Integer) datos.get("id_aca_unidad"),
         (String) datos.get("titulo"),
-        (String) datos.get("resumen"),
+        (String) datos.get("contenido"),
         (String) datos.get("enlace_externo"),
         FechaUtil.toLocalDate(datos.get("fecha_noticia")),
         (Boolean) datos.getOrDefault("es_destacada", false),
@@ -80,6 +97,40 @@ public class PubNoticiaApi {
     }
   }
 
+  @PostMapping("/api/noticia/upload/imagen")
+  public ResponseEntity<?> uploadImagenEditor(
+    @RequestParam("file") MultipartFile file,
+    @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails) {
+
+    try {
+      if (file == null || file.isEmpty()) {
+        return ResponseEntity.badRequest().body(Map.of(
+          "success", false,
+          "message", "No se ha enviado ninguna imagen"
+        ));
+      }
+
+      String imagenUri = archivoService.guardarArchivo(file, "images/noticias");
+
+      return ResponseEntity.ok(Map.of(
+        "success", true,
+        "url", "/api" + imagenUri,
+        "path", imagenUri
+      ));
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(Map.of(
+        "success", false,
+        "message", e.getMessage()
+      ));
+    } catch (IOException e) {
+      return ResponseEntity.status(500).body(Map.of(
+        "success", false,
+        "message", "Error al guardar la imagen: " + e.getMessage()
+      ));
+    }
+  }
+
+
   @PutMapping("/api/noticia/{id_pub_noticia}")
   public ResponseEntity<?> actualizarNoticia(
     @PathVariable Integer id_pub_noticia,
@@ -95,7 +146,7 @@ public class PubNoticiaApi {
         id_pub_noticia,
         (Integer) datos.get("id_aca_unidad"),
         (String) datos.get("titulo"),
-        (String) datos.get("resumen"),
+        (String) datos.get("contenido"),
         (String) datos.get("imagen_uri_antigua"),
         (String) datos.get("enlace_externo"),
         FechaUtil.toLocalDate(datos.get("fecha_noticia")),

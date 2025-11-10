@@ -11,6 +11,7 @@ import {
 import { api } from '@/services/api'
 import { Cropper } from 'vue-advanced-cropper'
 import 'vue-advanced-cropper/dist/style.css'
+import TiptapEditor from '@/components/TiptapEditor.vue'
 
 // Props
 const props = defineProps({
@@ -31,11 +32,9 @@ const emit = defineEmits(['guardar', 'cancelar'])
 const formularioNoticia = reactive({
   id_aca_unidad: null,
   titulo: '',
-  resumen: '',
+  contenido: '',
   imagen_uri: '',
-  enlace_externo: '',
   fecha_noticia: new Date(),
-  es_destacada: false,
   orden_prioridad: 0
 })
 
@@ -65,10 +64,9 @@ const esquemaReglas = computed(() => ({
     longitudMinima: longitudMinima(5),
     longitudMaxima: longitudMaxima(255)
   },
-  resumen: {
+  contenido: {
     esRequerido,
-    longitudMinima: longitudMinima(20),
-    longitudMaxima: longitudMaxima(2000)
+    longitudMinima: longitudMinima(20)
   },
   fecha_noticia: { esRequerido }
 }))
@@ -172,10 +170,8 @@ const guardar = async () => {
     const datos = {
       id_aca_unidad: formularioNoticia.id_aca_unidad,
       titulo: formularioNoticia.titulo,
-      resumen: formularioNoticia.resumen,
-      enlace_externo: formularioNoticia.enlace_externo || null,
+      contenido: formularioNoticia.contenido,
       fecha_noticia: formularioNoticia.fecha_noticia,
-      es_destacada: formularioNoticia.es_destacada,
       orden_prioridad: formularioNoticia.orden_prioridad
     }
 
@@ -203,16 +199,13 @@ const cargarDatosNoticia = (noticia) => {
 
   formularioNoticia.id_aca_unidad = noticia.id_aca_unidad
   formularioNoticia.titulo = noticia.titulo
-  formularioNoticia.resumen = noticia.resumen
-  formularioNoticia.enlace_externo = noticia.enlace_externo || ''
-
+  formularioNoticia.contenido = noticia.contenido
 
   if (noticia.fecha_noticia) {
     const fechaParts = noticia.fecha_noticia.split('-') // "2025-11-08"
     formularioNoticia.fecha_noticia = new Date(fechaParts[0], fechaParts[1] - 1, fechaParts[2])
   }
 
-  formularioNoticia.es_destacada = noticia.es_destacada || false
   formularioNoticia.orden_prioridad = noticia.orden_prioridad || 0
 
   if (noticia.imagen_url || noticia.imagen_uri) {
@@ -226,11 +219,9 @@ const limpiarFormulario = () => {
   Object.assign(formularioNoticia, {
     id_aca_unidad: null,
     titulo: '',
-    resumen: '',
+    contenido: '',
     imagen_uri: '',
-    enlace_externo: '',
     fecha_noticia: new Date(),
-    es_destacada: false,
     orden_prioridad: 0
   })
   archivoImagen.value = null
@@ -256,81 +247,6 @@ onMounted(() => {
 
 <template>
   <div class="formulario-noticia-pro">
-    <!-- Zona de Imagen Principal -->
-    <div class="imagen-section">
-      <!-- Preview Grande (solo si hay imagen) -->
-      <div v-if="tieneImagen" class="imagen-preview-container">
-        <v-img
-          :src="previewImagen"
-          aspect-ratio="4/3"
-          cover
-          class="imagen-preview"
-        >
-          <template #error>
-            <div class="error-fallback">
-              <v-file-upload
-                v-model="archivoImagen"
-                label="Error al cargar imagen - Selecciona otra"
-                variant="outlined"
-                prepend-icon="mdi-image-plus"
-                accept="image/*"
-                :disabled="cargandoFormulario"
-                show-size
-                scrim
-                @update:model-value="onArchivoSeleccionado"
-                class="ma-4 w-100"
-              />
-            </div>
-          </template>
-        </v-img>
-
-        <!-- Overlay con botón editar -->
-        <div class="imagen-overlay">
-          <v-btn
-            icon="mdi-pencil"
-            color="white"
-            size="large"
-            @click="editarImagen"
-            :disabled="cargandoFormulario"
-          >
-            <v-icon>mdi-pencil</v-icon>
-            <v-tooltip activator="parent" location="bottom">Cambiar imagen</v-tooltip>
-          </v-btn>
-        </div>
-      </div>
-
-      <!-- File Upload visible cuando NO hay imagen -->
-      <div v-else class="file-upload-container">
-        <v-file-upload
-          v-model="archivoImagen"
-          label="Seleccionar imagen de portada"
-          variant="outlined"
-          prepend-icon="mdi-image-plus"
-          accept="image/*"
-          :disabled="cargandoFormulario"
-          show-size
-          scrim
-          chips
-          @update:model-value="onArchivoSeleccionado"
-          class="ma-6 w-100"
-        >
-          <template #hint>
-            <div class="text-center mt-2">
-              PNG, JPG, WEBP, GIF • Máximo 10MB • Se recortará a formato 16:9
-            </div>
-          </template>
-        </v-file-upload>
-      </div>
-
-      <input
-        id="file-input-hidden"
-        type="file"
-        accept="image/*"
-        style="display: none"
-        @change="(e) => onArchivoSeleccionado(e.target.files[0])"
-      >
-    </div>
-
     <!-- Contenido del formulario -->
     <v-card-text class="pa-6">
       <v-form>
@@ -383,116 +299,97 @@ onMounted(() => {
           </v-col>
         </v-row>
 
-        <!-- Contenido Principal -->
-        <v-textarea
-          v-model="formularioNoticia.resumen"
-          :error-messages="obtenerErroresCampo($v.resumen)"
-          label="Contenido de la noticia"
-          placeholder="Escribe aquí el contenido completo de tu noticia..."
-          variant="outlined"
-          :disabled="cargandoFormulario"
-          counter="2000"
-          rows="8"
-          auto-grow
-          class="mb-4"
-        >
-          <template #prepend-inner>
-            <v-icon>mdi-text</v-icon>
-          </template>
-        </v-textarea>
+        <!-- Portada -->
+        <div class="mb-4">
+          <label class="text-subtitle-2 text-medium-emphasis mb-2 d-block">
+            <v-icon size="small" class="mr-1">mdi-image</v-icon>
+            Portada
+          </label>
 
-        <!-- Configuración Avanzada -->
-        <v-expansion-panels class="mb-4">
-          <v-expansion-panel>
-            <v-expansion-panel-title>
-              <div class="d-flex align-center">
-                <v-icon class="mr-2">mdi-cog</v-icon>
-                Configuración Avanzada
+          <!-- Preview Grande (solo si hay imagen) -->
+          <div v-if="tieneImagen" class="imagen-preview-container">
+            <v-img
+              :src="previewImagen"
+              aspect-ratio="16/9"
+              cover
+              class="imagen-preview"
+            >
+              <template #error>
+                <div class="error-fallback">
+                  <v-file-upload
+                    v-model="archivoImagen"
+                    label="Error al cargar imagen - Selecciona otra"
+                    variant="outlined"
+                    prepend-icon="mdi-image-plus"
+                    accept="image/*"
+                    :disabled="cargandoFormulario"
+                    show-size
+                    @update:model-value="onArchivoSeleccionado"
+                    class="ma-4 w-100"
+                  />
+                </div>
+              </template>
+            </v-img>
+
+            <!-- Overlay con botón editar -->
+            <div class="imagen-overlay">
+              <v-btn
+                icon="mdi-pencil"
+                color="white"
+                size="large"
+                @click="editarImagen"
+                :disabled="cargandoFormulario"
+              >
+                <v-icon>mdi-pencil</v-icon>
+                <v-tooltip activator="parent" location="bottom">Cambiar imagen</v-tooltip>
+              </v-btn>
+            </div>
+          </div>
+
+          <!-- File Upload visible cuando NO hay imagen -->
+          <v-file-upload
+            v-else
+            v-model="archivoImagen"
+            label="Seleccionar imagen de portada"
+            variant="outlined"
+            prepend-icon="mdi-image-plus"
+            accept="image/*"
+            :disabled="cargandoFormulario"
+            show-size
+            chips
+            @update:model-value="onArchivoSeleccionado"
+          >
+            <template #hint>
+              <div class="text-center mt-2">
+                PNG, JPG, WEBP, GIF • Máximo 10MB
               </div>
-            </v-expansion-panel-title>
-            <v-expansion-panel-text>
-              <v-row>
-                <!-- Prioridad -->
-                <v-col cols="12" md="6">
-                  <v-select
-                    v-model="formularioNoticia.orden_prioridad"
-                    :items="opcionesPrioridad"
-                    item-title="titulo"
-                    item-value="valor"
-                    label="Prioridad"
-                    variant="outlined"
-                    :disabled="cargandoFormulario"
-                  >
-                    <template #prepend-inner>
-                      <v-icon>mdi-priority-high</v-icon>
-                    </template>
+            </template>
+          </v-file-upload>
 
-                    <template #item="{ props, item }">
-                      <v-list-item v-bind="props">
-                        <template #prepend>
-                          <v-icon :color="item.raw.color">{{ item.raw.icono }}</v-icon>
-                        </template>
-                        <template #title>
-                          <span :class="`text-${item.raw.color}`">{{ item.raw.titulo }}</span>
-                        </template>
-                        <template #subtitle>
-                          {{ item.raw.descripcion }}
-                        </template>
-                      </v-list-item>
-                    </template>
+          <input
+            id="file-input-hidden"
+            type="file"
+            accept="image/*"
+            style="display: none"
+            @change="(e) => onArchivoSeleccionado(e.target.files[0])"
+          >
+        </div>
 
-                    <template #selection="{ item }">
-                      <div class="d-flex align-center">
-                        <v-icon :color="item.raw.color" size="small" class="mr-2">
-                          {{ item.raw.icono }}
-                        </v-icon>
-                        <span>{{ item.raw.titulo }}</span>
-                      </div>
-                    </template>
-                  </v-select>
-                </v-col>
-
-                <!-- Enlace Externo -->
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="formularioNoticia.enlace_externo"
-                    label="Enlace externo (opcional)"
-                    placeholder="https://..."
-                    variant="outlined"
-                    :disabled="cargandoFormulario"
-                  >
-                    <template #prepend-inner>
-                      <v-icon>mdi-link</v-icon>
-                    </template>
-                  </v-text-field>
-                </v-col>
-
-                <!-- Destacada -->
-                <v-col cols="12">
-                  <v-card variant="outlined" class="pa-4">
-                    <div class="d-flex align-center justify-space-between">
-                      <div class="d-flex align-center">
-                        <v-icon color="warning" class="mr-3" size="large">mdi-star</v-icon>
-                        <div>
-                          <div class="text-subtitle-1 font-weight-medium">Noticia Destacada</div>
-                          <div class="text-caption text-medium-emphasis">
-                            Aparecerá primero en el carrusel
-                          </div>
-                        </div>
-                      </div>
-                      <v-switch
-                        v-model="formularioNoticia.es_destacada"
-                        color="warning"
-                        hide-details
-                        :disabled="cargandoFormulario"
-                      ></v-switch>
-                    </div>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-expansion-panel-text>
-          </v-expansion-panel>
-        </v-expansion-panels>
+        <!-- Contenido Principal con Editor Rich Text -->
+        <div class="mb-4">
+          <label class="text-subtitle-2 text-medium-emphasis mb-2 d-block">
+            Contenido de la noticia *
+          </label>
+          <TiptapEditor
+            v-model="formularioNoticia.contenido"
+            placeholder="Escribe aquí el contenido completo de tu noticia con formato..."
+            :disabled="cargandoFormulario"
+            upload-endpoint="/api/noticia/upload/imagen"
+          />
+          <div v-if="$v.contenido.$errors.length" class="text-error text-caption mt-1">
+            {{ $v.contenido.$errors[0].$message }}
+          </div>
+        </div>
       </v-form>
     </v-card-text>
 
@@ -572,15 +469,13 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .formulario-noticia-pro {
-  .imagen-section {
+  .imagen-preview-container {
     position: relative;
-    background: #f5f5f5;
+    overflow: hidden;
+    border-radius: 8px;
 
-    .file-upload-container {
-      min-height: 200px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .imagen-preview {
+      width: 100%;
     }
 
     .error-fallback {
@@ -592,31 +487,22 @@ onMounted(() => {
       background: rgba(var(--v-theme-error), 0.1);
     }
 
-    .imagen-preview-container {
-      position: relative;
-      overflow: hidden;
+    .imagen-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
 
-      .imagen-preview {
-        width: 100%;
-      }
-
-      .imagen-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.4);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 16px;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-
-        &:hover {
-          opacity: 1;
-        }
+      &:hover {
+        opacity: 1;
       }
     }
   }
@@ -629,18 +515,12 @@ onMounted(() => {
     }
   }
 
-  .v-card-text {
-    max-height: 60vh;
-    overflow-y: auto;
-  }
-
   .cropper-container {
     height: 500px;
-    background: #f5f5f5;
+    background: rgba(var(--v-theme-surface-variant), 1);
 
     .cropper {
       height: 100%;
-      background: #f5f5f5;
     }
   }
 }
