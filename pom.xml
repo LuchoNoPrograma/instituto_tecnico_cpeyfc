@@ -94,6 +94,8 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Google Generative AI (Gemini) - usando HttpClient para llamadas REST -->
+        <!-- No hay SDK oficial de Java para Gemini API key, usaremos RestTemplate -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
