@@ -2,7 +2,6 @@ package uap.edu.bo.cpeyfc.chatbot;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,19 +13,12 @@ import java.util.Map;
 public class ChatbotService {
 
   private final GeminiService geminiService;
-  private final JdbcTemplate jdbcTemplate;
+  private final ChatbotRepository chatbotRepository;
 
-  /**
-   * Procesa un mensaje del chatbot obteniendo contexto de programas
-   */
   public ChatbotResponse procesarMensaje(ChatbotRequest request) {
     try {
-      // Obtener información actualizada de programas
-      String contextoProgramas = obtenerContextoProgramas();
-
-      // Enviar a Gemini con el contexto
+      String contextoProgramas = construirContextoProgramas();
       String respuesta = geminiService.enviarMensaje(request.getMensaje(), contextoProgramas);
-
       return ChatbotResponse.exito(respuesta);
 
     } catch (Exception e) {
@@ -35,88 +27,127 @@ public class ChatbotService {
     }
   }
 
-  /**
-   * Obtiene el contexto de programas ofertados desde la base de datos
-   */
-  private String obtenerContextoProgramas() {
+  private String construirContextoProgramas() {
     try {
-      String sql = """
-        SELECT
-          pap.id_aca_programa_aprobado,
-          p.nombre_programa,
-          a.nombre_area,
-          m.nombre_modalidad,
-          pe.plan_anho,
-          g.nombre_grupo,
-          g.fecha_fin_inscripcion,
-          g.precio_matricula,
-          g.precio_colegiatura,
-          CASE
-            WHEN g.fecha_fin_inscripcion >= CURRENT_DATE THEN 'INSCRIPCIONES ABIERTAS'
-            WHEN g.fecha_inicio_inscripcion > CURRENT_DATE THEN 'PROXIMAMENTE'
-            ELSE 'INSCRIPCIONES CERRADAS'
-          END as estado_inscripcion,
-          (SELECT COUNT(*) FROM ins_preinscripcion pre WHERE pre.id_ins_grupo = g.id_ins_grupo) as total_preinscritos
-        FROM ins_grupo g
-        INNER JOIN aca_programa_aprobado pap ON g.id_aca_programa_aprobado = pap.id_aca_programa_aprobado
-        INNER JOIN aca_version v ON pap.id_aca_version = v.id_aca_version
-        INNER JOIN aca_plan_estudio pe ON v.id_aca_plan_estudio = pe.id_aca_plan_estudio
-        INNER JOIN aca_programa p ON pe.id_aca_programa = p.id_aca_programa
-        INNER JOIN aca_area a ON p.id_aca_area = a.id_aca_area
-        INNER JOIN aca_modalidad m ON pe.id_aca_modalidad = m.id_aca_modalidad
-        WHERE g.estado = 'ACTIVO'
-        AND pap.estado = 'APROBADO'
-        ORDER BY g.fecha_fin_inscripcion DESC
-      """;
-
-      List<Map<String, Object>> programas = jdbcTemplate.queryForList(sql);
+      List<Map<String, Object>> programas = chatbotRepository.vistaChatbotProgramasInfo();
+      Map<String, Object> estadisticas = chatbotRepository.vistaChatbotEstadisticasGenerales();
 
       if (programas.isEmpty()) {
         return "Actualmente no hay programas disponibles. Por favor contacta con la institución para más información.";
       }
 
       StringBuilder contexto = new StringBuilder();
-      contexto.append("PROGRAMAS TÉCNICOS DISPONIBLES:\n\n");
+      contexto.append("=== PROGRAMAS TÉCNICOS DISPONIBLES ===\n\n");
 
       for (Map<String, Object> programa : programas) {
-        contexto.append(String.format("""
-          - Programa: %s
-            Área: %s
-            Modalidad: %s
-            Plan: %s
-            Grupo: %s
-            Estado: %s
-            Fecha límite de inscripción: %s
-            Precio matrícula: Bs. %.2f
-            Precio colegiatura mensual: Bs. %.2f
-            Preinscritos actuales: %d
+        String estadoInscripcion = getString(programa, "estado_inscripcion");
+        Integer diasRestantes = getInteger(programa, "dias_restantes");
 
+        contexto.append(String.format("""
+          📚 PROGRAMA: %s (%s)
+             Área: %s
+             Modalidad: %s
+             Grupo: %s - Gestión %s
+             Plan de estudios: %s
+             
+             📅 INSCRIPCIONES:
+             Estado: %s
+             Fecha inicio: %s
+             Fecha fin: %s
+             %s
+             
+             💰 COSTOS:
+             Matrícula: Bs. %.2f
+             Colegiatura mensual: Bs. %.2f
+             Titulación: Bs. %.2f
+             
+             📊 INFORMACIÓN ACADÉMICA:
+             Total módulos: %d
+             Carga horaria total: %d horas
+             Estudiantes preinscritos: %d
+             Estudiantes matriculados: %d
+             
+             ⚠️ IMPORTANTE: No se tiene información de horarios específicos en el sistema.
+             Para horarios detallados, el usuario debe contactar directamente al CPEyFP.
+          
           """,
-          programa.get("nombre_programa"),
-          programa.get("nombre_area"),
-          programa.get("nombre_modalidad"),
-          programa.get("plan_anho") != null ? "Plan " + programa.get("plan_anho") : "Información disponible próximamente",
-          programa.get("nombre_grupo"),
-          programa.get("estado_inscripcion"),
+          getString(programa, "nombre_programa"),
+          getString(programa, "programa_sigla"),
+          getString(programa, "nombre_area"),
+          getString(programa, "nombre_modalidad"),
+          getString(programa, "nombre_grupo"),
+          getInteger(programa, "gestion_inicio"),
+          programa.get("plan_anho") != null ? "Plan " + programa.get("plan_anho") : "Plan vigente",
+
+          estadoInscripcion,
+          programa.get("fecha_inicio_inscripcion"),
           programa.get("fecha_fin_inscripcion"),
-          programa.get("precio_matricula") != null ? ((Number) programa.get("precio_matricula")).doubleValue() : 0.0,
-          programa.get("precio_colegiatura") != null ? ((Number) programa.get("precio_colegiatura")).doubleValue() : 0.0,
-          programa.get("total_preinscritos") != null ? ((Number) programa.get("total_preinscritos")).longValue() : 0L
+          diasRestantes > 0 ? String.format("⏰ Quedan %d días para inscribirse", diasRestantes) : "",
+
+          getDecimal(programa, "precio_matricula"),
+          getDecimal(programa, "precio_colegiatura"),
+          getDecimal(programa, "precio_titulacion"),
+
+          getInteger(programa, "total_modulos"),
+          getInteger(programa, "total_horas"),
+          getInteger(programa, "total_preinscritos"),
+          getInteger(programa, "total_matriculados")
         ));
       }
 
-      contexto.append("\n");
-      contexto.append("INFORMACIÓN GENERAL:\n");
-      contexto.append("- Instituto: Centro Psicopedagógico de Educación y Formación Continua (CPEyFC)\n");
-      contexto.append("- Universidad: Universidad Amazónica de Pando (UAP)\n");
-      contexto.append("- Tipo: Instituto Técnico\n");
-      contexto.append("- Enfoque: Formación técnica especializada con orientación práctica\n");
+      // Agregar estadísticas generales
+      contexto.append("\n=== ESTADÍSTICAS DEL INSTITUTO ===\n");
+      contexto.append(String.format("""
+        - Total de programas ofertados: %d
+        - Áreas académicas: %d
+        - Grupos activos: %d
+        - Grupos con inscripción abierta: %d
+        - Total estudiantes: %d
+        - Docentes registrados: %d
+        """,
+        getInteger(estadisticas, "total_programas"),
+        getInteger(estadisticas, "total_areas"),
+        getInteger(estadisticas, "total_grupos"),
+        getInteger(estadisticas, "grupos_con_inscripcion_abierta"),
+        getInteger(estadisticas, "total_estudiantes"),
+        getInteger(estadisticas, "total_docentes")
+      ));
+
+      // Información de contacto con WhatsApp
+      contexto.append("\n=== INFORMACIÓN DE CONTACTO ===\n");
+      contexto.append("""
+        📱 WhatsApp: 591 74771457
+        🔗 Enlace directo: https://web.whatsapp.com/send?phone=59174771457 .
+       
+        Para información sobre horarios, requisitos específicos, proceso de inscripción o cualquier duda adicional,
+        puedes contactar directamente con el CPEyFP a través de WhatsApp usando el enlace proporcionado.
+        """);
 
       return contexto.toString();
 
     } catch (Exception e) {
-      log.error("Error al obtener contexto de programas", e);
-      return "Información de programas no disponible temporalmente.";
+      log.error("Error al construir contexto de programas", e);
+      return "Información de programas temporalmente no disponible.";
     }
+  }
+
+  // Métodos helper para manejo seguro de tipos
+  private String getString(Map<String, Object> map, String key) {
+    Object value = map.get(key);
+    return value != null ? value.toString() : "";
+  }
+
+  private Integer getInteger(Map<String, Object> map, String key) {
+    Object value = map.get(key);
+    if (value == null) return 0;
+    if (value instanceof Number) return ((Number) value).intValue();
+    return 0;
+  }
+
+  private Double getDecimal(Map<String, Object> map, String key) {
+    Object value = map.get(key);
+    if (value == null) return 0.0;
+    if (value instanceof Number) return ((Number) value).doubleValue();
+    return 0.0;
   }
 }

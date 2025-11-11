@@ -15,7 +15,7 @@ const toggleChat = () => {
     // Mensaje de bienvenida
     conversacion.value.push({
       tipo: 'bot',
-      texto: '¡Hola! Soy el asistente virtual del Instituto Técnico CPEyFC. ¿En qué puedo ayudarte hoy? Puedo responder preguntas sobre nuestros programas, inscripciones, costos y más.',
+      texto: '¡Hola! Soy el asistente virtual del Instituto Técnico CPEyFP. ¿En qué puedo ayudarte hoy? Puedo responder preguntas sobre nuestros programas, inscripciones, costos y más.',
       timestamp: new Date()
     })
   }
@@ -80,7 +80,7 @@ const scrollToBottom = () => {
 const limpiarChat = () => {
   conversacion.value = [{
     tipo: 'bot',
-    texto: '¡Hola! Soy el asistente virtual del Instituto Técnico CPEyFC. ¿En qué puedo ayudarte hoy?',
+    texto: '¡Hola! Soy el asistente virtual del Instituto Técnico CPEyFP. ¿En qué puedo ayudarte hoy?',
     timestamp: new Date()
   }]
 }
@@ -91,22 +91,44 @@ const formatearHora = (timestamp) => {
     minute: '2-digit'
   })
 }
+
+// NUEVA FUNCIÓN: Procesar markdown links a HTML
+const procesarMarkdown = (texto) => {
+  if (!texto) return ''
+
+  // Convertir links markdown [texto](url) a HTML
+  let html = texto.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer" class="chatbot-link">$1</a>'
+  )
+
+  // Convertir saltos de línea a <br>
+  html = html.replace(/\n/g, '<br>')
+
+  return html
+}
 </script>
 
 <template>
   <div class="chatbot-container">
     <!-- Botón flotante para abrir el chat -->
-    <v-btn
-      v-if="!abierto"
-      fab
-      color="primary"
-      size="large"
-      class="chatbot-fab"
-      @click="toggleChat"
-      elevation="8"
-    >
-      <v-icon size="32">mdi-robot</v-icon>
-    </v-btn>
+    <div v-if="!abierto" class="chatbot-fab-wrapper">
+      <v-btn
+        fab
+        color="primary"
+        size="large"
+        class="chatbot-fab"
+        @click="toggleChat"
+        elevation="8"
+      >
+        <v-icon size="32">mdi-robot</v-icon>
+      </v-btn>
+
+      <!-- Tooltip animado -->
+      <div class="chatbot-tooltip">
+        <span>¿Necesitas ayuda? 💬</span>
+      </div>
+    </div>
 
     <!-- Ventana del chat -->
     <v-card
@@ -123,7 +145,7 @@ const formatearHora = (timestamp) => {
           </v-avatar>
           <div class="flex-grow-1">
             <div class="chatbot-title">Asistente Virtual</div>
-            <div class="chatbot-subtitle">Instituto Técnico CPEyFC</div>
+            <div class="chatbot-subtitle">Instituto Técnico CPEyFP</div>
           </div>
           <v-btn
             icon
@@ -154,7 +176,8 @@ const formatearHora = (timestamp) => {
           :class="mensaje.tipo"
         >
           <div class="mensaje" :class="{ 'error': mensaje.error }">
-            <div class="mensaje-texto">{{ mensaje.texto }}</div>
+            <!-- Usar v-html para procesar el markdown -->
+            <div class="mensaje-texto" v-html="procesarMarkdown(mensaje.texto)"></div>
             <div class="mensaje-hora">{{ formatearHora(mensaje.timestamp) }}</div>
           </div>
         </div>
@@ -217,7 +240,7 @@ const formatearHora = (timestamp) => {
             </v-list-item>
           </v-list>
         </v-menu>
-      </v-card-actions>
+    </v-card-actions>
     </v-card>
   </div>
 </template>
@@ -230,12 +253,98 @@ const formatearHora = (timestamp) => {
   z-index: 1000;
 }
 
+.chatbot-fab-wrapper {
+  position: relative;
+}
+
 .chatbot-fab {
-  animation: pulse-bot 2s infinite;
+  position: relative;
+  animation: pulse-bot 2s infinite, bounce-gentle 3s ease-in-out infinite;
+  transition: all 0.3s ease;
 
   &:hover {
-    animation-play-state: paused;
+    animation: none;
+    transform: scale(1.1) rotate(5deg);
+
+    ~ .chatbot-tooltip {
+      opacity: 1;
+      transform: translateX(-10px) scale(1);
+    }
   }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 16px;
+    height: 16px;
+    background: #4CAF50;
+    border-radius: 50%;
+    border: 3px solid white;
+    animation: pulse-dot 2s infinite;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: linear-gradient(45deg,
+      rgba(var(--v-theme-primary), 0.3),
+      rgba(var(--v-theme-primary), 0.1)
+    );
+    animation: rotate-border 3s linear infinite;
+    z-index: -1;
+  }
+}
+
+.chatbot-tooltip {
+  position: absolute;
+  right: 70px;
+  top: 50%;
+  transform: translateY(-50%) translateX(10px) scale(0.8);
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  color: #333;
+  border: 2px solid rgb(var(--v-theme-primary));
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid rgb(var(--v-theme-primary));
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid white;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    z-index: 1;
+  }
+
+  // Animación de aparición automática
+  animation: tooltip-peek 8s ease-in-out 2s infinite;
 }
 
 .chatbot-card {
@@ -341,14 +450,53 @@ const formatearHora = (timestamp) => {
 
   .mensaje-texto {
     line-height: 1.5;
-    white-space: pre-wrap;
     margin-bottom: 0.25rem;
+
+    :deep(.chatbot-link) {
+      color: rgb(var(--v-theme-primary));
+      text-decoration: none;
+      font-weight: 600;
+      border-bottom: 2px solid rgb(var(--v-theme-primary));
+      padding-bottom: 2px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+
+      &:hover {
+        background: rgba(var(--v-theme-primary), 0.1);
+        border-radius: 4px;
+        padding: 2px 6px;
+        transform: translateY(-1px);
+      }
+
+      &::after {
+        content: '→';
+        font-size: 1.1em;
+        transition: transform 0.2s ease;
+      }
+
+      &:hover::after {
+        transform: translateX(3px);
+      }
+    }
   }
 
   .mensaje-hora {
     font-size: 0.7rem;
     opacity: 0.7;
     text-align: right;
+  }
+}
+
+.mensaje-wrapper.usuario {
+  .mensaje-texto :deep(.chatbot-link) {
+    color: white;
+    border-bottom-color: white;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
   }
 }
 
@@ -391,11 +539,51 @@ const formatearHora = (timestamp) => {
   0% {
     box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0.7);
   }
-  70% {
-    box-shadow: 0 0 0 10px rgba(var(--v-theme-primary), 0);
+  50% {
+    box-shadow: 0 0 0 15px rgba(var(--v-theme-primary), 0);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0);
+  }
+}
+
+@keyframes bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+@keyframes rotate-border {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes tooltip-peek {
+  0%, 90%, 100% {
+    opacity: 0;
+    transform: translateY(-50%) translateX(10px) scale(0.8);
+  }
+  10%, 80% {
+    opacity: 1;
+    transform: translateY(-50%) translateX(-10px) scale(1);
   }
 }
 
@@ -435,6 +623,10 @@ const formatearHora = (timestamp) => {
 
   .mensaje {
     max-width: 85%;
+  }
+
+  .chatbot-tooltip {
+    display: none;
   }
 }
 </style>
