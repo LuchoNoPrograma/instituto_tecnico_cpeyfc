@@ -46,6 +46,9 @@ export default createVuetify({
     locale: 'es',
     messages: { es }
   },
+  styles: {
+    configFile: 'src/styles/settings.scss',
+  },
 
   // Sistema de themes
   theme: {

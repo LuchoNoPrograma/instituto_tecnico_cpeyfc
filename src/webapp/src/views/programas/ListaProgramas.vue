@@ -432,45 +432,96 @@ onMounted(() => {
         density="comfortable"
       >
         <template #top>
-          <v-toolbar flat class="rounded-t-lg pa-4">
-            <v-toolbar-title class="text-h6 font-weight-bold d-flex align-center">
-              <v-icon class="mr-2" color="primary">mdi-school</v-icon>
-              Adm. Programas Aprobados
-            </v-toolbar-title>
-            <v-spacer></v-spacer>
+          <v-toolbar class="rounded-t-lg">
+            <v-container fluid class="py-4 px-4">
+              <v-row align="center" no-gutters>
 
-            <div class="d-flex align-center ga-3 flex-wrap">
-              <v-text-field
-                v-model="busqueda"
-                append-inner-icon="mdi-magnify"
-                label="Buscar programas..."
-                single-line
-                hide-details
-                variant="outlined"
-                density="compact"
-                class="search-field"
-              ></v-text-field>
+                <!-- Título - Siempre a la izquierda -->
+                <v-col cols="12" lg="auto" class="mb-3 mb-lg-0">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2" color="primary">mdi-school</v-icon>
+                    <span class="text-h6 font-weight-bold">Adm. Programas Aprobados</span>
+                  </div>
+                </v-col>
 
-              <v-btn
-                color="success"
-                variant="elevated"
-                @click="exportarExcel"
-                :disabled="cargando"
-              >
-                <v-icon start>mdi-file-excel</v-icon>
-                Exportar
-              </v-btn>
+                <v-spacer class="d-none d-lg-block"></v-spacer>
 
-              <v-btn
-                color="primary"
-                variant="elevated"
-                class="btn-nuevo"
-                @click="abrirDialogRegistrar"
-              >
-                <v-icon start>mdi-plus</v-icon>
-                Nuevo Programa
-              </v-btn>
-            </div>
+                <!-- Grupo de acciones - A la derecha en móvil -->
+                <v-col cols="12" lg="auto">
+                  <v-row align="center" justify="end" no-gutters class="ga-2">
+
+                    <!-- Búsqueda -->
+                    <v-col cols="auto" class="flex-grow-1 flex-lg-grow-0">
+                      <v-text-field
+                        v-model="busqueda"
+                        append-inner-icon="mdi-magnify"
+                        label="Buscar..."
+                        single-line
+                        hide-details
+                        variant="outlined"
+                        density="compact"
+                        style="min-width: 200px; max-width: 280px;"
+                      ></v-text-field>
+                    </v-col>
+
+                    <!-- Botones desktop -->
+                    <v-col cols="auto" class="d-none d-md-block">
+                      <v-btn
+                        color="success"
+                        variant="elevated"
+                        @click="exportarExcel"
+                        :disabled="cargando"
+                        class="mr-2"
+                      >
+                        <v-icon start>mdi-file-excel</v-icon>
+                        Exportar
+                      </v-btn>
+
+                      <v-btn
+                        color="primary"
+                        variant="elevated"
+                        @click="abrirDialogRegistrar"
+                      >
+                        <v-icon start>mdi-plus</v-icon>
+                        Nuevo Programa
+                      </v-btn>
+                    </v-col>
+
+                    <!-- Menú móvil -->
+                    <v-col cols="auto" class="d-md-none">
+                      <v-menu location="bottom end">
+                        <template v-slot:activator="{ props }">
+                          <v-btn
+                            icon="mdi-dots-vertical"
+                            v-bind="props"
+                            color="primary"
+                            variant="tonal"
+                          ></v-btn>
+                        </template>
+
+                        <v-list density="compact">
+                          <v-list-item @click="exportarExcel" :disabled="cargando">
+                            <template v-slot:prepend>
+                              <v-icon color="success">mdi-file-excel</v-icon>
+                            </template>
+                            <v-list-item-title>Exportar</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item @click="abrirDialogRegistrar">
+                            <template v-slot:prepend>
+                              <v-icon color="primary">mdi-plus</v-icon>
+                            </template>
+                            <v-list-item-title>Nuevo Programa</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </v-col>
+
+                  </v-row>
+                </v-col>
+
+              </v-row>
+            </v-container>
           </v-toolbar>
         </template>
 
@@ -784,44 +835,4 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.search-field {
-  min-width: 280px;
-  max-width: 350px;
-}
-
-.btn-nuevo {
-  min-width: 160px;
-  flex-shrink: 0;
-}
-
-@media (max-width: 960px) {
-  .v-toolbar {
-    .d-flex.align-center.ga-3 {
-      flex-direction: column;
-      align-items: stretch !important;
-      gap: 16px !important;
-      width: 100%;
-    }
-
-    .v-toolbar-title {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .search-field {
-      min-width: 100%;
-      max-width: 100%;
-    }
-
-    .btn-nuevo {
-      min-width: 100%;
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .v-toolbar {
-    padding: 16px !important;
-  }
-}
 </style>
