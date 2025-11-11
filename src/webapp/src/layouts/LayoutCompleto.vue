@@ -113,7 +113,7 @@ const verProgramasEjecucion = () => {
           <v-icon color="primary">mdi-school</v-icon>
         </v-avatar>
         <v-list-item-title class="text-h6 font-weight-bold text-white">
-          CPEYFC
+          CPEyFP
         </v-list-item-title>
         <v-list-item-subtitle class="text-caption text-white" style="opacity: 0.8;">
           {{ usuario?.username || 'Usuario' }}
@@ -163,7 +163,7 @@ const verProgramasEjecucion = () => {
       ></v-app-bar-nav-icon>
 
       <v-toolbar-title class="text-h6 font-weight-bold text-white">
-        Centro Profesional de Enseñanza y Formación Continua
+        Centro de Proyectos Especiales y Formación Permanente
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
