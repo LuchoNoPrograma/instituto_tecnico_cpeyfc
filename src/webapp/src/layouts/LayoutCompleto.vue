@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import GlobalLoading from '@/components/GlobalLoading.vue'
 
 const router = useRouter()
 const { logout, getCurrentUser, hasPermission } = useAuth()
@@ -100,6 +101,9 @@ const verProgramasEjecucion = () => {
 
 <template>
   <v-app>
+    <!-- Loading global -->
+    <GlobalLoading />
+
     <!-- Menú lateral -->
     <v-navigation-drawer
       v-model="drawer"
