@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ChatbotIA: typeof import('./src/components/ChatbotIA.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TiptapEditor: typeof import('./src/components/TiptapEditor.vue')['default']

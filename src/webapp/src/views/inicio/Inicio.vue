@@ -40,12 +40,13 @@ const whatsappLink = `https://web.whatsapp.com/send?phone=${phone}&text=${encode
       <inicio-noticia></inicio-noticia>
 
       <inicio-footer></inicio-footer>
+      <ChatbotIA></ChatbotIA>
 
       <!-- Botón flotante de WhatsApp -->
-      <a :href="whatsappLink" class="qlwapp-toggle" role="button" tabindex="0" target="_blank">
+<!--      <a :href="whatsappLink" class="qlwapp-toggle" role="button" tabindex="0" target="_blank">
         <v-icon icon="mdi-whatsapp" size="large" color="white"></v-icon>
         <span class="qlwapp-text">{{ buttonText }}</span>
-      </a>
+      </a>-->
     </v-main>
   </v-layout>
 </template>

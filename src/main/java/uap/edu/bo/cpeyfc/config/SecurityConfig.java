@@ -77,6 +77,7 @@ public class SecurityConfig {
             .requestMatchers("/authenticate", "/register").permitAll()
             .requestMatchers("/actuator/**").permitAll()
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            .requestMatchers("/api/publico/**").permitAll()  // Endpoints públicos incluyendo chatbot
 
             // Endpoints protegidos - ahora usando el sistema dinámico
             .requestMatchers("/admin/**").hasRole("ADMINISTRATIVO")

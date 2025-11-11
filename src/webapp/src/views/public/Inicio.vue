@@ -3,6 +3,7 @@ import {ref, onMounted, onUnmounted} from 'vue'
 import {useRouter} from 'vue-router'
 import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
+import ChatbotIA from '@/components/ChatbotIA.vue'
 
 const router = useRouter()
 
@@ -675,6 +676,9 @@ const animarContadores = () => {
     >
       <v-icon size="32" color="white">mdi-whatsapp</v-icon>
     </v-btn>
+
+    <!-- Chatbot de IA -->
+    <ChatbotIA />
   </div>
 </template>
 
@@ -1170,7 +1174,7 @@ const animarContadores = () => {
   .whatsapp-btn {
     position: fixed;
     bottom: 2rem;
-    right: 2rem;
+    left: 2rem;  // Cambiado a la izquierda para no chocar con el chatbot
     z-index: 1000;
     animation: pulse 2s infinite;
     transition: transform 0.1s ease-out;
