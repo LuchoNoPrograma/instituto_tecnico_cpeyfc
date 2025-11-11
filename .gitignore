@@ -66,3 +66,4 @@ src/webapp/node_modules/*
 *.sw?
 
 *.tsbuildinfo
+*.backup
