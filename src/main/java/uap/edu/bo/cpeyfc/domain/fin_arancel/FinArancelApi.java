@@ -30,8 +30,8 @@ public class FinArancelApi {
     }
 
     @GetMapping("/api/arancel/vista/aranceles-detalle")
-    public ResponseEntity<?> obtenerArancelesPrograma() {
-        return ResponseEntity.ok(vistasAcademicasService.obtenerArancelesPrograma());
+    public ResponseEntity<?> obtenerArancelesDetalle() {
+        return ResponseEntity.ok(vistasAcademicasService.obtenerArancelesDetalle());
     }
 
     @GetMapping("/api/arancel/vista/aranceles-detalle/{idProgramaAprobado}")
@@ -45,14 +45,15 @@ public class FinArancelApi {
     public ResponseEntity<?> registrarArancel(@RequestBody Map<String, Object> request) {
         return ResponseEntity.ok(funcionesAcademicasService.registrarArancel(
             (Integer) request.get("idProgramaAprobado"),
-            (Integer) request.get("idGestion"),
+            (Integer) request.get("idPeriodo"),
             (Integer) request.get("idTipoEstudiante"),
             (String) request.get("nombreArancel"),
-            (String) request.get("descripcion"),
+            (String) request.get("nroResolucion"),
+            (String) request.get("fechaAprobacion"),
             (String) request.get("fechaInicioVigencia"),
             (String) request.get("fechaFinVigencia"),
-            (String) request.get("detalles"), // JSON string
-            (String) request.get("userReg")
+            (String) request.get("detalles"), // JSON string [{id_fin_concepto_arancel, monto_concepto, orden_aplicacion}]
+            (Integer) request.get("userReg")
         ));
     }
 

@@ -34,20 +34,22 @@ public class FuncionesAcademicasService {
     }
 
     public Map<String, Object> registrarArancel(Integer idProgramaAprobado,
-                                               Integer idGestion,
+                                               Integer idPeriodo,
                                                Integer idTipoEstudiante,
                                                String nombreArancel,
-                                               String descripcion,
+                                               String nroResolucion,
+                                               String fechaAprobacion,
                                                String fechaInicioVigencia,
                                                String fechaFinVigencia,
                                                String detalles,
-                                               String userReg) {
+                                               Integer userReg) {
         return funcionesAcademicasRepository.registrarArancel(
             idProgramaAprobado,
-            idGestion,
+            idPeriodo,
             idTipoEstudiante,
             nombreArancel,
-            descripcion,
+            nroResolucion,
+            fechaAprobacion,
             fechaInicioVigencia,
             fechaFinVigencia,
             detalles,
