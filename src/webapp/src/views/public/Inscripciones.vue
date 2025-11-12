@@ -243,7 +243,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="detalle-programa">
+  <div class="programa-page">
     <!-- Overlay de carga -->
     <v-overlay
       :model-value="cargando"
@@ -273,288 +273,279 @@ onMounted(() => {
 
     <!-- Contenido Principal -->
     <div v-if="!cargando && programa" class="programa-content">
-      <!-- Header del Programa -->
-      <section class="programa-header">
-        <v-container fluid class="pa-0">
-          <v-row no-gutters>
-            <v-col cols="12" md="8" class="d-flex align-center">
-              <div class="programa-info pa-4 pa-md-8">
-                <h1 class="programa-titulo text-center text-md-start">{{ programa.nombre_programa }}</h1>
+      <!-- Breadcrumb -->
+      <v-container class="py-3">
+        <v-breadcrumbs
+          :items="[
+            { title: 'Inicio', to: '/', disabled: false },
+            { title: 'Programas', disabled: true },
+            { title: programa.nombre_programa, disabled: true }
+          ]"
+          density="compact"
+          class="px-0"
+        >
+          <template #divider>
+            <v-icon>mdi-chevron-right</v-icon>
+          </template>
+        </v-breadcrumbs>
+      </v-container>
 
-                <div class="programa-meta text-center text-md-start">
-                  <v-chip :color="obtenerColorEstado(programa.estado_inscripcion)" variant="elevated" class="me-2 mb-2">
-                    <v-icon start>mdi-calendar-clock</v-icon>
-                    {{ programa.estado_inscripcion }}
-                  </v-chip>
+      <v-container class="programa-container">
+        <v-row>
+          <!-- Contenido Principal -->
+          <v-col cols="12" lg="8" class="main-content">
+            <!-- Título del programa (mobile/tablet) -->
+            <h1 class="programa-titulo mb-4 d-lg-none">{{ programa.nombre_programa }}</h1>
 
-                  <v-chip color="white" variant="outlined" class="me-2 mb-2 chip-blanco">
-                    <v-icon start>mdi-domain</v-icon>
-                    {{ programa.nombre_area }}
+            <!-- Competencias -->
+            <v-card class="mb-4" elevation="0" variant="outlined">
+              <v-card-title class="text-h6 font-weight-bold pa-4">
+                <v-icon start color="primary">mdi-lightbulb-on</v-icon>
+                ¿Qué aprenderás?
+              </v-card-title>
+              <v-card-text class="pa-4">
+                <v-chip-group column>
+                  <v-chip
+                    v-for="competencia in competenciasPrograma"
+                    :key="competencia"
+                    variant="tonal"
+                    color="primary"
+                    prepend-icon="mdi-check-circle"
+                  >
+                    {{ competencia }}
                   </v-chip>
+                </v-chip-group>
+              </v-card-text>
+            </v-card>
 
-                  <v-chip color="white" variant="outlined" class="me-2 mb-2 chip-blanco">
-                    <v-icon start>mdi-laptop</v-icon>
-                    {{ programa.nombre_modalidad }}
-                  </v-chip>
+            <!-- Objetivo -->
+            <v-card class="mb-4" elevation="0" variant="outlined">
+              <v-card-title class="text-h6 font-weight-bold pa-4">
+                <v-icon start color="primary">mdi-target</v-icon>
+                Objetivo del Programa
+              </v-card-title>
+              <v-card-text class="pa-4">
+                <p class="text-body-1 mb-0">
+                  Actualizar conocimientos y habilidades en el área de secretariado para fortalecer las competencias
+                  en el uso de herramientas digitales y ofimáticas, gestión documental y archivo digital, y
+                  administración organizacional, con el propósito de garantizar un desempeño eficiente y eficaz en la
+                  institución educativa.
+                </p>
+              </v-card-text>
+            </v-card>
+
+            <!-- Plan de Estudios -->
+            <v-card class="mb-4" elevation="0" variant="outlined">
+              <v-card-title class="text-h6 font-weight-bold pa-4">
+                <v-icon start color="primary">mdi-book-multiple</v-icon>
+                Plan de Estudios
+              </v-card-title>
+              <v-card-text class="pa-4">
+                <!-- Estadísticas inline -->
+                <div v-if="planEstudios.length > 0" class="d-flex flex-wrap ga-4 mb-4">
+                  <div class="stat-inline">
+                    <span class="text-h6 font-weight-bold text-primary">{{ planEstudios.length }}</span>
+                    <span class="text-caption text-grey-darken-1 ml-1">Módulos</span>
+                  </div>
+                  <v-divider vertical></v-divider>
+                  <div class="stat-inline">
+                    <span class="text-h6 font-weight-bold text-primary">{{ planEstudios.reduce((sum, m) => sum + m.carga_horaria, 0) }}</span>
+                    <span class="text-caption text-grey-darken-1 ml-1">Horas</span>
+                  </div>
+                  <v-divider vertical></v-divider>
+                  <div class="stat-inline">
+                    <span class="text-h6 font-weight-bold text-primary">{{ planEstudios.reduce((sum, m) => sum + parseFloat(m.creditos), 0) }}</span>
+                    <span class="text-caption text-grey-darken-1 ml-1">Créditos</span>
+                  </div>
                 </div>
 
-                <div class="programa-detalles mt-4 mt-md-6">
-                  <v-row>
-                    <v-col cols="6" v-if="programa.duracion">
-                      <div class="detalle-item">
-                        <v-icon color="white" size="20">mdi-clock-outline</v-icon>
-                        <div class="ml-2 ml-md-3">
-                          <div class="text-caption text-grey-lighten-2">Duración</div>
-                          <div class="font-weight-bold text-white text-body-2">{{ programa.duracion }}</div>
+                <!-- Loading del plan -->
+                <div v-if="cargandoPlan" class="text-center py-8">
+                  <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
+                  <p class="mt-2">Cargando plan de estudios...</p>
+                </div>
+
+                <!-- Acordeones por nivel -->
+                <v-expansion-panels v-else-if="planEstudios.length > 0" variant="accordion" class="plan-expansion" multiple>
+                  <v-expansion-panel
+                    v-for="nivel in [...new Set(planEstudios.map(m => m.nivel))].sort()"
+                    :key="nivel"
+                    elevation="0"
+                  >
+                    <v-expansion-panel-title class="nivel-header">
+                      <div class="d-flex align-center">
+                        <v-icon class="me-2" size="20">mdi-book-open-variant</v-icon>
+                        <span class="font-weight-medium">Nivel {{ nivel }}</span>
+                        <v-chip size="small" variant="text" color="primary" class="ml-2">
+                          {{ planEstudios.filter(m => m.nivel === nivel).length }} módulos
+                        </v-chip>
+                      </div>
+                    </v-expansion-panel-title>
+
+                    <v-expansion-panel-text>
+                      <div class="modulos-table">
+                        <div
+                          v-for="modulo in planEstudios.filter(m => m.nivel === nivel)"
+                          :key="modulo.sigla"
+                          class="modulo-row"
+                        >
+                          <div class="modulo-info">
+                            <span class="modulo-sigla">{{ modulo.sigla }}</span>
+                            <span class="modulo-nombre">{{ modulo.nombre_modulo }}</span>
+                          </div>
+                          <div class="modulo-stats">
+                            <span class="stat-item">{{ modulo.carga_horaria }}h</span>
+                            <span class="stat-divider">|</span>
+                            <span class="stat-item">{{ modulo.creditos }} créditos</span>
+                          </div>
                         </div>
                       </div>
-                    </v-col>
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                </v-expansion-panels>
 
-                    <v-col cols="6" v-if="programa.carga_horaria">
-                      <div class="detalle-item">
-                        <v-icon color="white" size="20">mdi-book-open</v-icon>
-                        <div class="ml-2 ml-md-3">
-                          <div class="text-caption text-grey-lighten-2">Carga Horaria</div>
-                          <div class="font-weight-bold text-white text-body-2">{{ programa.carga_horaria }} hrs</div>
-                        </div>
-                      </div>
-                    </v-col>
-                  </v-row>
+                <!-- Sin plan -->
+                <div v-else class="text-center py-8">
+                  <v-icon size="48" color="grey-lighten-1">mdi-book-outline</v-icon>
+                  <p class="mt-2 text-grey">Plan de estudios no disponible</p>
                 </div>
+              </v-card-text>
+            </v-card>
 
-                <!-- Botones de Acción -->
-                <div class="d-flex gap-4 mt-6">
-                  <v-btn
-                    v-if="programa.estado_inscripcion === 'INSCRIPCIONES ABIERTAS'"
-                    color="white"
-                    size="large"
-                    variant="elevated"
-                    @click="abrirFormulario"
-                    prepend-icon="mdi-account-plus"
+            <!-- Requisitos -->
+            <v-card class="mb-4" elevation="0" variant="outlined">
+              <v-card-title class="text-h6 font-weight-bold pa-4">
+                <v-icon start color="primary">mdi-clipboard-list</v-icon>
+                Requisitos
+              </v-card-title>
+              <v-card-text class="pa-4">
+                <v-list density="compact" class="requisitos-list">
+                  <v-list-item
+                    v-for="(requisito, index) in requisitosPrograma"
+                    :key="index"
                   >
-                    Inscribirse Ahora
-                  </v-btn>
+                    <template #prepend>
+                      <v-icon color="success" size="20">mdi-check-circle</v-icon>
+                    </template>
+                    <v-list-item-title>{{ requisito.texto }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-card-text>
+            </v-card>
 
-                  <v-btn
-                    color="success"
-                    size="large"
-                    variant="elevated"
-                    @click="abrirWhatsApp"
-                    prepend-icon="mdi-whatsapp"
-                  >
-                    Solicitar Información
-                  </v-btn>
+            <!-- Certificación -->
+            <v-card class="mb-4" elevation="0" variant="outlined">
+              <v-card-title class="text-h6 font-weight-bold pa-4">
+                <v-icon start color="success">mdi-certificate</v-icon>
+                Certificación
+              </v-card-title>
+              <v-card-text class="pa-4">
+                <div class="text-center pa-4">
+                  <v-icon size="64" color="success" class="mb-3">mdi-seal</v-icon>
+                  <h4 class="text-h6 font-weight-bold mb-2">Diploma de Técnico Superior</h4>
+                  <p class="text-body-2 mb-3">
+                    Avalado por la Universidad Amazónica de Pando, con reconocimiento a nivel nacional.
+                  </p>
+                  <v-chip color="success" variant="elevated" prepend-icon="mdi-certificate">
+                    Certificación Oficial UAP
+                  </v-chip>
                 </div>
-              </div>
-            </v-col>
+              </v-card-text>
+            </v-card>
+          </v-col>
 
-            <v-col cols="12" md="4">
-              <div class="programa-imagen-header">
-                <v-img
-                  :src="programa.imagen_url"
-                  height="400"
-                  cover
-                  :alt="programa.nombre_programa"
-                  class="d-none d-md-block"
-                ></v-img>
+          <!-- Sidebar Sticky -->
+          <v-col cols="12" lg="4" class="sidebar-container">
+            <div class="sidebar-sticky">
+              <v-card class="programa-card" elevation="2">
+                <!-- Imagen -->
                 <v-img
                   :src="programa.imagen_url"
                   height="250"
                   cover
                   :alt="programa.nombre_programa"
-                  class="d-md-none"
+                  class="programa-img"
                 ></v-img>
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
-      </section>
 
-      <!-- Información Detallada -->
-      <section class="programa-info-detalle py-8">
-        <v-container fluid>
-          <v-row>
-            <!-- Requisitos del Programa -->
-            <v-col cols="12" lg="6">
-              <v-card class="info-card h-100" elevation="3">
-                <v-card-title class="bg-indigo-darken-2 text-white">
-                  <v-icon start>mdi-clipboard-list</v-icon>
-                  Requisitos del Curso
-                </v-card-title>
-                <v-card-text>
-                  <v-list density="compact">
-                    <v-list-item
-                      v-for="(requisito, index) in requisitosPrograma"
-                      :key="index"
-                    >
-                      <template #prepend>
-                        <v-icon color="indigo" :icon="requisito.icono"></v-icon>
-                      </template>
-                      <v-list-item-title class="text-wrap">{{ requisito.texto }}</v-list-item-title>
-                    </v-list-item>
-                  </v-list>
-                </v-card-text>
-              </v-card>
-            </v-col>
+                <v-card-text class="pa-4">
+                  <!-- Título (solo desktop) -->
+                  <h2 class="text-h5 font-weight-bold mb-3 d-none d-lg-block">{{ programa.nombre_programa }}</h2>
 
-            <!-- Objetivo del Programa -->
-            <v-col cols="12" lg="6">
-              <v-card class="info-card h-100" elevation="3">
-                <v-card-title class="bg-red-darken-1 text-white">
-                  <v-icon start>mdi-target</v-icon>
-                  Objetivo del Programa
-                </v-card-title>
-                <v-card-text>
-                  <p class="objetivo-texto">
-                    Actualizar conocimientos y habilidades en el área de secretariado para fortalecer las competencias
-                    en el uso de herramientas digitales y ofimáticas, gestión documental y archivo digital, y
-                    administración organizacional, con el propósito de garantizar un desempeño eficiente y eficaz en la
-                    institución educativa.
-                  </p>
+                  <!-- Info del programa -->
+                  <div class="programa-meta mb-4">
+                    <!-- Estado -->
+                    <div class="meta-item mb-2">
+                      <v-chip
+                        :color="obtenerColorEstado(programa.estado_inscripcion)"
+                        variant="flat"
+                        size="small"
+                        class="mb-2"
+                      >
+                        <v-icon start size="16">mdi-calendar-clock</v-icon>
+                        {{ programa.estado_inscripcion }}
+                      </v-chip>
+                    </div>
+
+                    <!-- Área -->
+                    <div class="meta-item d-flex align-center mb-2">
+                      <v-icon size="18" color="grey-darken-1" class="mr-2">mdi-domain</v-icon>
+                      <span class="text-body-2">{{ programa.nombre_area }}</span>
+                    </div>
+
+                    <!-- Modalidad -->
+                    <div class="meta-item d-flex align-center mb-2">
+                      <v-icon size="18" color="grey-darken-1" class="mr-2">mdi-laptop</v-icon>
+                      <span class="text-body-2">{{ programa.nombre_modalidad }}</span>
+                    </div>
+
+                    <!-- Duración -->
+                    <div v-if="programa.duracion" class="meta-item d-flex align-center mb-2">
+                      <v-icon size="18" color="grey-darken-1" class="mr-2">mdi-clock-outline</v-icon>
+                      <span class="text-body-2">{{ programa.duracion }}</span>
+                    </div>
+
+                    <!-- Carga horaria -->
+                    <div v-if="programa.carga_horaria" class="meta-item d-flex align-center mb-2">
+                      <v-icon size="18" color="grey-darken-1" class="mr-2">mdi-book-open</v-icon>
+                      <span class="text-body-2">{{ programa.carga_horaria }} horas</span>
+                    </div>
+                  </div>
 
                   <v-divider class="my-4"></v-divider>
 
-                  <h4 class="mb-3">Competencias que desarrollarás:</h4>
-                  <v-chip-group>
-                    <v-chip
-                      v-for="competencia in competenciasPrograma"
-                      :key="competencia"
-                      variant="outlined"
+                  <!-- CTAs -->
+                  <div class="cta-buttons">
+                    <v-btn
+                      v-if="programa.estado_inscripcion === 'INSCRIPCIONES ABIERTAS'"
                       color="primary"
-                      class="ma-1"
+                      size="large"
+                      variant="elevated"
+                      block
+                      @click="abrirFormulario"
+                      prepend-icon="mdi-account-plus"
+                      class="mb-3"
                     >
-                      {{ competencia }}
-                    </v-chip>
-                  </v-chip-group>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
+                      Preinscríbete Ahora
+                    </v-btn>
 
-          <!-- Plan de Estudios -->
-          <v-row class="mt-4">
-            <v-col cols="12">
-              <v-card class="info-card" elevation="3">
-                <v-card-title class="bg-primary text-white">
-                  <v-icon start>mdi-book-multiple</v-icon>
-                  Plan de Estudios
-                </v-card-title>
-                <v-card-text class="pa-4">
-
-                  <!-- Loading del plan -->
-                  <div v-if="cargandoPlan" class="text-center py-8">
-                    <v-progress-circular indeterminate color="primary" size="40"></v-progress-circular>
-                    <p class="mt-2">Cargando plan de estudios...</p>
-                  </div>
-
-                  <!-- Plan de estudios -->
-                  <div v-else-if="planEstudios.length > 0">
-                    <!-- Resumen estadístico -->
-                    <v-row class="mb-4">
-                      <v-col cols="4">
-                        <div class="stat-card text-center pa-3">
-                          <div class="text-h5 font-weight-bold text-primary">{{ planEstudios.length }}</div>
-                          <div class="text-caption text-grey-darken-1">Módulos</div>
-                        </div>
-                      </v-col>
-                      <v-col cols="4">
-                        <div class="stat-card text-center pa-3">
-                          <div class="text-h5 font-weight-bold text-primary">{{ planEstudios.reduce((sum, m) => sum + m.carga_horaria, 0) }}</div>
-                          <div class="text-caption text-grey-darken-1">Horas Totales</div>
-                        </div>
-                      </v-col>
-                      <v-col cols="4">
-                        <div class="stat-card text-center pa-3">
-                          <div class="text-h5 font-weight-bold text-primary">{{ planEstudios.reduce((sum, m) => sum + parseFloat(m.creditos), 0) }}</div>
-                          <div class="text-caption text-grey-darken-1">Créditos</div>
-                        </div>
-                      </v-col>
-                    </v-row>
-
-                    <!-- Acordeones por nivel -->
-                    <v-expansion-panels variant="accordion" class="plan-expansion">
-                      <v-expansion-panel
-                        v-for="nivel in [...new Set(planEstudios.map(m => m.nivel))].sort()"
-                        :key="nivel"
-                        elevation="0"
-                      >
-                        <v-expansion-panel-title class="nivel-header">
-                          <div class="d-flex align-center">
-                            <v-icon class="me-2" size="20">mdi-book-open-variant</v-icon>
-                            <span class="font-weight-medium">Nivel {{ nivel }}</span>
-                            <v-chip size="small" variant="tonal" color="primary" class="ml-2">
-                              {{ planEstudios.filter(m => m.nivel === nivel).length }} módulos
-                            </v-chip>
-                          </div>
-                        </v-expansion-panel-title>
-
-                        <v-expansion-panel-text>
-                          <v-list lines="two" density="compact" class="modulos-list">
-                            <v-list-item
-                              v-for="modulo in planEstudios.filter(m => m.nivel === nivel)"
-                              :key="modulo.sigla"
-                              class="modulo-item"
-                            >
-                              <template #prepend>
-                                <v-avatar size="32" color="primary" variant="tonal">
-                                  <span class="text-caption font-weight-bold">{{ modulo.orden }}</span>
-                                </v-avatar>
-                              </template>
-
-                              <v-list-item-title class="font-weight-medium mb-1">
-                                {{ modulo.nombre_modulo }}
-                              </v-list-item-title>
-
-                              <v-list-item-subtitle class="text-caption">
-                                <v-chip size="x-small" variant="outlined" class="mr-1">
-                                  {{ modulo.sigla }}
-                                </v-chip>
-                                <span class="text-grey-darken-1">
-                                  • {{ modulo.carga_horaria }}h • {{ modulo.creditos }} créditos
-                                </span>
-                              </v-list-item-subtitle>
-
-                              <template #append v-if="modulo.competencia">
-                                <v-tooltip location="left">
-                                  <template #activator="{ props }">
-                                    <v-icon v-bind="props" size="20" color="grey">mdi-information-outline</v-icon>
-                                  </template>
-                                  <span style="max-width: 300px; display: block;">{{ modulo.competencia }}</span>
-                                </v-tooltip>
-                              </template>
-                            </v-list-item>
-                          </v-list>
-                        </v-expansion-panel-text>
-                      </v-expansion-panel>
-                    </v-expansion-panels>
-                  </div>
-
-                  <!-- Sin plan de estudios -->
-                  <div v-else class="text-center py-8">
-                    <v-icon size="48" color="grey-lighten-1">mdi-book-outline</v-icon>
-                    <p class="mt-2 text-grey">Plan de estudios no disponible</p>
-                  </div>
-
-                  <!-- Certificación -->
-                  <div v-if="planEstudios.length > 0" class="mt-6 pa-4 bg-green-lighten-5 rounded">
-                    <div class="text-center">
-                      <v-icon size="40" color="green" class="mb-2">mdi-certificate-outline</v-icon>
-                      <h4 class="text-h6 font-weight-bold mb-2">Certificación Oficial</h4>
-                      <p class="text-body-2 mb-3">
-                        Al completar el programa, recibirás un <strong>Diploma de Técnico Superior</strong>
-                        avalado por la Universidad Amazónica de Pando, con reconocimiento a nivel nacional.
-                      </p>
-                      <v-chip color="green" variant="elevated" prepend-icon="mdi-seal">
-                        Certificación UAP
-                      </v-chip>
-                    </div>
+                    <v-btn
+                      color="success"
+                      size="large"
+                      variant="outlined"
+                      block
+                      @click="abrirWhatsApp"
+                      prepend-icon="mdi-whatsapp"
+                    >
+                      Solicitar Información
+                    </v-btn>
                   </div>
                 </v-card-text>
               </v-card>
-            </v-col>
-          </v-row>
-        </v-container>
-      </section>
+            </div>
+          </v-col>
+        </v-row>
+      </v-container>
+
     </div>
 
     <!-- Dialog de Formulario de Inscripción -->
@@ -823,90 +814,54 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.detalle-programa {
+.programa-page {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: #f5f7fa;
 
-  .programa-header {
-    background: linear-gradient(135deg, #37474F 0%, #263238 100%);
-    color: white;
+  .programa-content {
+    background: #f5f7fa;
+  }
 
-    .programa-titulo {
+  .programa-container {
+    max-width: 1280px;
+  }
+
+  .programa-titulo {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #1a1a1a;
+
+    @media (min-width: 600px) {
       font-size: 2rem;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 1rem;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      word-wrap: break-word;
-
-      @media (min-width: 960px) {
-        font-size: 2.5rem;
-        margin-bottom: 1.5rem;
-      }
-    }
-
-    .chip-blanco {
-      border-color: rgba(255, 255, 255, 0.7);
-      color: white;
-
-      .v-icon {
-        color: white;
-      }
-    }
-
-    .detalle-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-
-    .botones-accion {
-      .v-btn {
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #37474F !important;
-
-        &:hover {
-          transform: translateY(-2px);
-        }
-      }
     }
   }
 
-  .info-card {
-    border-radius: 12px;
-    transition: transform 0.3s ease;
-
-    &:hover {
-      transform: translateY(-4px);
+  // Contenido principal
+  .main-content {
+    :deep(.v-card) {
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
     }
 
-    .objetivo-texto {
-      line-height: 1.7;
-      text-align: justify;
-      color: #444;
+    :deep(.v-card-title) {
+      background: transparent !important;
+      color: #1a1a1a !important;
     }
   }
 
-  // Estilos para plan de estudios
-  .stat-card {
-    background: rgba(var(--v-theme-primary), 0.05);
-    border-radius: 8px;
-    border: 1px solid rgba(var(--v-theme-primary), 0.1);
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: rgba(var(--v-theme-primary), 0.08);
-      transform: translateY(-2px);
-    }
+  // Estadísticas inline
+  .stat-inline {
+    display: flex;
+    align-items: baseline;
   }
 
+  // Plan de estudios
   .plan-expansion {
     :deep(.v-expansion-panel) {
       margin-bottom: 8px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 8px !important;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px !important;
 
       &:before {
         box-shadow: none;
@@ -914,8 +869,8 @@ onMounted(() => {
     }
 
     :deep(.v-expansion-panel-title) {
-      min-height: 56px;
-      padding: 16px;
+      min-height: 48px;
+      padding: 12px 16px;
       font-size: 0.95rem;
 
       &:hover {
@@ -928,24 +883,102 @@ onMounted(() => {
     }
   }
 
-  .modulos-list {
-    background: transparent;
-
-    :deep(.v-list-item) {
-      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  // Tabla de módulos
+  .modulos-table {
+    .modulo-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background-color 0.2s;
 
       &:last-child {
         border-bottom: none;
       }
 
       &:hover {
-        background-color: rgba(var(--v-theme-primary), 0.02);
+        background-color: #f9f9f9;
+      }
+
+      .modulo-info {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .modulo-sigla {
+          font-weight: 600;
+          color: rgb(var(--v-theme-primary));
+          min-width: 60px;
+          font-size: 0.85rem;
+        }
+
+        .modulo-nombre {
+          font-size: 0.9rem;
+          color: #1a1a1a;
+        }
+      }
+
+      .modulo-stats {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: #666;
+        white-space: nowrap;
+
+        .stat-divider {
+          color: #ccc;
+        }
       }
     }
   }
 
-  .modulo-item {
-    padding: 12px 16px;
+  // Lista de requisitos
+  .requisitos-list {
+    background: transparent;
+
+    :deep(.v-list-item) {
+      padding: 8px 0;
+
+      &:hover {
+        background: transparent;
+      }
+    }
+  }
+
+  // Sidebar sticky
+  .sidebar-container {
+    @media (min-width: 1280px) {
+      .sidebar-sticky {
+        position: sticky;
+        top: 24px;
+      }
+    }
+  }
+
+  .programa-card {
+    border-radius: 8px;
+
+    .programa-img {
+      border-radius: 8px 8px 0 0;
+    }
+
+    .programa-meta {
+      .meta-item {
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+    }
+
+    .cta-buttons {
+      :deep(.v-btn) {
+        font-weight: 600;
+        text-transform: none;
+        letter-spacing: 0.25px;
+      }
+    }
   }
 
   .formulario-inscripcion {
