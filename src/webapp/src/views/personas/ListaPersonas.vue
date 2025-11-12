@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import FormularioPersona from '@/views/personas/FormularioPersona.vue'
+import { showRegistrado, showModificado, showError, showCargando, cerrarCargando } from '@/utils/sweetalert.js'
 
 const router = useRouter()
 const personas = ref([])
@@ -67,19 +68,29 @@ const cerrarDialog = () => {
 }
 
 const manejarGuardado = async (datosPersona) => {
+  // Mostrar indicador de carga
+  showCargando(
+    esEdicion.value ? 'Actualizando persona...' : 'Registrando persona...',
+    'Por favor espere'
+  )
+
   try {
     if (esEdicion.value) {
       await api.put(`/api/persona/${personaSeleccionada.value.id_prs_persona}`, datosPersona)
-      console.log('Persona actualizada exitosamente')
+      cerrarCargando()
+      await showModificado('Persona actualizada correctamente')
     } else {
       await api.post('/api/persona', datosPersona)
-      console.log('Persona registrada exitosamente')
+      cerrarCargando()
+      await showRegistrado('Persona registrada exitosamente')
     }
 
     await obtenerPersonas()
     cerrarDialog()
   } catch (error) {
+    cerrarCargando()
     console.error('Error al guardar persona:', error)
+    await showError(error.response?.data?.message || 'No se pudo guardar la persona')
     throw error
   }
 }

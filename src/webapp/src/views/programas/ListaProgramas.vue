@@ -5,6 +5,7 @@ import { api } from '@/services/api'
 import FormularioPrograma from '@/views/programas/FormularioPrograma.vue'
 import formatoFecha from '@/helpers/formatos.js'
 import ExcelJS from 'exceljs'
+import { showRegistrado, showModificado, showError, showConfirmar, showCargando, cerrarCargando } from '@/utils/sweetalert.js'
 
 const router = useRouter()
 const programas = ref([])
@@ -214,6 +215,12 @@ const abrirFormularioParametro = (parametro = null) => {
 }
 
 const guardarParametro = async () => {
+  // Mostrar indicador de carga
+  showCargando(
+    esEdicionParametro.value ? 'Actualizando parámetro...' : 'Guardando parámetro...',
+    'Por favor espere'
+  )
+
   try {
     const datos = {
       ...formularioParametro.value,
@@ -222,25 +229,45 @@ const guardarParametro = async () => {
 
     if (esEdicionParametro.value) {
       await api.put(`/api/parametro-programa/${parametroSeleccionado.value.id_parametro}`, datos)
+      cerrarCargando()
+      await showModificado('Parámetro actualizado correctamente')
     } else {
       await api.post('/api/parametro-programa', datos)
+      cerrarCargando()
+      await showRegistrado('Parámetro creado exitosamente')
     }
 
     await obtenerParametros(programaSeleccionado.value.id_aca_programa_aprobado)
     cerrarFormularioParametro()
   } catch (error) {
+    cerrarCargando()
     console.error('Error al guardar parámetro:', error)
+    await showError(error.response?.data?.message || 'No se pudo guardar el parámetro')
   }
 }
 
 const eliminarParametro = async (parametro) => {
-  if (confirm('¿Está seguro de eliminar este parámetro?')) {
-    try {
-      await api.delete(`/api/parametro-programa/${parametro.id_parametro}`)
-      await obtenerParametros(programaSeleccionado.value.id_aca_programa_aprobado)
-    } catch (error) {
-      console.error('Error al eliminar parámetro:', error)
-    }
+  const resultado = await showConfirmar({
+    titulo: '¿Eliminar parámetro?',
+    mensaje: `Se eliminará el parámetro "${parametro.nombre_param}". Esta acción no se puede deshacer.`,
+    textoConfirmar: 'Sí, eliminar',
+    tipo: 'delete'
+  })
+
+  if (!resultado.isConfirmed) return
+
+  // Mostrar indicador de carga
+  showCargando('Eliminando parámetro...', 'Por favor espere')
+
+  try {
+    await api.delete(`/api/parametro-programa/${parametro.id_parametro}`)
+    cerrarCargando()
+    await showModificado('Parámetro eliminado correctamente')
+    await obtenerParametros(programaSeleccionado.value.id_aca_programa_aprobado)
+  } catch (error) {
+    cerrarCargando()
+    console.error('Error al eliminar parámetro:', error)
+    await showError(error.response?.data?.message || 'No se pudo eliminar el parámetro')
   }
 }
 
@@ -344,22 +371,31 @@ const cerrarDialog = () => {
 }
 
 const guardarPrograma = async (datos) => {
+  // Mostrar indicador de carga
+  showCargando(
+    esEdicion.value ? 'Actualizando programa...' : 'Guardando programa...',
+    'Por favor espere'
+  )
+
   try {
-    cargando.value = true
     datos.cod_certificado_ceub = datos.cod_certificado_ceub ? datos.cod_certificado_ceub : null
-    let response;
+
     if(esEdicion.value) {
-      response = await api.put('/api/programa-aprobado/'+datos.id_aca_programa_aprobado, datos)
+      await api.put('/api/programa-aprobado/'+datos.id_aca_programa_aprobado, datos)
+      cerrarCargando()
+      await showModificado('Programa actualizado correctamente')
     }else{
-      response = await api.post('/api/programa-aprobado', datos)
+      await api.post('/api/programa-aprobado', datos)
+      cerrarCargando()
+      await showRegistrado('Programa creado exitosamente')
     }
+
     await obtenerProgramas()
     cerrarDialog()
-    console.log('Programa guardado exitosamente:', response.data)
   } catch (error) {
+    cerrarCargando()
     console.error('Error al guardar programa:', error)
-  } finally {
-    cargando.value = false
+    await showError(error.response?.data?.message || 'No se pudo guardar el programa')
   }
 }
 

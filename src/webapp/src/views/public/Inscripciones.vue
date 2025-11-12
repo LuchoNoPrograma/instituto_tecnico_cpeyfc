@@ -17,7 +17,7 @@ import {
   obtenerErroresCampo,
   validarFormulario as validarFormularioHelper
 } from '@/helpers/validations'
-import {showRegistrado} from "@/utils/sweetalert.js";
+import {showRegistrado, showError, showCargando, cerrarCargando} from "@/utils/sweetalert.js";
 
 const route = useRoute()
 const router = useRouter()
@@ -216,7 +216,9 @@ const enviarInscripcion = async () => {
   const esValido = await validarFormularioHelper($v.value)
   if (!esValido) return
 
-  enviandoFormulario.value = true
+  // Mostrar indicador de carga
+  showCargando('Enviando preinscripción...', 'Por favor espere')
+
   try {
     const datosInscripcion = {
       ...formularioInscripcion.value,
@@ -224,14 +226,15 @@ const enviarInscripcion = async () => {
     }
 
     const response = await api.post('/api/publico/preinscripcion', datosInscripcion)
-    showRegistrado('¡Preinscripción exitosa!', ' Te contactaremos pronto.');
+    cerrarCargando()
+    await showRegistrado('¡Preinscripción exitosa!', ' Te contactaremos pronto.');
     mostrarFormulario.value = false
     limpiarFormulario()
 
   } catch (error) {
+    cerrarCargando()
     console.error('Error en inscripción:', error)
-  } finally {
-    enviandoFormulario.value = false
+    await showError(error.response?.data?.message || 'No se pudo completar la preinscripción')
   }
 }
 
