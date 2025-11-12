@@ -430,47 +430,108 @@ onMounted(cargarDatos)
         class="rounded-lg"
       >
         <template #top>
-          <v-toolbar flat class="rounded-t-lg pa-4">
-            <v-toolbar-title class="text-h6 font-weight-bold d-flex align-center">
-              <v-icon class="mr-2" color="primary">mdi-table-edit</v-icon>
+          <v-toolbar flat class="rounded-t-lg">
+            <v-container fluid class="py-4 px-4">
+              <v-row align="center" no-gutters>
+
+                <!-- Título - Siempre a la izquierda -->
+                <v-col cols="12" lg="auto" class="mb-3 mb-lg-0">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2" color="primary">mdi-table-edit</v-icon>
+                    <span class="text-h6 font-weight-bold d-none d-sm-inline">
               Módulos del Plan ({{ modulosActivos.length }})
-            </v-toolbar-title>
+            </span>
+                    <span class="text-h6 font-weight-bold d-inline d-sm-none">
+              Módulos ({{ modulosActivos.length }})
+            </span>
+                  </div>
+                </v-col>
 
-            <v-spacer></v-spacer>
+                <v-spacer class="d-none d-sm-block"></v-spacer>
 
-            <div class="d-flex align-center ga-3 flex-wrap">
-              <v-text-field
-                v-model="busqueda"
-                append-inner-icon="mdi-magnify"
-                label="Buscar módulos..."
-                single-line
-                hide-details
-                variant="outlined"
-                density="compact"
-                class="search-field"
-              ></v-text-field>
+                <!-- Grupo de acciones - A la derecha en móvil -->
+                <v-col cols="12" lg="auto">
+                  <v-row align="center" justify="end" no-gutters class="ga-2">
 
-              <v-btn
-                color="success"
-                variant="elevated"
-                @click="exportarExcel"
-                :disabled="cargando || !modulosDelPlan.length"
-              >
-                <v-icon start>mdi-file-excel</v-icon>
-                Exportar
-              </v-btn>
+                    <!-- Búsqueda -->
+                    <v-col cols="auto" class="flex-grow-1 flex-sm-grow-0">
+                      <v-text-field
+                        v-model="busqueda"
+                        append-inner-icon="mdi-magnify"
+                        label="Buscar módulos..."
+                        single-line
+                        hide-details
+                        variant="outlined"
+                        density="compact"
+                        style="min-width: 200px; max-width: 280px;"
+                      ></v-text-field>
+                    </v-col>
 
-              <v-btn
-                color="primary"
-                variant="elevated"
-                class="btn-nuevo"
-                @click="abrirDialogModulo"
-                :disabled="cargando"
-              >
-                <v-icon start>mdi-plus</v-icon>
-                Agregar Módulo
-              </v-btn>
-            </div>
+                    <!-- Botones desktop -->
+                    <v-col cols="auto" class="d-none d-sm-block">
+                      <v-btn
+                        color="success"
+                        variant="elevated"
+                        @click="exportarExcel"
+                        :disabled="cargando || !modulosDelPlan.length"
+                        class="mr-2"
+                      >
+                        <v-icon start>mdi-file-excel</v-icon>
+                        Exportar
+                      </v-btn>
+
+                      <v-btn
+                        color="primary"
+                        variant="elevated"
+                        @click="abrirDialogModulo"
+                        :disabled="cargando"
+                      >
+                        <v-icon start>mdi-plus</v-icon>
+                        Agregar Módulo
+                      </v-btn>
+                    </v-col>
+
+                    <!-- Menú móvil -->
+                    <v-col cols="auto" class="d-sm-none">
+                      <v-menu location="bottom end">
+                        <template v-slot:activator="{ props }">
+                          <v-btn
+                            icon="mdi-dots-vertical"
+                            v-bind="props"
+                            color="primary"
+                            variant="tonal"
+                          ></v-btn>
+                        </template>
+
+                        <v-list density="compact">
+                          <v-list-item
+                            @click="exportarExcel"
+                            :disabled="cargando || !modulosDelPlan.length"
+                          >
+                            <template v-slot:prepend>
+                              <v-icon color="success">mdi-file-excel</v-icon>
+                            </template>
+                            <v-list-item-title>Exportar</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item
+                            @click="abrirDialogModulo"
+                            :disabled="cargando"
+                          >
+                            <template v-slot:prepend>
+                              <v-icon color="primary">mdi-plus</v-icon>
+                            </template>
+                            <v-list-item-title>Agregar Módulo</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </v-col>
+
+                  </v-row>
+                </v-col>
+
+              </v-row>
+            </v-container>
           </v-toolbar>
         </template>
         <!-- Nivel -->

@@ -1,9 +1,13 @@
 <script setup>
 // Layout minimalista para login, 404, etc.
+import GlobalLoading from '@/components/GlobalLoading.vue'
 </script>
 
 <template>
   <v-app>
+    <!-- Loading global -->
+    <GlobalLoading />
+
     <v-main class="d-flex align-center justify-center min-height-screen">
       <slot />
     </v-main>

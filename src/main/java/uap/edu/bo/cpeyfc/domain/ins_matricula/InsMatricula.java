@@ -47,4 +47,21 @@ public class InsMatricula extends Auditoria {
 
   @Column(name = "tipo_matricula", nullable = false, length = 35)
   private String tipoMatricula;
+
+  // Nuevos campos (las entities se crearán después)
+  @Column(name = "id_aca_tipo_estudiante")
+  private Integer idAcaTipoEstudiante; // Nacional, UAP, Extranjero
+
+  @Column(name = "id_fin_arancel_aplicado")
+  private Integer idFinArancelAplicado;
+
+  @Column(name = "id_fin_convenio_aplicado")
+  private Integer idFinConvenioAplicado;
+
+  @Column(name = "numero_periodo_cursando")
+  private Integer numeroPeriodoCursando; // 1, 2, 3, ...
+
+  @Column(name = "es_estudiante_antiguo")
+  private Boolean esEstudianteAntiguo;
+
 }

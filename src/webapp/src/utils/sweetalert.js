@@ -207,4 +207,92 @@ export const showToastInfo = (mensaje) => {
   })
 }
 
+/**
+ * Muestra alerta de carga (loading) mientras se procesa una operación
+ * @param {string} mensaje - Mensaje de carga (opcional)
+ * @param {string} titulo - Título de la alerta (opcional)
+ * @returns {Promise<void>}
+ */
+export const showCargando = (mensaje = 'Procesando...', titulo = 'Por favor espere') => {
+  return Swal.fire({
+    ...baseConfig,
+    title: titulo,
+    html: `
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+        <div class="swal2-loader" style="border-color: #1976D2; border-top-color: transparent;"></div>
+        <div style="color: #666; font-size: 14px;">${mensaje}</div>
+      </div>
+    `,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    allowEnterKey: false,
+    showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading()
+    }
+  })
+}
+
+/**
+ * Cierra la alerta de carga actual
+ */
+export const cerrarCargando = () => {
+  Swal.close()
+}
+
+/**
+ * Ejecuta una operación asíncrona mostrando un indicador de carga
+ * Muestra feedback de éxito o error al finalizar
+ * @param {Function} operacion - Función asíncrona a ejecutar
+ * @param {Object} opciones - Opciones de configuración
+ * @param {string} opciones.mensajeCargando - Mensaje mientras se procesa
+ * @param {string} opciones.tituloCargando - Título de la alerta de carga
+ * @param {string} opciones.mensajeExito - Mensaje de éxito
+ * @param {string} opciones.tituloExito - Título de éxito
+ * @param {string} opciones.tipoOperacion - Tipo de operación ('registrar', 'modificar', 'eliminar')
+ * @returns {Promise<any>} Resultado de la operación
+ */
+export const ejecutarConCarga = async (
+  operacion,
+  {
+    mensajeCargando = 'Procesando operación...',
+    tituloCargando = 'Por favor espere',
+    mensajeExito = null,
+    tituloExito = null,
+    tipoOperacion = 'registrar'
+  } = {}
+) => {
+  // Mostrar indicador de carga
+  showCargando(mensajeCargando, tituloCargando)
+
+  try {
+    // Ejecutar la operación
+    const resultado = await operacion()
+
+    // Cerrar indicador de carga
+    cerrarCargando()
+
+    // Mostrar mensaje de éxito según el tipo de operación
+    if (tipoOperacion === 'registrar') {
+      await showRegistrado(mensajeExito, tituloExito)
+    } else if (tipoOperacion === 'modificar') {
+      await showModificado(mensajeExito, tituloExito)
+    } else if (tipoOperacion === 'eliminar') {
+      await showEliminado(mensajeExito, tituloExito)
+    }
+
+    return resultado
+  } catch (error) {
+    // Cerrar indicador de carga
+    cerrarCargando()
+
+    // Mostrar mensaje de error
+    const mensajeError = error.response?.data?.message || error.message || 'Ha ocurrido un error inesperado'
+    await showError(mensajeError, '¡Error!')
+
+    // Re-lanzar el error para que el componente pueda manejarlo si es necesario
+    throw error
+  }
+}
+
 

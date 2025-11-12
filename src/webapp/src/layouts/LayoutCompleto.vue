@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import GlobalLoading from '@/components/GlobalLoading.vue'
 
 const router = useRouter()
 const { logout, getCurrentUser, hasPermission } = useAuth()
@@ -243,6 +244,9 @@ const verProgramasEjecucion = () => {
 
     <!-- Contenido principal -->
     <v-main class="main-content">
+      <!-- Loading scoped solo al contenido -->
+      <GlobalLoading scoped />
+
       <v-container fluid class="pa-4">
         <slot />
       </v-container>
@@ -291,6 +295,7 @@ const verProgramasEjecucion = () => {
 
 .main-content {
   background-color: rgb(var(--v-theme-background));
+  position: relative; // Necesario para que el loading scoped funcione
 }
 
 .user-avatar {

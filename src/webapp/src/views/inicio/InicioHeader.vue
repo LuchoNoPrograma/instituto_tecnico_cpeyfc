@@ -5,11 +5,16 @@ import { useDisplay } from 'vuetify';
 
 const { mdAndUp } = useDisplay();
 const drawer = ref(false);
+
+const router = useRouter()
+const irInicio = () => {
+  router.push('/')
+}
 </script>
 
 <template>
   <v-app-bar elevation="0" flat height="80" class="border-bottom position-fixed" color="primary" border="0">
-    <v-img :src="logo" max-height="50"></v-img>
+    <v-img :src="logo" max-height="50" @click="irInicio" style="cursor: pointer"></v-img>
     <v-container class="d-flex align-center fill-height">
 
       <v-spacer></v-spacer>

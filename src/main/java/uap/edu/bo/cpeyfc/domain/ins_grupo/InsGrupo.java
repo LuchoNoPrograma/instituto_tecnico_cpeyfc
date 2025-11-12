@@ -45,4 +45,19 @@ public class InsGrupo extends Auditoria {
   @Column(name = "gestion_inicio", nullable = false)
   private Integer gestionInicio;
 
+  @Column(name = "codigo_paralelo", length = 10)
+  private String codigoParalelo; // A, B, C, etc.
+
+  @Column(name = "horario", length = 50)
+  private String horario; // ej: 15:00-16:30
+
+  @Column(name = "aula", length = 20)
+  private String aula; // ej: C-5, D-9
+
+  @Column(name = "fecha_inicio")
+  private LocalDate fechaInicio;
+
+  @Column(name = "fecha_fin")
+  private LocalDate fechaFin;
+
 }

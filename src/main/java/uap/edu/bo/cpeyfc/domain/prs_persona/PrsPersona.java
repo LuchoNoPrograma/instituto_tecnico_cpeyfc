@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import uap.edu.bo.cpeyfc.config.Auditoria;
 
 import java.time.LocalDate;
@@ -42,5 +44,24 @@ public class PrsPersona extends Auditoria {
 
   @Column(name = "estado_persona", nullable = false, length = 35)
   private String estado_persona;
+
+  // Relación recursiva: apoderado/tutor
+  @ManyToOne(fetch = FetchType.LAZY)
+  @OnDelete(action = OnDeleteAction.RESTRICT)
+  @JoinColumn(name = "id_prs_persona_apoderado")
+  private PrsPersona apoderado;
+
+  @Column(name = "tipo_relacion_apoderado", length = 50)
+  private String tipoRelacionApoderado; // PADRE, MADRE, TUTOR, etc.
+
+  @Column(name = "telefono_apoderado", length = 20)
+  private String telefonoApoderado;
+
+  @Column(name = "email_apoderado", length = 100)
+  private String emailApoderado;
+
+  // Colegio de procedencia (se creará después la entity AcaColegio)
+  @Column(name = "id_aca_colegio_procedencia")
+  private Integer idAcaColegioProcedencia;
 
 }

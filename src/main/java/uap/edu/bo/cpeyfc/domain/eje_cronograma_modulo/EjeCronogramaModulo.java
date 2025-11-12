@@ -53,4 +53,17 @@ public class EjeCronogramaModulo extends Auditoria {
   @Column(name = "estado_cronograma_modulo", nullable = false, length = 35)
   private String estadoCronogramaModulo;
 
+  // Nuevo: Periodo académico (se creará después la entity AcaPeriodo)
+  @Column(name = "id_aca_periodo")
+  private Integer idAcaPeriodo;
+
+  @Column(name = "fecha_inicio_inscripciones")
+  private LocalDate fechaInicioInscripciones;
+
+  @Column(name = "fecha_fin_inscripciones")
+  private LocalDate fechaFinInscripciones;
+
+  @Column(name = "permite_inscripciones")
+  private Boolean permiteInscripciones;
+
 }

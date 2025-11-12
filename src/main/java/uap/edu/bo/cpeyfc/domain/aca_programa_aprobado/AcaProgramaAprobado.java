@@ -79,4 +79,7 @@ public class AcaProgramaAprobado extends Auditoria {
   @Column(name = "precio_titulacion", precision = 8, scale = 2)
   private BigDecimal precioTitulacion;
 
+  @Column(name = "sistema_programa", nullable = false, length = 35)
+  private String sistemaPrograma; // REGULAR, ACELERADO, MODULAR
+
 }
