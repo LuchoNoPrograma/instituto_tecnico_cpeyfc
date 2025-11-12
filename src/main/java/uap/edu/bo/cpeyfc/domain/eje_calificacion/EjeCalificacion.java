@@ -40,7 +40,24 @@ public class EjeCalificacion extends Auditoria {
   @Column(name = "nota", precision = 5, scale = 2)
   private BigDecimal nota;
 
+  @Column(name = "nota_ponderada", precision = 5, scale = 2)
+  private BigDecimal notaPonderada;
+
   @Column(name = "estado_calificacion", nullable = false, length = 35)
   private String estadoCalificacion;
+
+  // Nuevos campos
+  @Column(name = "comentario_general")
+  private String comentarioGeneral;
+
+  @Column(name = "total_faltas")
+  private Integer totalFaltas;
+
+  @Column(name = "debe_repetir")
+  private Boolean debeRepetir;
+
+  // Módulo al que pasa si aprueba (se creará después la entity AcaModulo)
+  @Column(name = "pasa_a_modulo")
+  private Integer pasaAModulo;
 
 }

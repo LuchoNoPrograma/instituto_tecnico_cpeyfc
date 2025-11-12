@@ -50,10 +50,35 @@ public class FinObligacionPago extends Auditoria {
   @Column(name = "deuda_con_descuento", nullable = false, precision = 10, scale = 2)
   private BigDecimal deudaConDescuento;
 
+  @Column(name = "saldo_pendiente", precision = 10, scale = 2)
+  private BigDecimal saldoPendiente;
+
   @Column(name = "observacion", length = 500)
   private String observacion;
 
   @Column(name = "estado_obligacion_pago", nullable = false, length = 35)
   private String estadoObligacionPago;
+
+  // Nuevos campos
+  @Column(name = "metodo_pago", length = 50)
+  private String metodoPago; // EFECTIVO, TRANSFERENCIA, QR, TARJETA, CHEQUE
+
+  @Column(name = "monto_base", precision = 10, scale = 2)
+  private BigDecimal montoBase;
+
+  @Column(name = "monto_descuento_arancel", precision = 10, scale = 2)
+  private BigDecimal montoDescuentoArancel;
+
+  @Column(name = "monto_descuento_convenio", precision = 10, scale = 2)
+  private BigDecimal montoDescuentoConvenio;
+
+  @Column(name = "monto_final", precision = 10, scale = 2)
+  private BigDecimal montoFinal;
+
+  @Column(name = "comprobante_pago_uri")
+  private String comprobantePagoUri;
+
+  @Column(name = "observaciones_pago")
+  private String observacionesPago;
 
 }

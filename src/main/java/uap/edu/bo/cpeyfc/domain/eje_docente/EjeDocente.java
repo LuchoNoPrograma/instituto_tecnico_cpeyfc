@@ -11,6 +11,8 @@ import uap.edu.bo.cpeyfc.config.Auditoria;
 import uap.edu.bo.cpeyfc.domain.prs_persona.PrsPersona;
 import uap.edu.bo.cpeyfc.domain.seg_usuario.SegUsuario;
 
+import java.time.LocalDate;
+
 @FieldNameConstants
 @Getter
 @Setter
@@ -40,5 +42,23 @@ public class EjeDocente extends Auditoria {
 
   @Column(name = "estado_docente", nullable = false, length = 35)
   private String estadoDocente;
+
+  @Column(name = "numero_contrato", length = 50)
+  private String numeroContrato;
+
+  @Column(name = "fecha_inicio_contrato")
+  private LocalDate fechaInicioContrato;
+
+  @Column(name = "fecha_fin_contrato")
+  private LocalDate fechaFinContrato;
+
+  @Column(name = "nivel_academico", length = 100)
+  private String nivelAcademico; // Licenciatura, Técnico Superior, Maestría, etc.
+
+  @Column(name = "especialidad")
+  private String especialidad;
+
+  @Column(name = "hoja_vida_uri")
+  private String hojaVidaUri;
 
 }
