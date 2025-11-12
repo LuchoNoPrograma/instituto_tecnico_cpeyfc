@@ -10,6 +10,30 @@ Sistema de loading con animaciones fade in/fade out integrado con Vue Router par
 - 📱 Diseño responsive
 - 🎨 Estilos Material Design con Vuetify
 - ⚡ Duración mínima configurable para evitar flashes
+- 🎭 Modo "scoped": limita el loading solo al área de contenido (sin afectar sidebar/header)
+
+## Modos de Uso
+
+### 1. Fullscreen (Pantalla Completa)
+Por defecto, el loading cubre **toda la pantalla** con blur. Ideal para layouts públicos.
+
+```vue
+<GlobalLoading />
+```
+
+**Usado en:** `LayoutBlanco.vue` (login, 404, etc.)
+
+### 2. Scoped (Solo Contenido)
+Con la prop `scoped`, el loading solo cubre el **área de contenido** sin afectar sidebar/header/footer.
+
+```vue
+<GlobalLoading scoped />
+```
+
+**Usado en:** `LayoutCompleto.vue` (panel de administración)
+- ✅ Sidebar visible durante carga
+- ✅ Header visible durante carga
+- ✅ Solo el contenido central tiene overlay y blur
 
 ## Uso Automático (Vue Router)
 
@@ -190,6 +214,41 @@ Edita `src/components/GlobalLoading.vue`:
 show('Cargando...', 500) // 500ms mínimo
 ```
 
+### Usar en Layouts Personalizados
+
+Si creas un layout personalizado:
+
+**Para loading fullscreen (cubre todo):**
+```vue
+<template>
+  <v-app>
+    <GlobalLoading />
+    <!-- Tu contenido -->
+  </v-app>
+</template>
+```
+
+**Para loading scoped (solo contenido):**
+```vue
+<template>
+  <v-app>
+    <!-- Header/Sidebar -->
+    <v-main class="content-wrapper">
+      <GlobalLoading scoped />
+      <slot />
+    </v-main>
+  </v-app>
+</template>
+
+<style scoped>
+.content-wrapper {
+  position: relative; /* IMPORTANTE para que scoped funcione */
+}
+</style>
+```
+
+⚠️ **Importante:** El contenedor padre del `<GlobalLoading scoped />` debe tener `position: relative` para que funcione correctamente.
+
 ## Componentes Involucrados
 
 - **GlobalLoading.vue** - Componente visual con animaciones
@@ -201,10 +260,12 @@ show('Cargando...', 500) // 500ms mínimo
 ## Notas Importantes
 
 1. El loading tiene duración mínima de 300ms para evitar flashes visuales molestos
-2. El componente está en z-index: 9999 para aparecer sobre todo
-3. Las animaciones usan CSS3 transitions para mejor performance
-4. El loading se oculta automáticamente después de cada navegación
-5. Múltiples llamadas a `show()` no se acumulan (sobrescriben el anterior)
+2. **Modo fullscreen:** z-index: 9999, position: fixed (cubre toda la pantalla)
+3. **Modo scoped:** z-index: 100, position: absolute (solo el contenedor padre)
+4. Las animaciones usan CSS3 transitions para mejor performance
+5. El loading se oculta automáticamente después de cada navegación
+6. Múltiples llamadas a `show()` no se acumulan (sobrescriben el anterior)
+7. Para modo scoped, el contenedor padre **debe** tener `position: relative`
 
 ## Solución de Problemas
 
@@ -225,3 +286,16 @@ show('Cargando...', 500) // 500ms mínimo
 1. Verifica que el navegador soporte CSS transitions
 2. Revisa que no haya conflictos de CSS
 3. Comprueba el z-index del componente
+
+### El loading scoped no se muestra o se ve raro
+
+1. Verifica que el contenedor padre tenga `position: relative`
+2. Asegúrate de que el contenedor tenga un tamaño definido (width/height)
+3. Comprueba que el componente esté dentro del contenedor correcto
+4. Revisa la consola por errores de importación
+
+### El loading scoped está cubriendo sidebar/header
+
+1. Verifica que estés usando la prop `scoped` en el componente
+2. Asegúrate de que el componente esté dentro del `<v-main>`, no en `<v-app>`
+3. Revisa que el `<v-main>` tenga `position: relative` en sus estilos

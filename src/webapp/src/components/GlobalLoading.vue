@@ -2,6 +2,15 @@
 import { computed } from 'vue'
 import { useLoadingStore } from '@/stores/loading'
 
+// Props
+const props = defineProps({
+  scoped: {
+    type: Boolean,
+    default: false,
+    description: 'Si es true, el loading se limita al contenedor padre (position: absolute). Si es false, cubre toda la pantalla (position: fixed)'
+  }
+})
+
 const loadingStore = useLoadingStore()
 const isLoading = computed(() => loadingStore.isLoading)
 const message = computed(() => loadingStore.message)
@@ -9,7 +18,11 @@ const message = computed(() => loadingStore.message)
 
 <template>
   <Transition name="fade">
-    <div v-if="isLoading" class="loading-overlay">
+    <div
+      v-if="isLoading"
+      class="loading-overlay"
+      :class="{ 'loading-overlay--scoped': scoped }"
+    >
       <div class="loading-container">
         <div class="spinner-container">
           <v-progress-circular
@@ -60,6 +73,12 @@ const message = computed(() => loadingStore.message)
   align-items: center;
   justify-content: center;
   z-index: 9999;
+
+  // Modo scoped: se limita al contenedor padre
+  &--scoped {
+    position: absolute;
+    z-index: 100;
+  }
 }
 
 .loading-container {

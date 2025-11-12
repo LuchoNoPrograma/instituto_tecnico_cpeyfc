@@ -101,9 +101,6 @@ const verProgramasEjecucion = () => {
 
 <template>
   <v-app>
-    <!-- Loading global -->
-    <GlobalLoading />
-
     <!-- Menú lateral -->
     <v-navigation-drawer
       v-model="drawer"
@@ -247,6 +244,9 @@ const verProgramasEjecucion = () => {
 
     <!-- Contenido principal -->
     <v-main class="main-content">
+      <!-- Loading scoped solo al contenido -->
+      <GlobalLoading scoped />
+
       <v-container fluid class="pa-4">
         <slot />
       </v-container>
@@ -295,6 +295,7 @@ const verProgramasEjecucion = () => {
 
 .main-content {
   background-color: rgb(var(--v-theme-background));
+  position: relative; // Necesario para que el loading scoped funcione
 }
 
 .user-avatar {
