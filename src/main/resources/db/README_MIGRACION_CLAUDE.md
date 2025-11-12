@@ -954,23 +954,23 @@ public class Calificacion {
 
 Crear estas entidades desde cero:
 
-1. **Gestion.java** → aca_gestion
-2. **Periodo.java** → aca_periodo
-3. **ModalidadGraduacion.java** → aca_modalidad_graduacion
-4. **TituloCertificado.java** → aca_titulo_certificado
-5. **CertificacionPrograma.java** → aca_certificacion_programa
-6. **ProgramaModalidadGraduacion.java** → aca_programa_modalidad_graduacion
-7. **CertificadoEmitido.java** → aca_certificado_emitido
-8. **Colegio.java** → aca_colegio
-9. **TipoEstudiante.java** → aca_tipo_estudiante
-10. **Convenio.java** → fin_convenio
-11. **ColegioConvenio.java** → fin_colegio_convenio
-12. **ConceptoArancel.java** → fin_concepto_arancel
-13. **Arancel.java** → fin_arancel
-14. **DetalleArancel.java** → fin_detalle_arancel
-15. **DescuentoArancel.java** → fin_descuento_arancel
-16. **AreaEvaluacion.java** → eje_area_evaluacion
-17. **DetalleCalificacion.java** → eje_detalle_calificacion
+1. **AcaGestion.java** → aca_gestion
+2. **AcaPeriodo.java** → aca_periodo
+3. **AcaModalidadGraduacion.java** → aca_modalidad_graduacion
+4. **AcaTituloCertificado.java** → aca_titulo_certificado
+5. **AcaCertificacionPrograma.java** → aca_certificacion_programa
+6. **AcaProgramaModalidadGraduacion.java** → aca_programa_modalidad_graduacion
+7. **AcaCertificadoEmitido.java** → aca_certificado_emitido
+8. **AcaColegio.java** → aca_colegio
+9. **AcaTipoEstudiante.java** → aca_tipo_estudiante
+10. **FinConvenio.java** → fin_convenio
+11. **FinColegioConvenio.java** → fin_colegio_convenio
+12. **FinConceptoArancel.java** → fin_concepto_arancel
+13. **FinArancel.java** → fin_arancel
+14. **FinDetalleArancel.java** → fin_detalle_arancel
+15. **FinDescuentoArancel.java** → fin_descuento_arancel
+16. **EjeAreaEvaluacion.java** → eje_area_evaluacion
+17. **EjeDetalleCalificacion.java** → eje_detalle_calificacion
 
 ### 7.4. Repositories NUEVOS
 
@@ -1164,69 +1164,6 @@ public record EstudianteAptoCertificacionDTO(
 
 ### 7.8. Frontend (Vue.js)
 
-#### Componente: CursosDisponibles.vue
-```vue
-<template>
-  <v-container>
-    <v-data-table
-      :headers="headers"
-      :items="cursos"
-      :loading="loading"
-    >
-      <template v-slot:item.estado_inscripcion="{ item }">
-        <v-chip :color="getEstadoColor(item.estado_inscripcion)">
-          {{ item.estado_inscripcion }}
-        </v-chip>
-      </template>
-    </v-data-table>
-  </v-container>
-</template>
-
-<script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-
-const cursos = ref([]);
-const loading = ref(false);
-
-const headers = [
-  { title: 'Programa', key: 'nombre_programa' },
-  { title: 'Sistema', key: 'sistema_programa' },
-  { title: 'Módulo', key: 'nombre_modulo' },
-  { title: 'Grupo', key: 'nombre_grupo' },
-  { title: 'Horario', key: 'horario' },
-  { title: 'Aula', key: 'aula' },
-  { title: 'Docente', key: 'docente_nombre' },
-  { title: 'Estudiantes', key: 'estudiantes_matriculados' },
-  { title: 'Estado', key: 'estado_inscripcion' }
-];
-
-const cargarCursos = async () => {
-  loading.value = true;
-  try {
-    const response = await axios.get('/api/cursos/disponibles');
-    cursos.value = response.data;
-  } catch (error) {
-    console.error(error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const getEstadoColor = (estado) => {
-  const colors = {
-    'ABIERTO': 'success',
-    'CERRADO': 'error',
-    'PROXIMAMENTE': 'info',
-    'FINALIZADO': 'grey'
-  };
-  return colors[estado] || 'grey';
-};
-
-onMounted(cargarCursos);
-</script>
-```
-
 ---
 
 ## 📋 CHECKLIST DE REFACTORIZACIÓN
@@ -1239,24 +1176,19 @@ onMounted(cargarCursos);
 - [ ] Crear services de negocio
 - [ ] Crear controllers REST
 - [ ] Crear DTOs
-- [ ] Agregar validaciones
-- [ ] Actualizar tests
 
-### Frontend
+### Frontend --Seguir el patron que está en ListaProgramas, con sweetalert, formularios
 - [ ] Crear componentes para gestión de periodos
 - [ ] Crear componentes para certificaciones
 - [ ] Crear componentes para convenios
-- [ ] Crear formulario de inscripción con cálculo de montos
-- [ ] Crear vista de calificaciones por competencias
-- [ ] Crear dashboard de estudiantes aptos para certificar
-- [ ] Actualizar formularios existentes
+- [ ] Actualizar formulario de inscripción con listado de precio por programa
+- [ ] Actualizar formularios existentes de aquellas tablas que fueron modificadas
 
 ### Base de Datos
 - [x] Ejecutar V020 (tablas)
 - [x] Ejecutar V021 (vistas y funciones)
+- [ ] Crear V022 (triggers)
 - [ ] Ejecutar V022 (triggers)
-- [ ] Insertar datos de prueba
-- [ ] Validar integridad
 
 ---
 
