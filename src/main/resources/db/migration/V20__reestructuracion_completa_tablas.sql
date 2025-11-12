@@ -10,10 +10,6 @@
 -- ============================================================================
 -- SECCIÓN 1: GESTIÓN Y PERIODOS ACADÉMICOS
 -- ============================================================================
-
-ALTER TABLE aca_plan_modulo_detalle
-RENAME COLUMN horas_academicas TO carga_horaria;
-
 -- Tabla: aca_gestion
 -- Propósito: Registro de gestiones académicas anuales (años lectivos)
 CREATE TABLE IF NOT EXISTS aca_gestion (
