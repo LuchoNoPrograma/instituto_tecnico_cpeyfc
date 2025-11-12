@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
+import InicioHeader from '@/views/inicio/InicioHeader.vue'
 import { useVuelidate } from '@vuelidate/core'
 import {
   esRequerido,
@@ -81,6 +82,10 @@ const $v = useVuelidate(reglasValidacion, formularioInscripcion)
 const enviandoFormulario = ref(false)
 
 const programaId = computed(() => route.query.programa)
+const nivelesExpandidos = computed(() => {
+  if (!planEstudios.value.length) return []
+  return [...new Set(planEstudios.value.map(m => m.nivel))].sort()
+})
 
 const requisitosPrograma = ref([
   {
@@ -246,6 +251,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <InicioHeader />
   <div class="programa-page">
     <!-- Overlay de carga -->
     <v-overlay
@@ -369,10 +375,17 @@ onMounted(() => {
                 </div>
 
                 <!-- Acordeones por nivel -->
-                <v-expansion-panels v-else-if="planEstudios.length > 0" variant="accordion" class="plan-expansion" multiple>
+                <v-expansion-panels
+                  v-else-if="planEstudios.length > 0"
+                  variant="accordion"
+                  class="plan-expansion"
+                  :model-value="nivelesExpandidos"
+                  multiple
+                >
                   <v-expansion-panel
                     v-for="nivel in [...new Set(planEstudios.map(m => m.nivel))].sort()"
                     :key="nivel"
+                    :value="nivel"
                     elevation="0"
                   >
                     <v-expansion-panel-title class="nivel-header">
@@ -718,7 +731,6 @@ onMounted(() => {
                       variant="outlined"
                       density="comfortable"
                       :error-messages="obtenerErroresCampo($v.fecha_nacimiento)"
-                      :max="new Date().toISOString().split('T')[0]"
                       @blur="$v.fecha_nacimiento.$touch"
                     ></v-date-input>
                   </v-col>
@@ -801,9 +813,10 @@ onMounted(() => {
         </v-window>
       </v-card>
     </v-dialog>
+    <ChatbotIA></ChatbotIA>
 
     <!-- Botón WhatsApp Flotante -->
-    <v-btn
+<!--    <v-btn
       fab
       color="#25D366"
       size="large"
@@ -812,7 +825,7 @@ onMounted(() => {
       elevation="8"
     >
       <v-icon size="32" color="white">mdi-whatsapp</v-icon>
-    </v-btn>
+    </v-btn>-->
   </div>
 </template>
 
