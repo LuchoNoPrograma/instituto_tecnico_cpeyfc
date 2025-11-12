@@ -107,33 +107,78 @@ onMounted(() => {
       >
         <template #top>
           <v-toolbar flat class="rounded-t-lg">
-            <v-toolbar-title class="text-h6 font-weight-bold d-flex align-center">
-              Adm. Personas
-            </v-toolbar-title>
+            <v-container fluid class="py-4 px-4">
+              <v-row align="center" no-gutters>
 
-            <v-spacer></v-spacer>
-            <v-text-field
-              v-model="busqueda"
-              append-inner-icon="mdi-magnify"
-              class="mx-2"
-              label="Buscar personas..."
-              single-line
-              hide-details
-              variant="outlined"
-              density="compact"
-              style="max-width: 300px;"
-            />
+                <!-- Título - Siempre a la izquierda -->
+                <v-col cols="12" lg="auto" class="mb-3 mb-lg-0">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2" color="primary">mdi-account-multiple</v-icon>
+                    <span class="text-h6 font-weight-bold d-none d-sm-inline">Adm. Personas</span>
+                    <span class="text-h6 font-weight-bold d-inline d-sm-none">Personas</span>
+                  </div>
+                </v-col>
 
-            <div class="d-flex align-center ga-3">
-              <v-btn
-                color="primary"
-                variant="elevated"
-                @click="abrirDialogRegistrar"
-              >
-                <v-icon start>mdi-plus</v-icon>
-                Registrar Persona
-              </v-btn>
-            </div>
+                <v-spacer class="d-none d-lg-block"></v-spacer>
+
+                <!-- Grupo de acciones - A la derecha en móvil -->
+                <v-col cols="12" lg="auto">
+                  <v-row align="center" justify="end" no-gutters class="ga-2">
+
+                    <!-- Búsqueda -->
+                    <v-col cols="auto" class="flex-grow-1 flex-lg-grow-0">
+                      <v-text-field
+                        v-model="busqueda"
+                        append-inner-icon="mdi-magnify"
+                        label="Buscar personas..."
+                        single-line
+                        hide-details
+                        variant="outlined"
+                        density="compact"
+                        style="min-width: 200px; max-width: 280px;"
+                      ></v-text-field>
+                    </v-col>
+
+                    <!-- Botón desktop -->
+                    <v-col cols="auto" class="d-none d-sm-block">
+                      <v-btn
+                        color="primary"
+                        variant="elevated"
+                        @click="abrirDialogRegistrar"
+                      >
+                        <v-icon start>mdi-plus</v-icon>
+                        Registrar Persona
+                      </v-btn>
+                    </v-col>
+
+                    <!-- Menú móvil -->
+                    <v-col cols="auto" class="d-sm-none">
+                      <v-menu location="bottom end">
+                        <template v-slot:activator="{ props }">
+                          <v-btn
+                            icon="mdi-dots-vertical"
+                            v-bind="props"
+                            color="primary"
+                            variant="tonal"
+                          ></v-btn>
+                        </template>
+
+                        <v-list density="compact">
+                          <v-list-item @click="abrirDialogRegistrar">
+                            <template v-slot:prepend>
+                              <v-icon color="primary">mdi-plus</v-icon>
+                            </template>
+                            <v-list-item-title>Registrar Persona</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </v-col>
+
+                  </v-row>
+                </v-col>
+
+              </v-row>
+            </v-container>
           </v-toolbar>
         </template>
 
@@ -195,19 +240,4 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-// Responsive
-@media (max-width: 960px) {
-  .v-toolbar {
-    .d-flex.align-center.ga-3 {
-      flex-direction: column;
-      align-items: stretch !important;
-      gap: 12px !important;
-    }
-
-    .v-toolbar-title {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-  }
-}
 </style>
