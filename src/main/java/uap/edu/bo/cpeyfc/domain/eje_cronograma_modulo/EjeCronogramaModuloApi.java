@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
-import uap.edu.bo.cpeyfc.service.VistasAcademicasService;
 import uap.edu.bo.cpeyfc.util.FechaUtil;
 
 import java.util.Map;
@@ -15,7 +14,6 @@ import java.util.Map;
 public class EjeCronogramaModuloApi {
   private final EjeCronogramaModuloRepository ejeCronogramaModuloRepository;
   private final EjeCronogramaModuloService ejeCronogramaModuloService;
-  private final VistasAcademicasService vistasAcademicasService;
 
   @PutMapping("/api/cronograma-modulo")
   public ResponseEntity<?> modificarCronogramaModulo(@RequestBody Map<String, Object> datos, @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails) {
@@ -40,16 +38,16 @@ public class EjeCronogramaModuloApi {
 
   @GetMapping("/api/cronograma-modulo/vista/cursos-disponibles")
   public ResponseEntity<?> obtenerCursosDisponibles() {
-    return ResponseEntity.ok(vistasAcademicasService.obtenerCursosDisponibles());
+    return ResponseEntity.ok(ejeCronogramaModuloService.obtenerCursosDisponibles());
   }
 
   @GetMapping("/api/cronograma-modulo/vista/cronogramas-docente")
   public ResponseEntity<?> obtenerCronogramasDocente() {
-    return ResponseEntity.ok(vistasAcademicasService.obtenerCronogramasDocente());
+    return ResponseEntity.ok(ejeCronogramaModuloService.obtenerCronogramasDocente());
   }
 
   @GetMapping("/api/cronograma-modulo/vista/cronogramas-docente/{idUsuarioDocente}")
   public ResponseEntity<?> obtenerCronogramasPorDocente(@PathVariable Integer idUsuarioDocente) {
-    return ResponseEntity.ok(vistasAcademicasService.obtenerCronogramasPorDocente(idUsuarioDocente));
+    return ResponseEntity.ok(ejeCronogramaModuloService.obtenerCronogramasPorDocente(idUsuarioDocente));
   }
 }

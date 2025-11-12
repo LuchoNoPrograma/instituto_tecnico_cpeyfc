@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import uap.edu.bo.cpeyfc.crud.RepositorioGenericoCrud;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @Log4j2
@@ -39,4 +40,19 @@ public class EjeCronogramaModuloService {
 
         return mensaje + (usuarioExistia ? " - Docente existente asignado" : "");
     }
+
+    // === VISTAS DE CRONOGRAMAS ===
+
+    public List<Map<String, Object>> obtenerCronogramasDocente() {
+        return ejeCronogramaModuloRepository.vistaCronogramasDocente();
+    }
+
+    public List<Map<String, Object>> obtenerCronogramasPorDocente(Integer idUsuarioDocente) {
+        return ejeCronogramaModuloRepository.vistaCronogramasPorDocente(idUsuarioDocente);
+    }
+
+    public List<Map<String, Object>> obtenerCursosDisponibles() {
+        return ejeCronogramaModuloRepository.vistaCursosDisponiblesInscripcion();
+    }
+
 }

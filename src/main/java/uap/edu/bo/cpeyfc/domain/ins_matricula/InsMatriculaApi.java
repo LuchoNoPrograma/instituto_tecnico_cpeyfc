@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import uap.edu.bo.cpeyfc.domain.ins_grupo.InsGrupoService;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
-import uap.edu.bo.cpeyfc.service.VistasAcademicasService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class InsMatriculaApi {
   private final InsMatriculaRepository insMatriculaRepository;
   private final InsMatriculaService insMatriculaService;
-  private final VistasAcademicasService vistasAcademicasService;
+  private final InsGrupoService insGrupoService;
 
   @PostMapping("/api/matricula/matricular-preinscrito")
   public ResponseEntity<String> matricularPreinscrito(@RequestBody HashMap<String, Object> datos, @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails) {
@@ -47,6 +47,6 @@ public class InsMatriculaApi {
 
   @GetMapping("/api/matricula/vista/estudiante/ci/{ci}")
   public ResponseEntity<?> obtenerEstudiantePorCi(@PathVariable String ci) {
-    return ResponseEntity.ok(vistasAcademicasService.obtenerEstudiantePorCi(ci));
+    return ResponseEntity.ok(insGrupoService.obtenerEstudiantePorCi(ci));
   }
 }

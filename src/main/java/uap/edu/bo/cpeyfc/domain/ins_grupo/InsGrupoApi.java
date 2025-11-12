@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
-import uap.edu.bo.cpeyfc.service.VistasAcademicasService;
 import uap.edu.bo.cpeyfc.util.FechaUtil;
 
 import java.io.IOException;
@@ -22,7 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class InsGrupoApi {
   private final InsGrupoRepository insGrupoRepository;
-  private final VistasAcademicasService vistasAcademicasService;
+  private final InsGrupoService insGrupoService;
 
   @GetMapping("/api/grupos/vista/grupos-completos")
   public ResponseEntity<List<Map<String, Object>>> obtenerGruposCompletos(
@@ -138,11 +137,11 @@ public class InsGrupoApi {
 
   @GetMapping("/api/grupo/vista/estudiantes-grupo")
   public ResponseEntity<?> obtenerVistaEstudiantesGrupo() {
-    return ResponseEntity.ok(vistasAcademicasService.obtenerEstudiantesGrupo());
+    return ResponseEntity.ok(insGrupoService.obtenerEstudiantesGrupo());
   }
 
   @GetMapping("/api/grupo/vista/estudiantes-grupo/{idGrupo}")
   public ResponseEntity<?> obtenerVistaEstudiantesPorGrupo(@PathVariable Integer idGrupo) {
-    return ResponseEntity.ok(vistasAcademicasService.obtenerEstudiantesPorGrupo(idGrupo));
+    return ResponseEntity.ok(insGrupoService.obtenerEstudiantesPorGrupo(idGrupo));
   }
 }
