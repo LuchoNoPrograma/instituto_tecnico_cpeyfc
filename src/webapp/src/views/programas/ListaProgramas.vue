@@ -444,7 +444,7 @@ onMounted(() => {
                   </div>
                 </v-col>
 
-                <v-spacer class="d-none d-lg-block"></v-spacer>
+                <v-spacer class="d-none d-sm-block"></v-spacer>
 
                 <!-- Grupo de acciones - A la derecha en móvil -->
                 <v-col cols="12" lg="auto">
@@ -465,7 +465,7 @@ onMounted(() => {
                     </v-col>
 
                     <!-- Botones desktop -->
-                    <v-col cols="auto" class="d-none d-md-block">
+                    <v-col cols="auto" class="d-none d-sm-block">
                       <v-btn
                         color="success"
                         variant="elevated"
@@ -488,7 +488,7 @@ onMounted(() => {
                     </v-col>
 
                     <!-- Menú móvil -->
-                    <v-col cols="auto" class="d-md-none">
+                    <v-col cols="auto" class="d-sm-none">
                       <v-menu location="bottom end">
                         <template v-slot:activator="{ props }">
                           <v-btn

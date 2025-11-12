@@ -498,7 +498,7 @@ onMounted(cargarDatos)
                   <v-row align="center" justify="end" no-gutters class="ga-2">
 
                     <!-- Búsqueda -->
-                    <v-col cols="auto" class="flex-grow-1 flex-lg-grow-0">
+                    <v-col cols="auto" class="flex-grow-1 flex-sm-grow-0">
                       <v-text-field
                         v-model="busqueda"
                         append-inner-icon="mdi-magnify"
@@ -512,7 +512,7 @@ onMounted(cargarDatos)
                     </v-col>
 
                     <!-- Botones desktop -->
-                    <v-col cols="auto" class="d-none d-lg-block">
+                    <v-col cols="auto" class="d-none d-sm-block">
                       <v-btn
                         color="success"
                         variant="elevated"
@@ -535,7 +535,7 @@ onMounted(cargarDatos)
                     </v-col>
 
                     <!-- Menú móvil -->
-                    <v-col cols="auto" class="d-lg-none">
+                    <v-col cols="auto" class="d-sm-none">
                       <v-menu location="bottom end">
                         <template v-slot:activator="{ props }">
                           <v-btn
