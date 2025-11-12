@@ -1,4 +1,4 @@
-package uap.edu.bo.cpeyfc.api;
+package uap.edu.bo.cpeyfc.domain.aca_certificado_emitido;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -9,26 +9,13 @@ import uap.edu.bo.cpeyfc.service.FuncionesAcademicasService;
 
 @RestController
 @RequiredArgsConstructor
-public class FuncionesAcademicasApi {
+public class AcaCertificadoEmitidoApi {
 
+    private final AcaCertificadoEmitidoService acaCertificadoEmitidoService;
+    private final AcaCertificadoEmitidoRepository acaCertificadoEmitidoRepository;
     private final FuncionesAcademicasService funcionesAcademicasService;
 
-    @GetMapping("/api/funcion/calcular-monto-matricula")
-    public ResponseEntity<?> calcularMontoMatricula(
-        @RequestParam Integer idProgramaAprobado,
-        @RequestParam Integer idTipoEstudiante,
-        @RequestParam Integer numeroPeriodo,
-        @RequestParam(required = false) Integer idConvenio
-    ) {
-        return ResponseEntity.ok(funcionesAcademicasService.calcularMontoMatricula(
-            idProgramaAprobado,
-            idTipoEstudiante,
-            numeroPeriodo,
-            idConvenio
-        ));
-    }
-
-    @GetMapping("/api/funcion/validar-emision-certificado")
+    @GetMapping("/api/certificado-emitido/validar-emision")
     public ResponseEntity<?> validarEmisionCertificado(
         @RequestParam Integer idPersona,
         @RequestParam Integer idCertificacionPrograma
