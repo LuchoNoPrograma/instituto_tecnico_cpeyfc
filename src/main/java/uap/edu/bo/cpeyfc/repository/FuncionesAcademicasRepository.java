@@ -38,26 +38,28 @@ public interface FuncionesAcademicasRepository extends JpaRepository<AcaGestion,
   /**
    * Registra un arancel completo con sus detalles (conceptos)
    * @param idProgramaAprobado ID del programa aprobado
-   * @param idGestion ID de la gestión académica
+   * @param idPeriodo ID del periodo académico (puede ser null)
    * @param idTipoEstudiante ID del tipo de estudiante
    * @param nombreArancel Nombre descriptivo del arancel
-   * @param descripcion Descripción del arancel
+   * @param nroResolucion Número de resolución (puede ser null)
+   * @param fechaAprobacion Fecha de aprobación (puede ser null)
    * @param fechaInicioVigencia Fecha de inicio de vigencia
    * @param fechaFinVigencia Fecha de fin de vigencia (puede ser null)
-   * @param detalles JSON array con conceptos [{id_fin_concepto_arancel, monto, orden}]
+   * @param detalles JSON array con conceptos [{id_fin_concepto_arancel, monto_concepto, orden_aplicacion}]
    * @param userReg Usuario que registra
    * @return Map con flag, mensaje, id_arancel
    */
-  @Query(value = "SELECT * FROM fn_registrar_arancel(?1, ?2, ?3, ?4, ?5, ?6, ?7, CAST(?8 AS jsonb), ?9)", nativeQuery = true)
+  @Query(value = "SELECT * FROM fn_registrar_arancel(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, CAST(?9 AS jsonb), ?10)", nativeQuery = true)
   Map<String, Object> registrarArancel(Integer idProgramaAprobado,
-                                       Integer idGestion,
+                                       Integer idPeriodo,
                                        Integer idTipoEstudiante,
                                        String nombreArancel,
-                                       String descripcion,
+                                       String nroResolucion,
+                                       String fechaAprobacion,
                                        String fechaInicioVigencia,
                                        String fechaFinVigencia,
                                        String detalles,
-                                       String userReg);
+                                       Integer userReg);
 
   /**
    * Obtiene los conceptos de pago con montos y descuentos aplicados según arancel

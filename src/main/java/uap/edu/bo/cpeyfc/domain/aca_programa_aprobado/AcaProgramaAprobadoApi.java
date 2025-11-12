@@ -39,57 +39,13 @@ public class AcaProgramaAprobadoApi {
     return ResponseEntity.ok(acaProgramaAprobadoRepository.obtenerPlanEstudioProgramaAprobado(idAcaProgramaAprobado));
   }
 
-  // === ENDPOINTS NUEVOS (SIN PRECIOS) ===
+  // === ENDPOINTS DE REGISTRO/MODIFICACIÓN ===
 
   /**
-   * Registra un programa aprobado SIN precios. Los aranceles deben configurarse después usando /api/arancel/registrar
+   * IMPORTANTE: Este endpoint mantiene los campos de precio por compatibilidad, pero se recomienda
+   * configurar los aranceles por separado usando /api/arancel/registrar después de crear el programa.
+   * Los campos precio_* pueden ser 0 o null.
    */
-  @PostMapping("/api/programa-aprobado/v2")
-  public ResponseEntity<?> registrarProgramaAprobadoV2(@RequestBody Map<String, Object> datos, @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails) {
-    Map<String, Object> resultado = acaProgramaAprobadoRepository.registrarProgramaAprobadoV2(
-      (Integer) datos.get("id_aca_programa"),
-      (Integer) datos.get("id_aca_nivel"),
-      (Integer) datos.get("id_aca_modalidad"),
-      (Integer) datos.get("id_aca_plan_estudio"),
-      (Integer) datos.get("id_aca_version"),
-      datos.get("gestion").toString(),
-      (String) datos.get("cod_certificado_ceub"),
-      datos.get("fecha_inicio_vigencia") != null ? datos.get("fecha_inicio_vigencia").toString() : null,
-      datos.get("fecha_fin_vigencia") != null ? datos.get("fecha_fin_vigencia").toString() : null,
-      datos.get("sistema_programa") != null ? (String) datos.get("sistema_programa") : "REGULAR",
-      (String) datos.get("imagen_programa_url"),
-      userDetails.getIdSegUsuario().toString()
-    );
-    return ResponseEntity.ok(resultado);
-  }
-
-  /**
-   * Modifica un programa aprobado SIN afectar precios. Los aranceles se gestionan por separado.
-   */
-  @PutMapping("/api/programa-aprobado/v2/{id}")
-  public ResponseEntity<?> modificarProgramaAprobadoV2(@PathVariable Integer id, @RequestBody Map<String, Object> datos, @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails) {
-    Map<String, Object> resultado = acaProgramaAprobadoRepository.modificarProgramaAprobadoV2(
-      id,
-      (Integer) datos.get("id_aca_plan_estudio"),
-      (Integer) datos.get("id_aca_version"),
-      datos.get("gestion").toString(),
-      (String) datos.get("cod_certificado_ceub"),
-      datos.get("fecha_inicio_vigencia") != null ? datos.get("fecha_inicio_vigencia").toString() : null,
-      datos.get("fecha_fin_vigencia") != null ? datos.get("fecha_fin_vigencia").toString() : null,
-      datos.get("sistema_programa") != null ? (String) datos.get("sistema_programa") : "REGULAR",
-      (String) datos.get("imagen_programa_url"),
-      (String) datos.get("estado_programa_aprobado"),
-      userDetails.getIdSegUsuario().toString()
-    );
-    return ResponseEntity.ok(resultado);
-  }
-
-  // === ENDPOINTS DEPRECATED (CON PRECIOS) ===
-
-  /**
-   * @deprecated Usar /api/programa-aprobado/v2 en su lugar. Este endpoint usa el sistema legacy de precios directos.
-   */
-  @Deprecated
   @PostMapping("/api/programa-aprobado")
   public ResponseEntity<?> registrarProgramaAprobado(@RequestBody Map<String, Object> datos, @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails) {
     String resultado = acaProgramaAprobadoRepository.registrarProgramaAprobado(
@@ -111,9 +67,9 @@ public class AcaProgramaAprobadoApi {
   }
 
   /**
-   * @deprecated Usar /api/programa-aprobado/v2/{id} en su lugar. Este endpoint usa el sistema legacy de precios directos.
+   * IMPORTANTE: Este endpoint mantiene los campos de precio por compatibilidad, pero se recomienda
+   * gestionar los aranceles por separado usando /api/arancel. Los campos precio_* pueden ser 0 o null.
    */
-  @Deprecated
   @PutMapping("/api/programa-aprobado/{id}")
   public ResponseEntity<String> modificarProgramaAprobado(@PathVariable Integer id, @RequestBody HashMap<String, Object> datos, @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails) {
     String resultado = acaProgramaAprobadoRepository.modificarProgramaAprobado(

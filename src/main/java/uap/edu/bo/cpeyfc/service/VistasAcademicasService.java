@@ -53,8 +53,8 @@ public class VistasAcademicasService {
         return vistasAcademicasRepository.vistaArancelesPorPrograma(nombrePrograma);
     }
 
-    public List<Map<String, Object>> obtenerArancelesPrograma() {
-        return vistasAcademicasRepository.vistaArancelesPrograma();
+    public List<Map<String, Object>> obtenerArancelesDetalle() {
+        return vistasAcademicasRepository.vistaArancelesDetalle();
     }
 
     public List<Map<String, Object>> obtenerArancelesDetallePorPrograma(Integer idProgramaAprobado) {
