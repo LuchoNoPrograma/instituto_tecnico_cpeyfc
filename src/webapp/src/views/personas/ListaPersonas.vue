@@ -140,7 +140,7 @@ onMounted(() => {
                     </v-col>
 
                     <!-- Botón desktop -->
-                    <v-col cols="auto" class="d-none d-lg-block">
+                    <v-col cols="auto" class="d-none d-sm-block">
                       <v-btn
                         color="primary"
                         variant="elevated"
@@ -152,7 +152,8 @@ onMounted(() => {
                     </v-col>
 
                     <!-- Menú móvil -->
-                    <v-col cols="auto" class="d-lg-none">
+                    <v-col cols="auto" class="d-sm-none">
+
                       <v-menu location="bottom end">
                         <template v-slot:activator="{ props }">
                           <v-btn
@@ -240,19 +241,4 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-// Responsive
-@media (max-width: 960px) {
-  .v-toolbar {
-    .d-flex.align-center.ga-3 {
-      flex-direction: column;
-      align-items: stretch !important;
-      gap: 12px !important;
-    }
-
-    .v-toolbar-title {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-  }
-}
 </style>
