@@ -58,4 +58,19 @@ public interface EjeCalificacionRepository extends JpaRepository<EjeCalificacion
         ORDER BY p.ap_paterno, p.nombre
         """, nativeQuery = true)
   List<Map<String, Object>> obtenerEstudiantesCronograma(Integer id_cronograma);
+
+  // === VISTAS DE CALIFICACIONES ===
+
+  /**
+   * Obtiene calificaciones por matrícula
+   */
+  @Query(value = "SELECT * FROM vista_calificaciones_competencia WHERE cod_ins_matricula = ?1", nativeQuery = true)
+  List<Map<String, Object>> vistaCalificacionesPorMatricula(Integer codMatricula);
+
+  /**
+   * Obtiene calificaciones por CI
+   */
+  @Query(value = "SELECT * FROM vista_calificaciones_competencia WHERE ci = ?1", nativeQuery = true)
+  List<Map<String, Object>> vistaCalificacionesPorCi(String ci);
+
 }

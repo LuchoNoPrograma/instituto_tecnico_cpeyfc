@@ -3,8 +3,6 @@ package uap.edu.bo.cpeyfc.domain.fin_arancel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import uap.edu.bo.cpeyfc.service.FuncionesAcademicasService;
-import uap.edu.bo.cpeyfc.service.VistasAcademicasService;
 
 import java.util.Map;
 
@@ -13,37 +11,34 @@ import java.util.Map;
 public class FinArancelApi {
 
     private final FinArancelService finArancelService;
-    private final FinArancelRepository finArancelRepository;
-    private final VistasAcademicasService vistasAcademicasService;
-    private final FuncionesAcademicasService funcionesAcademicasService;
 
     // === VISTAS DE ARANCELES ===
 
     @GetMapping("/api/arancel/vista/aranceles-vigentes")
     public ResponseEntity<?> obtenerArancelesVigentes() {
-        return ResponseEntity.ok(vistasAcademicasService.obtenerArancelesVigentes());
+        return ResponseEntity.ok(finArancelService.obtenerArancelesVigentes());
     }
 
     @GetMapping("/api/arancel/vista/aranceles-programa/{nombrePrograma}")
     public ResponseEntity<?> obtenerArancelesPorPrograma(@PathVariable String nombrePrograma) {
-        return ResponseEntity.ok(vistasAcademicasService.obtenerArancelesPorPrograma(nombrePrograma));
+        return ResponseEntity.ok(finArancelService.obtenerArancelesPorPrograma(nombrePrograma));
     }
 
     @GetMapping("/api/arancel/vista/aranceles-detalle")
     public ResponseEntity<?> obtenerArancelesDetalle() {
-        return ResponseEntity.ok(vistasAcademicasService.obtenerArancelesDetalle());
+        return ResponseEntity.ok(finArancelService.obtenerArancelesDetalle());
     }
 
     @GetMapping("/api/arancel/vista/aranceles-detalle/{idProgramaAprobado}")
     public ResponseEntity<?> obtenerArancelesDetallePorPrograma(@PathVariable Integer idProgramaAprobado) {
-        return ResponseEntity.ok(vistasAcademicasService.obtenerArancelesDetallePorPrograma(idProgramaAprobado));
+        return ResponseEntity.ok(finArancelService.obtenerArancelesDetallePorPrograma(idProgramaAprobado));
     }
 
     // === FUNCIONES DE ARANCELES ===
 
     @PostMapping("/api/arancel/registrar")
     public ResponseEntity<?> registrarArancel(@RequestBody Map<String, Object> request) {
-        return ResponseEntity.ok(funcionesAcademicasService.registrarArancel(
+        return ResponseEntity.ok(finArancelService.registrarArancel(
             (Integer) request.get("idProgramaAprobado"),
             (Integer) request.get("idPeriodo"),
             (Integer) request.get("idTipoEstudiante"),
@@ -64,7 +59,7 @@ public class FinArancelApi {
         @RequestParam Integer numeroPeriodo,
         @RequestParam(required = false) Integer idConvenio
     ) {
-        return ResponseEntity.ok(funcionesAcademicasService.obtenerConceptosArancel(
+        return ResponseEntity.ok(finArancelService.obtenerConceptosArancel(
             idProgramaAprobado,
             idTipoEstudiante,
             numeroPeriodo,
@@ -83,7 +78,7 @@ public class FinArancelApi {
         @RequestParam Integer numeroPeriodo,
         @RequestParam(required = false) Integer idConvenio
     ) {
-        return ResponseEntity.ok(funcionesAcademicasService.calcularMontoMatricula(
+        return ResponseEntity.ok(finArancelService.calcularMontoMatricula(
             idProgramaAprobado,
             idTipoEstudiante,
             numeroPeriodo,

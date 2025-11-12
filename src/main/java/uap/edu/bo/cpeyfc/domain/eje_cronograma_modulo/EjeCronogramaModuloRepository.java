@@ -27,4 +27,25 @@ public interface EjeCronogramaModuloRepository extends JpaRepository<EjeCronogra
 
   @Query(value = "SELECT * FROM fn_reporte_acta_regular(?1)", nativeQuery = true)
   List<Map<String,Object>> reporte_acta_regular(Integer id_cronograma_modulo);
+
+  // === VISTAS DE CRONOGRAMAS ===
+
+  /**
+   * Obtiene todos los cronogramas de docentes
+   */
+  @Query(value = "SELECT * FROM vista_cronogramas_docente", nativeQuery = true)
+  List<Map<String, Object>> vistaCronogramasDocente();
+
+  /**
+   * Obtiene cronogramas filtrados por docente
+   */
+  @Query(value = "SELECT * FROM vista_cronogramas_docente WHERE id_usuario_docente = ?1", nativeQuery = true)
+  List<Map<String, Object>> vistaCronogramasPorDocente(Integer idUsuarioDocente);
+
+  /**
+   * Obtiene cursos disponibles para inscripción
+   */
+  @Query(value = "SELECT * FROM vista_cursos_disponibles_inscripcion", nativeQuery = true)
+  List<Map<String, Object>> vistaCursosDisponiblesInscripcion();
+
 }

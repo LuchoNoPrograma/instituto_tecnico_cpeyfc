@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
-import uap.edu.bo.cpeyfc.service.VistasAcademicasService;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -15,7 +14,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EjeCalificacionApi {
   private final EjeCalificacionRepository ejeCalificacionRepository;
-  private final VistasAcademicasService vistasAcademicasService;
+  private final EjeCalificacionService ejeCalificacionService;
 
   @PostMapping("/api/calificacion/registrar")
   public ResponseEntity<?> registrarCalificacion(@RequestBody Map<String, Object> datos,
@@ -61,11 +60,11 @@ public class EjeCalificacionApi {
 
   @GetMapping("/api/calificacion/vista/calificaciones-competencia/matricula/{codMatricula}")
   public ResponseEntity<?> obtenerCalificacionesPorMatricula(@PathVariable Integer codMatricula) {
-    return ResponseEntity.ok(vistasAcademicasService.obtenerCalificacionesPorMatricula(codMatricula));
+    return ResponseEntity.ok(ejeCalificacionService.obtenerCalificacionesPorMatricula(codMatricula));
   }
 
   @GetMapping("/api/calificacion/vista/calificaciones-competencia/ci/{ci}")
   public ResponseEntity<?> obtenerCalificacionesPorCi(@PathVariable String ci) {
-    return ResponseEntity.ok(vistasAcademicasService.obtenerCalificacionesPorCi(ci));
+    return ResponseEntity.ok(ejeCalificacionService.obtenerCalificacionesPorCi(ci));
   }
 }
