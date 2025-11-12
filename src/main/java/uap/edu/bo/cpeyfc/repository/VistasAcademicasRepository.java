@@ -46,6 +46,12 @@ public interface VistasAcademicasRepository extends JpaRepository<AcaGestion, In
   @Query(value = "SELECT * FROM vista_aranceles_vigentes WHERE nombre_programa = ?1", nativeQuery = true)
   List<Map<String, Object>> vistaArancelesPorPrograma(String nombrePrograma);
 
+  @Query(value = "SELECT * FROM vista_aranceles_programa", nativeQuery = true)
+  List<Map<String, Object>> vistaArancelesPrograma();
+
+  @Query(value = "SELECT * FROM vista_aranceles_programa WHERE id_aca_programa_aprobado = ?1", nativeQuery = true)
+  List<Map<String, Object>> vistaArancelesDetallePorPrograma(Integer idProgramaAprobado);
+
   @Query(value = "SELECT * FROM vista_convenios_colegios", nativeQuery = true)
   List<Map<String, Object>> vistaConveniosColegios();
 

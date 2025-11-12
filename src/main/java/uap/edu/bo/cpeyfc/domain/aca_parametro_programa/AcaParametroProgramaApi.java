@@ -10,6 +10,11 @@ import uap.edu.bo.cpeyfc.util.FechaUtil;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * API para gestión de parámetros de programa.
+ * IMPORTANTE: Los parámetros son SOLO para metadata del programa (configuraciones, URLs, textos, etc.).
+ * NO usar para descuentos o precios. Los descuentos se manejan en el sistema de aranceles (/api/arancel).
+ */
 @RestController
 @RequiredArgsConstructor
 public class AcaParametroProgramaApi {

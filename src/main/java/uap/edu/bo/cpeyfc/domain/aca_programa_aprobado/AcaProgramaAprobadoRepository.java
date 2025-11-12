@@ -18,6 +18,11 @@ public interface AcaProgramaAprobadoRepository extends JpaRepository<AcaPrograma
   @Query(value = "SELECT * FROM fn_obtener_plan_estudio_programa_aprobado(?1)", nativeQuery = true)
   List<Map<String, Object>> obtenerPlanEstudioProgramaAprobado(Integer idAcaProgramaAprobado);
 
+  /**
+   * Registra un programa aprobado SIN precios. Los aranceles deben configurarse por separado.
+   * @deprecated Los parámetros de precio ya no se usan. Usar sistema de aranceles (fin_arancel).
+   */
+  @Deprecated
   @Query(value = """
         SELECT fn_registrar_programa_aprobado(
             :id_aca_programa, :id_aca_modalidad, :gestion, :id_aca_plan_estudio,
@@ -39,6 +44,31 @@ public interface AcaProgramaAprobadoRepository extends JpaRepository<AcaPrograma
                                    LocalDate fecha_fin_vigencia,
                                    Integer user_reg);
 
+  /**
+   * Registra un programa aprobado usando el nuevo sistema sin precios directos.
+   */
+  @Query(value = """
+        SELECT * FROM fn_registrar_programa_aprobado(
+            ?1, ?2, ?3, ?4, ?5, ?6,
+            ?7, ?8, ?9, ?10, ?11, ?12)
+        """, nativeQuery = true)
+  Map<String, Object> registrarProgramaAprobadoV2(Integer idPrograma,
+                                                   Integer idNivel,
+                                                   Integer idModalidad,
+                                                   Integer idPlanEstudio,
+                                                   Integer idVersion,
+                                                   String gestion,
+                                                   String codCertificadoCeub,
+                                                   String fechaInicioVigencia,
+                                                   String fechaFinVigencia,
+                                                   String sistemaPrograma,
+                                                   String imagenProgramaUrl,
+                                                   String userReg);
+
+  /**
+   * @deprecated Los parámetros de precio ya no se usan. Usar modificarProgramaAprobadoV2.
+   */
+  @Deprecated
   @Query(value = """
         SELECT fn_modificar_programa_aprobado(
             :id, :id_aca_programa, :id_aca_modalidad, :gestion, :id_aca_plan_estudio,
@@ -61,4 +91,24 @@ public interface AcaProgramaAprobadoRepository extends JpaRepository<AcaPrograma
                                    String cod_certificado_ceub,
                                    String cod_sigla_version,
                                    Integer user_mod);
+
+  /**
+   * Modifica un programa aprobado usando el nuevo sistema sin precios directos.
+   */
+  @Query(value = """
+        SELECT * FROM fn_modificar_programa_aprobado(
+            ?1, ?2, ?3, ?4, ?5, ?6, ?7,
+            ?8, ?9, ?10, ?11)
+        """, nativeQuery = true)
+  Map<String, Object> modificarProgramaAprobadoV2(Integer idProgramaAprobado,
+                                                   Integer idPlanEstudio,
+                                                   Integer idVersion,
+                                                   String gestion,
+                                                   String codCertificadoCeub,
+                                                   String fechaInicioVigencia,
+                                                   String fechaFinVigencia,
+                                                   String sistemaPrograma,
+                                                   String imagenProgramaUrl,
+                                                   String estadoProgramaAprobado,
+                                                   String userMod);
 }

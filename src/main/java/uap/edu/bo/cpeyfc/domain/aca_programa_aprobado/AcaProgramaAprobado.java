@@ -70,16 +70,34 @@ public class AcaProgramaAprobado extends Auditoria {
   @Column(name = "cod_sigla_version", length = 15)
   private String codSiglaVersion;
 
-  @Column(name = "precio_matricula", nullable = false, precision = 8, scale = 2)
+  /**
+   * @deprecated Usar sistema de aranceles (fin_arancel) en su lugar.
+   * Campo mantenido para compatibilidad con datos históricos.
+   */
+  @Deprecated
+  @Column(name = "precio_matricula", precision = 8, scale = 2)
   private BigDecimal precioMatricula;
 
-  @Column(name = "precio_colegiatura", nullable = false, precision = 8, scale = 2)
+  /**
+   * @deprecated Usar sistema de aranceles (fin_arancel) en su lugar.
+   * Campo mantenido para compatibilidad con datos históricos.
+   */
+  @Deprecated
+  @Column(name = "precio_colegiatura", precision = 8, scale = 2)
   private BigDecimal precioColegiatura;
 
+  /**
+   * @deprecated Usar sistema de aranceles (fin_arancel) en su lugar.
+   * Campo mantenido para compatibilidad con datos históricos.
+   */
+  @Deprecated
   @Column(name = "precio_titulacion", precision = 8, scale = 2)
   private BigDecimal precioTitulacion;
 
   @Column(name = "sistema_programa", nullable = false, length = 35)
   private String sistemaPrograma; // REGULAR, ACELERADO, MODULAR
+
+  @Column(name = "imagen_programa_url", length = 500)
+  private String imagenProgramaUrl;
 
 }
