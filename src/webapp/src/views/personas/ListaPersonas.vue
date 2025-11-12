@@ -153,6 +153,7 @@ onMounted(() => {
 
                     <!-- Menú móvil -->
                     <v-col cols="auto" class="d-sm-none">
+
                       <v-menu location="bottom end">
                         <template v-slot:activator="{ props }">
                           <v-btn
