@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { api } from '@/services/api'
 import { useRouter } from 'vue-router'
-import { showRegistrado, showError, showConfirmar } from '@/utils/sweetalert'
+import { showRegistrado, showError, showConfirmar, showCargando, cerrarCargando } from '@/utils/sweetalert'
 import jsPDF from "jspdf";
 import autoTable from 'jspdf-autotable'
 
@@ -211,7 +211,9 @@ const guardarCriterios = async () => {
 
   if (!resultado.isConfirmed) return
 
-  cargandoCriterios.value = true
+  // Mostrar indicador de carga
+  showCargando('Guardando criterios de evaluación...', 'Por favor espere')
+
   try {
     // Obtener ID del docente desde el cronograma
     const idDocente = cronogramaSeleccionado.value.id_eje_docente
@@ -227,13 +229,13 @@ const guardarCriterios = async () => {
       })
     }
 
-    showRegistrado('Criterios de evaluación creados exitosamente')
+    cerrarCargando()
+    await showRegistrado('Criterios de evaluación creados exitosamente')
     cargarCronogramasDocente()
     dialogCriterios.value = false
   } catch (error) {
-    showError('Error al guardar criterios')
-  } finally {
-    cargandoCriterios.value = false
+    cerrarCargando()
+    await showError('Error al guardar criterios')
   }
 }
 

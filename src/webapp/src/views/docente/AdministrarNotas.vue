@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/services/api'
-import { showRegistrado, showError, showModificado } from '@/utils/sweetalert'
+import { showRegistrado, showError, showModificado, showCargando, cerrarCargando } from '@/utils/sweetalert'
 
 const route = useRoute()
 const router = useRouter()
@@ -88,9 +88,12 @@ const guardarNota = async (idProgramacion, idCriterio) => {
   const nota = notasLocales.value[key] || obtenerNota(idProgramacion, idCriterio)
 
   if (nota < 0 || nota > 100) {
-    showError('La nota debe estar entre 0 y 100')
+    await showError('La nota debe estar entre 0 y 100')
     return
   }
+
+  // Mostrar indicador de carga
+  showCargando('Guardando nota...', 'Por favor espere')
 
   try {
     await api.post('/api/calificacion/registrar', {
@@ -120,9 +123,11 @@ const guardarNota = async (idProgramacion, idCriterio) => {
       })
     }
 
-    showModificado('Nota registrada exitosamente')
+    cerrarCargando()
+    await showModificado('Nota registrada exitosamente')
   } catch (error) {
-    showError('Error al guardar la nota')
+    cerrarCargando()
+    await showError('Error al guardar la nota')
   }
 }
 
