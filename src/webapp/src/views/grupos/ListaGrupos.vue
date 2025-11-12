@@ -5,7 +5,7 @@ import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
 import ExcelJS from 'exceljs'
 import FormularioPersona from '@/views/personas/FormularioPersona.vue'
-import { showRegistrado, showModificado } from '@/utils/sweetalert'
+import { showRegistrado, showModificado, showError, showCargando, cerrarCargando } from '@/utils/sweetalert'
 
 const route = useRoute()
 const router = useRouter()
@@ -228,9 +228,13 @@ const abrirDialogEditar = (grupo) => {
 }
 
 const guardarGrupo = async () => {
-  try {
-    guardando.value = true
+  // Mostrar indicador de carga
+  showCargando(
+    editando.value ? 'Actualizando grupo...' : 'Creando grupo...',
+    'Por favor espere'
+  )
 
+  try {
     const payload = {
       id_ins_grupo: formularioGrupo.id_ins_grupo,
       id_aca_programa_aprobado: formularioGrupo.id_aca_programa_aprobado,
@@ -243,18 +247,20 @@ const guardarGrupo = async () => {
 
     if (editando.value) {
       await api.put('/api/grupos', payload)
-      showModificado('Grupo actualizado correctamente')
+      cerrarCargando()
+      await showModificado('Grupo actualizado correctamente')
     } else {
       await api.post('/api/grupos', payload)
-      showRegistrado('Grupo creado exitosamente')
+      cerrarCargando()
+      await showRegistrado('Grupo creado exitosamente')
     }
 
     await cargarDatos()
     dialogFormulario.value = false
   } catch (error) {
+    cerrarCargando()
     console.error('Error guardando grupo:', error)
-  } finally {
-    guardando.value = false
+    await showError(error.response?.data?.message || 'No se pudo guardar el grupo')
   }
 }
 
@@ -266,6 +272,9 @@ const abrirDialogCronograma = async (cronograma) => {
 }
 
 const guardarCronograma = async () => {
+  // Mostrar indicador de carga
+  showCargando('Actualizando cronograma...', 'Por favor espere')
+
   try {
     await api.put('/api/cronograma-modulo', {
       id_eje_cronograma_modulo: cronogramaSeleccionado.value.id_eje_cronograma_modulo,
@@ -274,11 +283,14 @@ const guardarCronograma = async () => {
       fecha_fin: cronogramaSeleccionado.value.fecha_fin
     })
 
-    showModificado('Cronograma actualizado correctamente')
+    cerrarCargando()
+    await showModificado('Cronograma actualizado correctamente')
     await cargarDatos()
     dialogCronograma.value = false
   } catch (error) {
+    cerrarCargando()
     console.error('Error guardando cronograma:', error)
+    await showError(error.response?.data?.message || 'No se pudo actualizar el cronograma')
   }
 }
 
@@ -289,6 +301,9 @@ const abrirFormularioNuevaPersona = () => {
 }
 
 const guardarPersona = async (datosPersona) => {
+  // Mostrar indicador de carga
+  showCargando('Registrando persona...', 'Por favor espere')
+
   try {
     const response = await api.post('/api/persona', datosPersona, {
       responseType: 'text'
@@ -298,7 +313,8 @@ const guardarPersona = async (datosPersona) => {
     const match = response.data.match(/ID:\s*(\d+)/)
     const idPersonaCreada = match ? parseInt(match[1]) : null
 
-    showRegistrado('Persona registrada exitosamente')
+    cerrarCargando()
+    await showRegistrado('Persona registrada exitosamente')
     await cargarPersonas()
 
     if (idPersonaCreada) {
@@ -307,7 +323,9 @@ const guardarPersona = async (datosPersona) => {
 
     dialogFormularioPersona.value = false
   } catch (error) {
+    cerrarCargando()
     console.error('Error guardando persona:', error)
+    await showError(error.response?.data?.message || 'No se pudo registrar la persona')
     throw error
   }
 }
@@ -478,46 +496,97 @@ onMounted(cargarDatos)
         :group-by="groupBy"
       >
         <template #top>
-          <v-toolbar flat class="rounded-t-lg pa-4">
-            <v-toolbar-title class="text-h6 font-weight-bold d-flex align-center">
-              <v-icon class="mr-2" color="primary">mdi-account-group</v-icon>
-              Adm. Grupos con módulos
-            </v-toolbar-title>
+          <v-toolbar flat class="rounded-t-lg">
+            <v-container fluid class="py-4 px-4">
+              <v-row align="center" no-gutters>
 
-            <v-spacer></v-spacer>
+                <!-- Título - Siempre a la izquierda -->
+                <v-col cols="12" lg="auto" class="mb-3 mb-lg-0">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2" color="primary">mdi-account-group</v-icon>
+                    <span class="text-h6 font-weight-bold d-none d-sm-inline">Adm. Grupos con módulos</span>
+                    <span class="text-h6 font-weight-bold d-inline d-sm-none">Grupos</span>
+                  </div>
+                </v-col>
 
-            <div class="d-flex align-center ga-3 flex-wrap">
-              <v-text-field
-                v-model="busqueda"
-                append-inner-icon="mdi-magnify"
-                label="Buscar..."
-                single-line
-                hide-details
-                variant="outlined"
-                density="compact"
-                class="search-field"
-              ></v-text-field>
+                <v-spacer class="d-none d-lg-block"></v-spacer>
 
-              <v-btn
-                color="success"
-                variant="elevated"
-                @click="exportarExcel"
-                :disabled="cargando"
-              >
-                <v-icon start>mdi-file-excel</v-icon>
-                Exportar
-              </v-btn>
+                <!-- Grupo de acciones - A la derecha en móvil -->
+                <v-col cols="12" lg="auto">
+                  <v-row align="center" justify="end" no-gutters class="ga-2">
 
-              <v-btn
-                color="primary"
-                variant="elevated"
-                class="btn-nuevo"
-                @click="abrirDialogNuevo"
-              >
-                <v-icon start>mdi-plus</v-icon>
-                Nuevo Grupo
-              </v-btn>
-            </div>
+                    <!-- Búsqueda -->
+                    <v-col cols="auto" class="flex-grow-1 flex-sm-grow-0">
+                      <v-text-field
+                        v-model="busqueda"
+                        append-inner-icon="mdi-magnify"
+                        label="Buscar..."
+                        single-line
+                        hide-details
+                        variant="outlined"
+                        density="compact"
+                        style="min-width: 200px; max-width: 280px;"
+                      ></v-text-field>
+                    </v-col>
+
+                    <!-- Botones desktop -->
+                    <v-col cols="auto" class="d-none d-sm-block">
+                      <v-btn
+                        color="success"
+                        variant="elevated"
+                        @click="exportarExcel"
+                        :disabled="cargando"
+                        class="mr-2"
+                      >
+                        <v-icon start>mdi-file-excel</v-icon>
+                        Exportar
+                      </v-btn>
+
+                      <v-btn
+                        color="primary"
+                        variant="elevated"
+                        @click="abrirDialogNuevo"
+                      >
+                        <v-icon start>mdi-plus</v-icon>
+                        Nuevo Grupo
+                      </v-btn>
+                    </v-col>
+
+                    <!-- Menú móvil -->
+                    <v-col cols="auto" class="d-sm-none">
+                      <v-menu location="bottom end">
+                        <template v-slot:activator="{ props }">
+                          <v-btn
+                            icon="mdi-dots-vertical"
+                            v-bind="props"
+                            color="primary"
+                            variant="tonal"
+                          ></v-btn>
+                        </template>
+
+                        <v-list density="compact">
+                          <v-list-item @click="exportarExcel" :disabled="cargando">
+                            <template v-slot:prepend>
+                              <v-icon color="success">mdi-file-excel</v-icon>
+                            </template>
+                            <v-list-item-title>Exportar</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item @click="abrirDialogNuevo">
+                            <template v-slot:prepend>
+                              <v-icon color="primary">mdi-plus</v-icon>
+                            </template>
+                            <v-list-item-title>Nuevo Grupo</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </v-col>
+
+                  </v-row>
+                </v-col>
+
+              </v-row>
+            </v-container>
           </v-toolbar>
         </template>
 

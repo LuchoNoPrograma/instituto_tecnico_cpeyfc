@@ -80,11 +80,11 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 3000,
+    port: 6063,
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:6064',
         rewrite: (path) => path.replace(/^\/api/, ''),
         changeOrigin: true,
         secure: false
@@ -98,6 +98,7 @@ export default defineConfig({
       },
       scss: {
         api: 'modern-compiler',
+        additionalData: `@use "@/styles/main.scss" as *;`
       },
     },
   },

@@ -4,7 +4,7 @@ import { api } from '@/services/api'
 import FormularioNoticia from '@/views/noticias/FormularioNoticia.vue'
 import formatoFecha from '@/helpers/formatos.js'
 import imagenNoDisponible from '@/assets/images/img_default.png'
-import {showConfirmar, showError, showModificado, showRegistrado} from '@/utils/sweetalert.js';
+import {showConfirmar, showError, showModificado, showRegistrado, showCargando, cerrarCargando} from '@/utils/sweetalert.js';
 import {useDebounceBusqueda} from '@/helpers/debounce.js';
 
 // Estados de datos
@@ -95,9 +95,13 @@ const cerrarDialog = () => {
 
 // Persistir noticia
 const guardarNoticia = async (formData) => {
-  try {
-    cargando.value = true
+  // Mostrar indicador de carga
+  showCargando(
+    esEdicion.value ? 'Actualizando noticia...' : 'Publicando noticia...',
+    'Por favor espere'
+  )
 
+  try {
     if (esEdicion.value) {
       await api.put(
         `/api/noticia/${noticiaSeleccionada.value.id_pub_noticia}`,
@@ -108,23 +112,24 @@ const guardarNoticia = async (formData) => {
           }
         }
       )
-      showModificado('La noticia ha sido actualizada correctamente')
+      cerrarCargando()
+      await showModificado('La noticia ha sido actualizada correctamente')
     } else {
       await api.post('/api/noticia', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       })
-      showRegistrado('La noticia ha sido publicada exitosamente')
+      cerrarCargando()
+      await showRegistrado('La noticia ha sido publicada exitosamente')
     }
 
     await obtenerNoticias()
     cerrarDialog()
   } catch (error) {
+    cerrarCargando()
     console.error('Error al guardar noticia:', error)
-    showError(error.response?.data?.message || 'No se pudo guardar la noticia')
-  } finally {
-    cargando.value = false
+    await showError(error.response?.data?.message || 'No se pudo guardar la noticia')
   }
 }
 
@@ -160,16 +165,21 @@ const cambiarEstadoNoticia = async (noticia, nuevoEstado) => {
 
   if (!resultado.isConfirmed) return
 
+  // Mostrar indicador de carga
+  showCargando('Actualizando estado...', 'Por favor espere')
+
   try {
     await api.patch(`/api/noticia/${noticia.id_pub_noticia}/estado`, {
       estado: nuevoEstado
     })
 
-    showModificado('El estado ha sido actualizado correctamente')
+    cerrarCargando()
+    await showModificado('El estado ha sido actualizado correctamente')
     await obtenerNoticias()
   } catch (error) {
+    cerrarCargando()
     console.error('Error al cambiar estado:', error)
-    showError(error.response?.data?.message || 'No se pudo cambiar el estado')
+    await showError(error.response?.data?.message || 'No se pudo cambiar el estado')
   }
 }
 

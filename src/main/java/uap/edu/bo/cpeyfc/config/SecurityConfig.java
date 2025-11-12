@@ -77,6 +77,7 @@ public class SecurityConfig {
             .requestMatchers("/authenticate", "/register").permitAll()
             .requestMatchers("/actuator/**").permitAll()
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            .requestMatchers("/api/publico/**").permitAll()  // Endpoints públicos incluyendo chatbot
 
             // Endpoints protegidos - ahora usando el sistema dinámico
             .requestMatchers("/admin/**").hasRole("ADMINISTRATIVO")
@@ -103,6 +104,7 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "http://localhost:3000",
                 "http://127.0.0.1:5173",
+                "http://localhost:6063",
                 "https://*.trycloudflare.com"
         ));
 

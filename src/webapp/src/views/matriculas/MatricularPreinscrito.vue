@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from '@/services/api'
-import { showRegistrado } from "@/utils/sweetalert.js"
+import { showRegistrado, showError, showCargando, cerrarCargando } from "@/utils/sweetalert.js"
 
 const router = useRouter()
 const route = useRoute()
@@ -152,7 +152,9 @@ const cargarDatos = async () => {
 const matricular = async () => {
   if (!step1Complete.value) return
 
-  matriculando.value = true
+  // Mostrar indicador de carga
+  showCargando('Matriculando estudiante...', 'Por favor espere')
+
   try {
     const payload = {
       id_ins_preinscripcion: formulario.id_ins_preinscripcion,
@@ -166,13 +168,14 @@ const matricular = async () => {
 
     await api.post('/api/matricula/matricular-preinscrito', payload)
 
-    showRegistrado('Estudiante matriculado exitosamente', '¡Matrícula Completada!')
+    cerrarCargando()
+    await showRegistrado('Estudiante matriculado exitosamente', '¡Matrícula Completada!')
     router.push(`/matriculas?grupo=${formulario.id_ins_grupo}`)
 
   } catch (error) {
+    cerrarCargando()
     console.error('Error matriculando:', error)
-  } finally {
-    matriculando.value = false
+    await showError(error.response?.data?.message || 'No se pudo completar la matrícula')
   }
 }
 

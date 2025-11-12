@@ -5,6 +5,7 @@ import { api } from '@/services/api'
 import FormularioPrograma from '@/views/programas/FormularioPrograma.vue'
 import formatoFecha from '@/helpers/formatos.js'
 import ExcelJS from 'exceljs'
+import { showRegistrado, showModificado, showError, showConfirmar, showCargando, cerrarCargando } from '@/utils/sweetalert.js'
 
 const router = useRouter()
 const programas = ref([])
@@ -214,6 +215,12 @@ const abrirFormularioParametro = (parametro = null) => {
 }
 
 const guardarParametro = async () => {
+  // Mostrar indicador de carga
+  showCargando(
+    esEdicionParametro.value ? 'Actualizando parámetro...' : 'Guardando parámetro...',
+    'Por favor espere'
+  )
+
   try {
     const datos = {
       ...formularioParametro.value,
@@ -222,25 +229,45 @@ const guardarParametro = async () => {
 
     if (esEdicionParametro.value) {
       await api.put(`/api/parametro-programa/${parametroSeleccionado.value.id_parametro}`, datos)
+      cerrarCargando()
+      await showModificado('Parámetro actualizado correctamente')
     } else {
       await api.post('/api/parametro-programa', datos)
+      cerrarCargando()
+      await showRegistrado('Parámetro creado exitosamente')
     }
 
     await obtenerParametros(programaSeleccionado.value.id_aca_programa_aprobado)
     cerrarFormularioParametro()
   } catch (error) {
+    cerrarCargando()
     console.error('Error al guardar parámetro:', error)
+    await showError(error.response?.data?.message || 'No se pudo guardar el parámetro')
   }
 }
 
 const eliminarParametro = async (parametro) => {
-  if (confirm('¿Está seguro de eliminar este parámetro?')) {
-    try {
-      await api.delete(`/api/parametro-programa/${parametro.id_parametro}`)
-      await obtenerParametros(programaSeleccionado.value.id_aca_programa_aprobado)
-    } catch (error) {
-      console.error('Error al eliminar parámetro:', error)
-    }
+  const resultado = await showConfirmar({
+    titulo: '¿Eliminar parámetro?',
+    mensaje: `Se eliminará el parámetro "${parametro.nombre_param}". Esta acción no se puede deshacer.`,
+    textoConfirmar: 'Sí, eliminar',
+    tipo: 'delete'
+  })
+
+  if (!resultado.isConfirmed) return
+
+  // Mostrar indicador de carga
+  showCargando('Eliminando parámetro...', 'Por favor espere')
+
+  try {
+    await api.delete(`/api/parametro-programa/${parametro.id_parametro}`)
+    cerrarCargando()
+    await showModificado('Parámetro eliminado correctamente')
+    await obtenerParametros(programaSeleccionado.value.id_aca_programa_aprobado)
+  } catch (error) {
+    cerrarCargando()
+    console.error('Error al eliminar parámetro:', error)
+    await showError(error.response?.data?.message || 'No se pudo eliminar el parámetro')
   }
 }
 
@@ -344,22 +371,31 @@ const cerrarDialog = () => {
 }
 
 const guardarPrograma = async (datos) => {
+  // Mostrar indicador de carga
+  showCargando(
+    esEdicion.value ? 'Actualizando programa...' : 'Guardando programa...',
+    'Por favor espere'
+  )
+
   try {
-    cargando.value = true
     datos.cod_certificado_ceub = datos.cod_certificado_ceub ? datos.cod_certificado_ceub : null
-    let response;
+
     if(esEdicion.value) {
-      response = await api.put('/api/programa-aprobado/'+datos.id_aca_programa_aprobado, datos)
+      await api.put('/api/programa-aprobado/'+datos.id_aca_programa_aprobado, datos)
+      cerrarCargando()
+      await showModificado('Programa actualizado correctamente')
     }else{
-      response = await api.post('/api/programa-aprobado', datos)
+      await api.post('/api/programa-aprobado', datos)
+      cerrarCargando()
+      await showRegistrado('Programa creado exitosamente')
     }
+
     await obtenerProgramas()
     cerrarDialog()
-    console.log('Programa guardado exitosamente:', response.data)
   } catch (error) {
+    cerrarCargando()
     console.error('Error al guardar programa:', error)
-  } finally {
-    cargando.value = false
+    await showError(error.response?.data?.message || 'No se pudo guardar el programa')
   }
 }
 
@@ -432,45 +468,96 @@ onMounted(() => {
         density="comfortable"
       >
         <template #top>
-          <v-toolbar flat class="rounded-t-lg pa-4">
-            <v-toolbar-title class="text-h6 font-weight-bold d-flex align-center">
-              <v-icon class="mr-2" color="primary">mdi-school</v-icon>
-              Adm. Programas Aprobados
-            </v-toolbar-title>
-            <v-spacer></v-spacer>
+          <v-toolbar class="rounded-t-lg">
+            <v-container fluid class="py-4 px-4">
+              <v-row align="center" no-gutters>
 
-            <div class="d-flex align-center ga-3 flex-wrap">
-              <v-text-field
-                v-model="busqueda"
-                append-inner-icon="mdi-magnify"
-                label="Buscar programas..."
-                single-line
-                hide-details
-                variant="outlined"
-                density="compact"
-                class="search-field"
-              ></v-text-field>
+                <!-- Título - Siempre a la izquierda -->
+                <v-col cols="12" lg="auto" class="mb-3 mb-lg-0">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2" color="primary">mdi-school</v-icon>
+                    <span class="text-h6 font-weight-bold">Adm. Programas Aprobados</span>
+                  </div>
+                </v-col>
 
-              <v-btn
-                color="success"
-                variant="elevated"
-                @click="exportarExcel"
-                :disabled="cargando"
-              >
-                <v-icon start>mdi-file-excel</v-icon>
-                Exportar
-              </v-btn>
+                <v-spacer class="d-none d-sm-block"></v-spacer>
 
-              <v-btn
-                color="primary"
-                variant="elevated"
-                class="btn-nuevo"
-                @click="abrirDialogRegistrar"
-              >
-                <v-icon start>mdi-plus</v-icon>
-                Nuevo Programa
-              </v-btn>
-            </div>
+                <!-- Grupo de acciones - A la derecha en móvil -->
+                <v-col cols="12" lg="auto">
+                  <v-row align="center" justify="end" no-gutters class="ga-2">
+
+                    <!-- Búsqueda -->
+                    <v-col cols="auto" class="flex-grow-1 flex-lg-grow-0">
+                      <v-text-field
+                        v-model="busqueda"
+                        append-inner-icon="mdi-magnify"
+                        label="Buscar..."
+                        single-line
+                        hide-details
+                        variant="outlined"
+                        density="compact"
+                        style="min-width: 200px; max-width: 280px;"
+                      ></v-text-field>
+                    </v-col>
+
+                    <!-- Botones desktop -->
+                    <v-col cols="auto" class="d-none d-sm-block">
+                      <v-btn
+                        color="success"
+                        variant="elevated"
+                        @click="exportarExcel"
+                        :disabled="cargando"
+                        class="mr-2"
+                      >
+                        <v-icon start>mdi-file-excel</v-icon>
+                        Exportar
+                      </v-btn>
+
+                      <v-btn
+                        color="primary"
+                        variant="elevated"
+                        @click="abrirDialogRegistrar"
+                      >
+                        <v-icon start>mdi-plus</v-icon>
+                        Nuevo Programa
+                      </v-btn>
+                    </v-col>
+
+                    <!-- Menú móvil -->
+                    <v-col cols="auto" class="d-sm-none">
+                      <v-menu location="bottom end">
+                        <template v-slot:activator="{ props }">
+                          <v-btn
+                            icon="mdi-dots-vertical"
+                            v-bind="props"
+                            color="primary"
+                            variant="tonal"
+                          ></v-btn>
+                        </template>
+
+                        <v-list density="compact">
+                          <v-list-item @click="exportarExcel" :disabled="cargando">
+                            <template v-slot:prepend>
+                              <v-icon color="success">mdi-file-excel</v-icon>
+                            </template>
+                            <v-list-item-title>Exportar</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item @click="abrirDialogRegistrar">
+                            <template v-slot:prepend>
+                              <v-icon color="primary">mdi-plus</v-icon>
+                            </template>
+                            <v-list-item-title>Nuevo Programa</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </v-col>
+
+                  </v-row>
+                </v-col>
+
+              </v-row>
+            </v-container>
           </v-toolbar>
         </template>
 
@@ -784,44 +871,4 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.search-field {
-  min-width: 280px;
-  max-width: 350px;
-}
-
-.btn-nuevo {
-  min-width: 160px;
-  flex-shrink: 0;
-}
-
-@media (max-width: 960px) {
-  .v-toolbar {
-    .d-flex.align-center.ga-3 {
-      flex-direction: column;
-      align-items: stretch !important;
-      gap: 16px !important;
-      width: 100%;
-    }
-
-    .v-toolbar-title {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .search-field {
-      min-width: 100%;
-      max-width: 100%;
-    }
-
-    .btn-nuevo {
-      min-width: 100%;
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .v-toolbar {
-    padding: 16px !important;
-  }
-}
 </style>

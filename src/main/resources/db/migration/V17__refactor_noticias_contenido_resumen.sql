@@ -325,7 +325,7 @@ BEGIN
 END $$;
 
 
-DROP FUNCTION fn_obtener_noticias_paginadas(p_page INTEGER, p_size INTEGER, p_busqueda VARCHAR, p_estado VARCHAR, p_id_unidad INTEGER);
+DROP FUNCTION IF EXISTS  fn_obtener_noticias_paginadas(p_page INTEGER, p_size INTEGER, p_busqueda VARCHAR, p_estado VARCHAR, p_id_unidad INTEGER);
 CREATE OR REPLACE FUNCTION fn_obtener_noticias_paginadas(
   p_page INTEGER,
   p_size INTEGER,
