@@ -65,7 +65,6 @@ public class FinArancelApi {
         FechaUtil.toLocalDate(datos.get("fecha_inicio_vigencia")),
         FechaUtil.toLocalDate(datos.get("fecha_fin_vigencia")),
         (String) datos.get("descripcion"),
-        (String) datos.get("estado_arancel"),
         userDetails.getIdSegUsuario()
     );
 

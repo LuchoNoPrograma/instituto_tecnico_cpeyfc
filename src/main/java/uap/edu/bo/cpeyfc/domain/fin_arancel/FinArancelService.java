@@ -59,7 +59,6 @@ public class FinArancelService {
       LocalDate fechaInicioVigencia,
       LocalDate fechaFinVigencia,
       String descripcion,
-      String estadoArancel,
       Integer userMod
   ) {
     return finArancelRepository.modificarArancel(
@@ -68,7 +67,6 @@ public class FinArancelService {
         fechaInicioVigencia,
         fechaFinVigencia,
         descripcion,
-        estadoArancel,
         userMod
     );
   }

@@ -19,6 +19,7 @@ import {
   validarFormulario as validarFormularioHelper
 } from '@/helpers/validations'
 import {showRegistrado, showError, showCargando, cerrarCargando} from "@/utils/sweetalert.js";
+import imagenDefault from '@/assets/images/img_default.png';
 
 const route = useRoute()
 const router = useRouter()
@@ -151,6 +152,13 @@ const obtenerPlanEstudios = async () => {
     cargandoPlan.value = false
   }
 }
+
+const obtenerImagen = computed(() => {
+  if (programa.value?.imagen_url) {
+    return '/api' + programa.value.imagen_url
+  }
+  return imagenDefault
+})
 
 const abrirFormulario = () => {
   mostrarFormulario.value = true
@@ -476,7 +484,7 @@ onMounted(() => {
               <v-card class="programa-card" elevation="2">
                 <!-- Imagen -->
                 <v-img
-                  :src="programa.imagen_url"
+                  :src="obtenerImagen"
                   height="250"
                   cover
                   :alt="programa.nombre_programa"

@@ -3,6 +3,7 @@ package uap.edu.bo.cpeyfc.chatbot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uap.edu.bo.cpeyfc.domain.fin_arancel.FinArancelRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ public class ChatbotService {
 
   private final GeminiService geminiService;
   private final ChatbotRepository chatbotRepository;
+  private final FinArancelRepository finArancelRepository;
 
   public ChatbotResponse procesarMensaje(ChatbotRequest request) {
     try {
@@ -42,6 +44,10 @@ public class ChatbotService {
       for (Map<String, Object> programa : programas) {
         String estadoInscripcion = getString(programa, "estado_inscripcion");
         Integer diasRestantes = getInteger(programa, "dias_restantes");
+        Integer idProgramaAprobado = getInteger(programa, "id_aca_programa_aprobado");
+
+        List<Map<String, Object>> aranceles = finArancelRepository.obtenerArancelesPrograma(idProgramaAprobado);
+        String costosTexto = construirTextoAranceles(aranceles);
 
         contexto.append(String.format("""
           📚 PROGRAMA: %s (%s)
@@ -56,10 +62,8 @@ public class ChatbotService {
              Fecha fin: %s
              %s
              
-             💰 COSTOS:
-             Matrícula: Bs. %.2f
-             Colegiatura mensual: Bs. %.2f
-             Titulación: Bs. %.2f
+             💰 PRECIOS:
+             %s
              
              📊 INFORMACIÓN ACADÉMICA:
              Total módulos: %d
@@ -84,9 +88,7 @@ public class ChatbotService {
           programa.get("fecha_fin_inscripcion"),
           diasRestantes > 0 ? String.format("⏰ Quedan %d días para inscribirse", diasRestantes) : "",
 
-          getDecimal(programa, "precio_matricula"),
-          getDecimal(programa, "precio_colegiatura"),
-          getDecimal(programa, "precio_titulacion"),
+          costosTexto,
 
           getInteger(programa, "total_modulos"),
           getInteger(programa, "total_horas"),
@@ -129,6 +131,38 @@ public class ChatbotService {
       log.error("Error al construir contexto de programas", e);
       return "Información de programas temporalmente no disponible.";
     }
+  }
+
+  private String construirTextoAranceles(List<Map<String, Object>> aranceles) {
+    if (aranceles == null || aranceles.isEmpty()) {
+      return "Aranceles no disponibles - contactar con CPEyFP";
+    }
+
+    StringBuilder texto = new StringBuilder();
+
+    // Agrupar por concepto
+    Map<String, List<Map<String, Object>>> porConcepto = aranceles.stream()
+      .collect(java.util.stream.Collectors.groupingBy(
+        a -> getString(a, "concepto")
+      ));
+
+    for (Map.Entry<String, List<Map<String, Object>>> entry : porConcepto.entrySet()) {
+      String concepto = entry.getKey();
+      List<Map<String, Object>> arancelesConcepto = entry.getValue();
+
+      texto.append(String.format("%s:\n", concepto));
+
+      for (Map<String, Object> arancel : arancelesConcepto) {
+        texto.append(String.format("   • %s: Bs. %.2f\n",
+          getString(arancel, "tipo_beneficiario"),
+          getDecimal(arancel, "monto")
+        ));
+      }
+    }
+
+    texto.append("\nNOTA: Los aranceles pueden variar si aplica un convenio institucional.");
+
+    return texto.toString();
   }
 
   // Métodos helper para manejo seguro de tipos

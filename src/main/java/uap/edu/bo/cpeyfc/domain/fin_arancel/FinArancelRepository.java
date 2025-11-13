@@ -41,7 +41,7 @@ public interface FinArancelRepository extends JpaRepository<FinArancel, Integer>
   @Query(nativeQuery = true, value = """
       SELECT fn_modificar_arancel(
           :id_arancel, :monto_base, :fecha_inicio_vigencia,
-          :fecha_fin_vigencia, :descripcion, :estado_arancel, :user_mod
+          :fecha_fin_vigencia, :descripcion, :user_mod
       )
       """)
   String modificarArancel(
@@ -50,7 +50,6 @@ public interface FinArancelRepository extends JpaRepository<FinArancel, Integer>
       LocalDate fecha_inicio_vigencia,
       LocalDate fecha_fin_vigencia,
       String descripcion,
-      String estado_arancel,
       Integer user_mod
   );
 

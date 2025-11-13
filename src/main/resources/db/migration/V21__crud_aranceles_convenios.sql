@@ -292,7 +292,6 @@ CREATE OR REPLACE FUNCTION fn_modificar_arancel(
   p_fecha_inicio_vigencia DATE,
   p_fecha_fin_vigencia DATE,
   p_descripcion TEXT,
-  p_estado_arancel VARCHAR,
   p_user_mod INTEGER
 )
   RETURNS TEXT AS $$
@@ -301,7 +300,7 @@ DECLARE
 BEGIN
   -- Validaciones obligatorias
   IF p_id_arancel IS NULL OR p_monto_base IS NULL OR
-     p_fecha_inicio_vigencia IS NULL OR p_estado_arancel IS NULL OR p_user_mod IS NULL THEN
+     p_fecha_inicio_vigencia IS NULL OR p_user_mod IS NULL THEN
     RAISE EXCEPTION 'Error! Campos obligatorios faltantes';
   END IF;
 
@@ -331,7 +330,6 @@ BEGIN
       fecha_inicio_vigencia = p_fecha_inicio_vigencia,
       fecha_fin_vigencia = p_fecha_fin_vigencia,
       descripcion = TRIM(p_descripcion),
-      estado_arancel = UPPER(TRIM(p_estado_arancel)),
       fecha_mod = CURRENT_TIMESTAMP,
       user_mod = p_user_mod
   WHERE id_arancel = p_id_arancel;

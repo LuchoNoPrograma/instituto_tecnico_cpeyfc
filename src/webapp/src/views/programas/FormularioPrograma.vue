@@ -12,6 +12,8 @@ import {
 import { filtroLatinoFlexible } from '@/helpers/filtros'
 import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
 
 // Props
 const props = defineProps({
@@ -39,12 +41,11 @@ const formularioPrograma = reactive({
   id_aca_plan_estudio: null,
   id_aca_version: null,
   estado_programa_aprobado: 'SIN INICIAR',
-  cod_certificado_ceub: '',
 
-  // Paso 3: Costos del programa
-  precio_matricula: 0,
-  precio_colegiatura: 0,
-  precio_titulacion: 0,
+  // Paso 3: Imagen
+  imagen_programa_url: '',
+
+  // Vigencia
   fecha_inicio_vigencia: null,
   fecha_fin_vigencia: null,
 
@@ -65,10 +66,17 @@ const formularioPrograma = reactive({
 // Estados
 const cargandoFormulario = ref(false)
 const pasoActual = ref(1)
-const totalPasos = 4
+const totalPasos = 3
 const mostrarFormularioNuevoPrograma = ref(false)
 const mostrarFormularioNuevoPlan = ref(false)
 const busquedaPrograma = ref('')
+
+// Estados del cropper
+const dialogCropper = ref(false)
+const imagenOriginal = ref(null)
+const cropperRef = ref(null)
+const archivoImagen = ref(null)
+const previewImagen = ref(null)
 
 // Datos para selects
 const programas = ref([])
@@ -88,11 +96,6 @@ const esquemaReglasPaso2 = computed(() => ({
   estado_programa_aprobado: { esRequerido }
 }))
 
-const esquemaReglasPaso3 = computed(() => ({
-  precio_matricula: { esRequerido },
-  precio_colegiatura: { esRequerido }
-}))
-
 const esquemaReglasNuevoPrograma = computed(() => ({
   programaNuevo: {
     nombre_programa: {
@@ -110,7 +113,6 @@ const esquemaReglasNuevoPrograma = computed(() => ({
 // Instancias de Vuelidate
 const $vPaso1 = useVuelidate(esquemaReglasPaso1, formularioPrograma)
 const $vPaso2 = useVuelidate(esquemaReglasPaso2, formularioPrograma)
-const $vPaso3 = useVuelidate(esquemaReglasPaso3, formularioPrograma)
 const $vNuevoPrograma = useVuelidate(esquemaReglasNuevoPrograma, formularioPrograma)
 
 // Computed
@@ -122,7 +124,6 @@ const puedeAvanzar = computed(() => {
   switch (pasoActual.value) {
     case 1: return !$vPaso1.value.$invalid
     case 2: return !$vPaso2.value.$invalid
-    case 3: return !$vPaso3.value.$invalid
     default: return true
   }
 })
@@ -144,27 +145,11 @@ const mostrarOpcionNuevoPrograma = computed(() => {
   return busquedaPrograma.value && busquedaPrograma.value.length > 2
 })
 
-// Computed para sigla automática del programa
 const siglaPrograma = computed(() => {
   return programaSeleccionado.value?.sigla || ''
 })
 
-// Computed para formato de certificado CEUB
-const codigoCertificadoFormatted = computed({
-  get() {
-    return formularioPrograma.cod_certificado_ceub
-  },
-  set(value) {
-    // Remover caracteres no numéricos excepto /
-    const cleaned = value.replace(/[^\d/]/g, '')
-    // Si no tiene /, agregar automáticamente año al final
-    if (cleaned && !cleaned.includes('/')) {
-      formularioPrograma.cod_certificado_ceub = `${cleaned}/${formularioPrograma.gestion}`
-    } else {
-      formularioPrograma.cod_certificado_ceub = cleaned
-    }
-  }
-})
+const tieneImagen = computed(() => previewImagen.value !== null && previewImagen.value !== '')
 
 // Computed para datos de confirmación
 const datosConfirmacion = computed(() => {
@@ -181,14 +166,11 @@ const datosConfirmacion = computed(() => {
     modalidad: modalidad?.nombre_modalidad || 'No seleccionada',
     gestion: formularioPrograma.gestion,
     estado: formularioPrograma.estado_programa_aprobado,
-    planEstudio: planEstudio?.descripcion_plan || 'No seleccionado',
+    planEstudio: planEstudio?.anho || 'No seleccionado',
     version: version?.cod_version || 'No seleccionada',
-    certificadoCeub: formularioPrograma.cod_certificado_ceub || 'No definido',
-    precioMatricula: new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(formularioPrograma.precio_matricula),
-    precioColegiatura: new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(formularioPrograma.precio_colegiatura),
-    precioTitulacion: new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(formularioPrograma.precio_titulacion),
     fechaInicioVigencia: formularioPrograma.fecha_inicio_vigencia,
-    fechaFinVigencia: formularioPrograma.fecha_fin_vigencia
+    fechaFinVigencia: formularioPrograma.fecha_fin_vigencia,
+    tieneImagen: tieneImagen.value
   }
 })
 
@@ -248,15 +230,12 @@ const crearNuevoPrograma = async () => {
   try {
     const response = await api.post('/api/programa', formularioPrograma.programaNuevo)
 
-    // Extraer ID del mensaje de respuesta: "Programa registrado exitosamente con ID: 123"
     const mensaje = response.data
     const idMatch = mensaje.match(/ID:\s*(\d+)/)
     const nuevoId = idMatch ? parseInt(idMatch[1]) : null
 
-    // Recargar programas
     await cargarDatos()
 
-    // Auto-seleccionar el programa recién creado
     if (nuevoId) {
       formularioPrograma.id_aca_programa = nuevoId
       const programa = programas.value.find(p => p.id_aca_programa === nuevoId)
@@ -265,7 +244,6 @@ const crearNuevoPrograma = async () => {
       }
     }
 
-    // Cerrar dialog y limpiar formulario nuevo programa
     mostrarFormularioNuevoPrograma.value = false
     Object.assign(formularioPrograma.programaNuevo, {
       nombre_programa: '',
@@ -302,7 +280,6 @@ const crearNuevoPlan = async () => {
     await cargarPlanesEstudio()
     mostrarFormularioNuevoPlan.value = false
 
-    // Autoseleccionar el plan recién creado
     const nuevoPlan = planesEstudio.value.find(p => p.anho === formularioPrograma.planNuevo.anho)
     if (nuevoPlan) {
       formularioPrograma.id_aca_plan_estudio = nuevoPlan.id_aca_plan_estudio
@@ -320,6 +297,59 @@ const cancelarNuevoPlan = () => {
   })
 }
 
+// Manejo de imágenes con cropper
+const onArchivoSeleccionado = (file) => {
+  if (!file) return
+
+  if (!(file instanceof File)) {
+    console.error('No es un archivo válido')
+    return
+  }
+
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    alert('La imagen es muy grande. Máximo: 10MB')
+    return
+  }
+
+  if (!file.type.startsWith('image/')) {
+    alert('Solo se permiten imágenes')
+    return
+  }
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    imagenOriginal.value = e.target.result
+    dialogCropper.value = true
+  }
+  reader.readAsDataURL(file)
+}
+
+const confirmarRecorte = async () => {
+  const { canvas } = cropperRef.value.getResult()
+
+  if (canvas) {
+    canvas.toBlob((blob) => {
+      const archivoRecortado = new File([blob], 'programa.jpg', { type: 'image/jpeg' })
+      archivoImagen.value = archivoRecortado
+
+      const urlPreview = canvas.toDataURL('image/jpeg', 0.9)
+      previewImagen.value = urlPreview
+
+      dialogCropper.value = false
+    }, 'image/jpeg', 0.9)
+  }
+}
+
+const cancelarRecorte = () => {
+  dialogCropper.value = false
+  imagenOriginal.value = null
+}
+
+const editarImagen = () => {
+  document.getElementById('file-input-programa').click()
+}
+
 // Preparar datos para envío
 const guardar = async () => {
   cargandoFormulario.value = true
@@ -329,7 +359,20 @@ const guardar = async () => {
     delete datos.programaNuevo
     delete datos.planNuevo
 
-    await emit('guardar', datos)
+    if (archivoImagen.value) {
+      const formData = new FormData()
+      formData.append('file', archivoImagen.value)
+      formData.append('datos', JSON.stringify(datos))
+
+      if (props.esEdicion && props.programa?.imagen_programa_url) {
+        formData.append('imagen_url_antigua', props.programa.imagen_programa_url)
+      }
+
+      await emit('guardar', formData)
+    } else {
+      await emit('guardar', datos)
+    }
+
     limpiarFormulario()
   } catch (error) {
     console.error('Error al guardar:', error)
@@ -346,10 +389,7 @@ const limpiarFormulario = () => {
     id_aca_plan_estudio: null,
     id_aca_version: null,
     estado_programa_aprobado: 'SIN INICIAR',
-    cod_certificado_ceub: '',
-    precio_matricula: 0,
-    precio_colegiatura: 0,
-    precio_titulacion: 0,
+    imagen_programa_url: '',
     fecha_inicio_vigencia: null,
     fecha_fin_vigencia: null,
     programaNuevo: {
@@ -365,6 +405,8 @@ const limpiarFormulario = () => {
   pasoActual.value = 1
   mostrarFormularioNuevoPrograma.value = false
   busquedaPrograma.value = ''
+  archivoImagen.value = null
+  previewImagen.value = null
 }
 
 const cancelar = () => {
@@ -372,7 +414,6 @@ const cancelar = () => {
   emit('cancelar')
 }
 
-// Cargar datos al editar
 const cargarDatosPrograma = (programa) => {
   if (!programa) return
 
@@ -381,14 +422,13 @@ const cargarDatosPrograma = (programa) => {
   formularioPrograma.gestion = programa.gestion
   formularioPrograma.id_aca_plan_estudio = programa.id_aca_plan_estudio
   formularioPrograma.id_aca_version = programa.id_aca_version
-  formularioPrograma.id_aca_programa_aprobado = programa.id_aca_programa_aprobado
   formularioPrograma.estado_programa_aprobado = programa.estado_programa_aprobado
-  formularioPrograma.cod_certificado_ceub = programa.cod_certificado_ceub || ''
-  formularioPrograma.precio_matricula = programa.precio_matricula || 0
-  formularioPrograma.precio_colegiatura = programa.precio_colegiatura || 0
-  formularioPrograma.precio_titulacion = programa.precio_titulacion || 0
   formularioPrograma.fecha_inicio_vigencia = programa.fecha_inicio_vigencia
   formularioPrograma.fecha_fin_vigencia = programa.fecha_fin_vigencia
+
+  if (programa.imagen_programa_url) {
+    previewImagen.value = programa.imagen_programa_url
+  }
 
   busquedaPrograma.value = programa.programa_nombre || ''
 }
@@ -401,14 +441,6 @@ watch(() => props.programa, (programa) => {
     cargarDatosPrograma(programa)
   }
 }, { immediate: true })
-
-// Actualizar código certificado cuando cambie la gestión
-watch(() => formularioPrograma.gestion, (newGestion) => {
-  if (formularioPrograma.cod_certificado_ceub && formularioPrograma.cod_certificado_ceub.includes('/')) {
-    const [numero] = formularioPrograma.cod_certificado_ceub.split('/')
-    formularioPrograma.cod_certificado_ceub = `${numero}/${newGestion}`
-  }
-})
 
 onMounted(() => {
   cargarDatos()
@@ -434,22 +466,13 @@ onMounted(() => {
             :complete="pasoActual > 2"
             :value="2"
             title="Configuración"
-            subtitle="Académica y versión"
+            subtitle="Académica y vigencia"
           ></v-stepper-item>
 
           <v-divider></v-divider>
 
           <v-stepper-item
-            :complete="pasoActual > 3"
             :value="3"
-            title="Costos"
-            subtitle="Precios del programa"
-          ></v-stepper-item>
-
-          <v-divider></v-divider>
-
-          <v-stepper-item
-            :value="4"
             title="Confirmación"
             subtitle="Revisar datos"
           ></v-stepper-item>
@@ -552,7 +575,7 @@ onMounted(() => {
 
       <!-- Paso 2: Configuración Académica -->
       <div v-if="pasoActual === 2">
-        <h3 class="text-h6 mb-4">Configuración Académica</h3>
+        <h3 class="text-h6 mb-4">Configuración Académica e Imagen</h3>
 
         <v-row>
           <v-col cols="12" md="6">
@@ -579,29 +602,9 @@ onMounted(() => {
                       >
                         Vigente
                       </v-chip>
-                      <v-chip
-                        v-else
-                        color="warning"
-                        variant="outlined"
-                        size="x-small"
-                        class="ml-2"
-                      >
-                        Sin vigencia
-                      </v-chip>
-                    </div>
-                  </template>
-                  <template #subtitle>
-                    <div class="text-caption mt-1">
-                      {{ item.raw.descripcion_plan.includes('Sin programas asignados')
-                      ? 'Sin programas asignados'
-                      : item.raw.descripcion_plan.split(' - Usado por: ')[1] }}
                     </div>
                   </template>
                 </v-list-item>
-              </template>
-
-              <template #selection="{ item }">
-                <span>Plan {{ item.raw.anho }}{{ item.raw.vigente ? ' (Vigente)' : '' }}</span>
               </template>
 
               <template #append-item>
@@ -624,22 +627,8 @@ onMounted(() => {
               :error-messages="obtenerErroresCampo($vPaso2.estado_programa_aprobado)"
               label="Estado del Programa *"
               prepend-inner-icon="mdi-flag"
-              readonly
               variant="outlined"
             ></v-select>
-          </v-col>
-
-          <v-col cols="12" md="6">
-            <v-text-field
-              v-model="codigoCertificadoFormatted"
-              label="Nº Certificado CEUB"
-              variant="outlined"
-              prepend-inner-icon="mdi-certificate"
-              placeholder="123/2024"
-              hint="Ejemplo: 3/2025"
-              persistent-hint
-              :disabled="cargandoFormulario"
-            ></v-text-field>
           </v-col>
 
           <v-col cols="12" md="6">
@@ -649,13 +638,15 @@ onMounted(() => {
               clearable
               item-title="cod_version"
               item-value="id_aca_version"
-              label="Versión"
+              label="Versión CEUB"
               persistent-clear
               variant="outlined"
               prepend-inner-icon="mdi-tag"
               :disabled="cargandoFormulario"
             ></v-select>
           </v-col>
+
+          <v-col cols="12" md="6"></v-col>
 
           <v-col cols="12" md="6">
             <v-date-input
@@ -674,222 +665,197 @@ onMounted(() => {
               :disabled="cargandoFormulario"
             ></v-date-input>
           </v-col>
-        </v-row>
-      </div>
 
-      <!-- Paso 3: Costos del Programa -->
-      <div v-if="pasoActual === 3">
-        <h3 class="text-h6 mb-4">Costos del Programa</h3>
+          <!-- Imagen del Programa -->
+          <v-col cols="12" class="mt-4">
+            <label class="text-subtitle-2 text-medium-emphasis mb-2 d-block">
+              <v-icon size="small" class="mr-1">mdi-image</v-icon>
+              Imagen Destacada (16:9)
+            </label>
 
-        <v-row>
-          <v-col cols="12" md="4">
-            <v-text-field
-              v-model.number="formularioPrograma.precio_matricula"
-              :error-messages="obtenerErroresCampo($vPaso3.precio_matricula)"
-              label="Precio Matrícula *"
+            <!-- Preview Grande (solo si hay imagen) -->
+            <div v-if="tieneImagen" class="imagen-preview-container">
+              <v-img
+                :src="previewImagen"
+                aspect-ratio="16/9"
+                cover
+                class="imagen-preview"
+              >
+                <template #error>
+                  <div class="error-fallback">
+                    <v-btn
+                      @click="editarImagen"
+                      :disabled="cargandoFormulario"
+                      color="primary"
+                    >
+                      Error al cargar - Selecciona otra
+                    </v-btn>
+                  </div>
+                </template>
+              </v-img>
+
+              <!-- Overlay con botón editar -->
+              <div class="imagen-overlay">
+                <v-btn
+                  icon="mdi-pencil"
+                  color="white"
+                  size="large"
+                  @click="editarImagen"
+                  :disabled="cargandoFormulario"
+                >
+                  <v-icon>mdi-pencil</v-icon>
+                  <v-tooltip activator="parent" location="bottom">Cambiar imagen</v-tooltip>
+                </v-btn>
+              </div>
+            </div>
+
+            <!-- File Upload visible cuando NO hay imagen -->
+            <v-file-upload
+              v-else
+              v-model="archivoImagen"
+              label="Seleccionar imagen del programa"
               variant="outlined"
-              prepend-inner-icon="mdi-currency-usd"
-              type="number"
-              min="0"
-              step="0.01"
+              prepend-icon="mdi-image-plus"
+              accept="image/*"
               :disabled="cargandoFormulario"
-              hint="Costo por matrícula del programa"
-              persistent-hint
-            ></v-text-field>
-          </v-col>
-
-          <v-col cols="12" md="4">
-            <v-text-field
-              v-model.number="formularioPrograma.precio_colegiatura"
-              :error-messages="obtenerErroresCampo($vPaso3.precio_colegiatura)"
-              label="Precio Colegiatura *"
-              variant="outlined"
-              prepend-inner-icon="mdi-currency-usd"
-              type="number"
-              min="0"
-              step="0.01"
-              :disabled="cargandoFormulario"
-              hint="Costo total del programa completo"
-              persistent-hint
-            ></v-text-field>
-          </v-col>
-
-          <v-col cols="12" md="4">
-            <v-text-field
-              v-model.number="formularioPrograma.precio_titulacion"
-              label="Precio Titulación"
-              variant="outlined"
-              prepend-inner-icon="mdi-currency-usd"
-              type="number"
-              min="0"
-              step="0.01"
-              :disabled="cargandoFormulario"
-              hint="Costo adicional por obtener el título"
-              persistent-hint
-            ></v-text-field>
-          </v-col>
-
-          <v-col cols="12">
-            <v-alert
-              color="info"
-              variant="tonal"
-              class="mt-2"
+              show-size
+              chips
+              @update:model-value="onArchivoSeleccionado"
             >
-              <template #prepend>
-                <v-icon>mdi-information</v-icon>
+              <template #hint>
+                <div class="text-center mt-2">
+                  PNG, JPG, WEBP • Máximo 10MB • Se recortará a 16:9
+                </div>
               </template>
+            </v-file-upload>
 
-              <div class="text-subtitle-2 font-weight-bold mb-2">
-                Configuración de Costos:
-              </div>
-
-              <div class="text-body-2">
-                • <strong>Matrícula:</strong> Para programas con pago por concepto de matricula semestral o matricula única<br>
-                • <strong>Colegiatura:</strong> Para programas con pago completo al contado o parcelado<br>
-                • <strong>Titulación:</strong> Costo adicional para obtener el título/impresion de certificados (opcional)
-              </div>
-            </v-alert>
+            <input
+              id="file-input-programa"
+              type="file"
+              accept="image/*"
+              style="display: none"
+              @change="(e) => onArchivoSeleccionado(e.target.files[0])"
+            >
           </v-col>
         </v-row>
       </div>
 
-      <!-- Paso 4: Confirmación -->
-      <div v-if="pasoActual === 4">
-        <h3 class="text-h6 mb-4">Confirmar Información del Programa</h3>
+      <!-- Paso 3: Confirmación -->
+      <div v-if="pasoActual === 3">
+        <h3 class="text-h6 mb-6">Confirmar Información del Programa</h3>
 
         <v-row>
-          <!-- Información del Programa -->
-          <v-col cols="12">
-            <v-card variant="outlined" class="mb-4">
-              <v-card-title class="bg-primary text-white">
-                <v-icon start>mdi-school</v-icon>
-                Información del Programa
-              </v-card-title>
-              <v-card-text class="pa-4">
-                <v-row>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Programa:</span>
-                      <span class="value">{{ datosConfirmacion.programa }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Sigla:</span>
-                      <span class="value">{{ datosConfirmacion.sigla }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Área:</span>
-                      <span class="value">{{ datosConfirmacion.area }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Modalidad:</span>
-                      <span class="value">{{ datosConfirmacion.modalidad }}</span>
-                    </div>
-                  </v-col>
-                </v-row>
+          <!-- Programa + Imagen -->
+          <v-col cols="12" lg="6">
+            <v-card variant="outlined" class="h-100">
+              <div v-if="datosConfirmacion.tieneImagen" class="card-image-wrapper">
+                <v-img
+                  :src="previewImagen"
+                  aspect-ratio="16/9"
+                  cover
+                  class="rounded-t"
+                ></v-img>
+              </div>
+
+              <v-card-text class="pa-6">
+                <div class="mb-4">
+                  <h4 class="text-h4 font-weight-bold text-primary mb-2">
+                    {{ datosConfirmacion.programa }}
+                  </h4>
+                  <div class="d-flex gap-2 mb-3">
+                    <v-chip color="info" size="small">
+                      {{ datosConfirmacion.sigla }}
+                    </v-chip>
+                    <v-chip color="success" size="small">
+                      {{ datosConfirmacion.area }}
+                    </v-chip>
+                  </div>
+                </div>
+
+                <v-divider class="my-4"></v-divider>
+
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="label">Modalidad</span>
+                    <span class="value">{{ datosConfirmacion.modalidad }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="label">Gestión</span>
+                    <span class="value">{{ datosConfirmacion.gestion }}</span>
+                  </div>
+                </div>
               </v-card-text>
             </v-card>
           </v-col>
 
           <!-- Configuración Académica -->
-          <v-col cols="12">
-            <v-card variant="outlined" class="mb-4">
-              <v-card-title class="bg-info text-white">
+          <v-col cols="12" lg="6">
+            <v-card variant="outlined" class="h-100">
+              <v-card-title class="bg-info text-white pa-4">
                 <v-icon start>mdi-cog</v-icon>
                 Configuración Académica
               </v-card-title>
-              <v-card-text class="pa-4">
-                <v-row>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Gestión:</span>
-                      <span class="value">{{ datosConfirmacion.gestion }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Estado:</span>
-                      <v-chip
-                        :color="datosConfirmacion.estado === 'SIN INICIAR' ? 'warning' :
-                               datosConfirmacion.estado === 'EN EJECUCION' ? 'success' : 'info'"
-                        size="small"
-                      >
-                        {{ datosConfirmacion.estado }}
-                      </v-chip>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Plan de Estudio:</span>
-                      <span class="value">{{ datosConfirmacion.planEstudio }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Versión CEUB:</span>
-                      <span class="value">{{ datosConfirmacion.version }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12">
-                    <div class="info-item">
-                      <span class="label">Certificado CEUB:</span>
-                      <span class="value">{{ datosConfirmacion.certificadoCeub }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Inicio Vigencia:</span>
-                      <span class="value">{{ formatoFecha.ddMMaaaa(datosConfirmacion.fechaInicioVigencia) }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="6">
-                    <div class="info-item">
-                      <span class="label">Fin Vigencia:</span>
-                      <span class="value">{{ formatoFecha.ddMMaaaa(datosConfirmacion.fechaFinVigencia) }}</span>
-                    </div>
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </v-card>
-          </v-col>
 
-          <!-- Plan de Pago -->
-          <v-col cols="12">
-            <v-card variant="outlined">
-              <v-card-title class="bg-warning text-white">
-                <v-icon start>mdi-cash-multiple</v-icon>
-                Plan de Pago
-              </v-card-title>
-              <v-card-text class="pa-4">
-                <v-row>
-                  <v-col cols="12" md="4">
-                    <div class="info-item">
-                      <span class="label">Precio Matrícula:</span>
-                      <span class="value text-success font-weight-bold">{{ datosConfirmacion.precioMatricula }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <div class="info-item">
-                      <span class="label">Precio Colegiatura:</span>
-                      <span class="value text-success font-weight-bold">{{ datosConfirmacion.precioColegiatura }}</span>
-                    </div>
-                  </v-col>
-                  <v-col cols="12" md="4">
-                    <div class="info-item">
-                      <span class="label">Precio Titulación:</span>
-                      <span class="value text-success font-weight-bold">{{ datosConfirmacion.precioTitulacion }}</span>
-                    </div>
-                  </v-col>
-                </v-row>
+              <v-card-text class="pa-6">
+                <div class="info-list">
+                  <div class="info-row">
+                    <span class="label">Plan de Estudio</span>
+                    <span class="value">{{ datosConfirmacion.planEstudio }}</span>
+                  </div>
+
+                  <div class="info-row">
+                    <span class="label">Versión CEUB</span>
+                    <span class="value">{{ datosConfirmacion.version }}</span>
+                  </div>
+
+                  <div class="info-row">
+                    <span class="label">Estado</span>
+                    <v-chip
+                      :color="datosConfirmacion.estado === 'SIN INICIAR' ? 'warning' :
+                               datosConfirmacion.estado === 'EN EJECUCION' ? 'success' : 'info'"
+                      size="small"
+                    >
+                      {{ datosConfirmacion.estado }}
+                    </v-chip>
+                  </div>
+
+                  <v-divider class="my-4"></v-divider>
+
+                  <div class="info-row">
+                    <span class="label">Vigencia</span>
+                  </div>
+
+                  <div class="info-row">
+                    <span class="text-caption text-medium-emphasis">Inicio:</span>
+                    <span class="value">
+                      {{ datosConfirmacion.fechaInicioVigencia ?
+                      formatoFecha.ddMMaaaa(datosConfirmacion.fechaInicioVigencia) :
+                      'Sin definir' }}
+                    </span>
+                  </div>
+
+                  <div class="info-row">
+                    <span class="text-caption text-medium-emphasis">Fin:</span>
+                    <span class="value">
+                      {{ datosConfirmacion.fechaFinVigencia ?
+                      formatoFecha.ddMMaaaa(datosConfirmacion.fechaFinVigencia) :
+                      'Sin definir' }}
+                    </span>
+                  </div>
+                </div>
               </v-card-text>
             </v-card>
           </v-col>
         </v-row>
+
+        <v-alert
+          color="success"
+          variant="tonal"
+          class="mt-6"
+          icon="mdi-checkbox-marked-circle"
+        >
+          Verifica que todos los datos sean correctos antes de guardar. Los aranceles de pago se configuran después.
+        </v-alert>
       </div>
     </v-card-text>
 
@@ -1030,7 +996,7 @@ onMounted(() => {
                     <template #activator="{ props }">
                       <v-icon v-bind="props" size="small">mdi-help-circle</v-icon>
                     </template>
-                    Si se marca como vigente, será el plan por defecto para este año
+                    Si se marca como vigente, será el plan por defecto
                   </v-tooltip>
                 </template>
               </v-switch>
@@ -1048,6 +1014,54 @@ onMounted(() => {
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Dialog del Cropper -->
+    <v-dialog
+      v-model="dialogCropper"
+      max-width="900px"
+      persistent
+    >
+      <v-card>
+        <v-card-title class="bg-primary text-white pa-4">
+          <v-icon start>mdi-crop</v-icon>
+          Ajustar Imagen (Formato 16:9)
+        </v-card-title>
+
+        <v-card-text class="pa-6">
+          <div class="cropper-container">
+            <Cropper
+              ref="cropperRef"
+              class="cropper"
+              :src="imagenOriginal"
+              :stencil-props="{
+                aspectRatio: 16/9
+              }"
+            />
+          </div>
+          <div class="text-caption text-center text-medium-emphasis mt-4">
+            Ajusta la imagen para que se vea perfecta en 16:9
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn
+            variant="text"
+            @click="cancelarRecorte"
+          >
+            Cancelar
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            @click="confirmarRecorte"
+          >
+            <v-icon start>mdi-check</v-icon>
+            Confirmar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -1058,33 +1072,106 @@ onMounted(() => {
     background: transparent !important;
   }
 
-  .info-item {
+  .imagen-preview-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 16px;
+
+    .imagen-preview {
+      width: 100%;
+    }
+
+    .error-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(var(--v-theme-error), 0.1);
+    }
+
+    .imagen-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  .cropper-container {
+    height: 500px;
+    background: rgba(var(--v-theme-surface-variant), 1);
+
+    .cropper {
+      height: 100%;
+    }
+  }
+
+  .card-image-wrapper {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .info-list {
     display: flex;
     flex-direction: column;
-    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .info-item,
+  .info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
     .label {
       font-size: 0.875rem;
       color: rgba(var(--v-theme-on-surface), 0.6);
-      margin-bottom: 4px;
+      font-weight: 500;
     }
 
     .value {
       font-weight: 500;
       color: rgba(var(--v-theme-on-surface), 0.87);
+      font-size: 1rem;
     }
   }
 }
 
-// Responsive
-@media (max-width: 600px) {
+@media (max-width: 960px) {
   .formulario-programa {
-    .v-card-text {
-      padding: 16px !important;
+    .info-grid {
+      grid-template-columns: 1fr;
     }
 
+    .cropper-container {
+      height: 400px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .formulario-programa {
     .v-card-actions {
-      padding: 16px !important;
       flex-direction: column;
       gap: 8px;
 
@@ -1093,8 +1180,8 @@ onMounted(() => {
       }
     }
 
-    .info-item {
-      margin-bottom: 12px;
+    .cropper-container {
+      height: 250px;
     }
   }
 }

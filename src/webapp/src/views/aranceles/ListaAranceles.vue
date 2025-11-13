@@ -3,6 +3,7 @@ import { onMounted, ref, computed } from 'vue'
 import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
 import { showRegistrado, showModificado, showError, showConfirmar } from '@/utils/sweetalert.js'
+import FormularioArancel from '@/views/aranceles/FormularioArancel.vue'
 
 const aranceles = ref([])
 const tiposBeneficiario = ref([])
@@ -15,18 +16,6 @@ const busqueda = ref('')
 const dialogFormulario = ref(false)
 const arancelSeleccionado = ref(null)
 const esEdicion = computed(() => !!arancelSeleccionado.value)
-
-// Formulario
-const formularioArancel = ref({
-  id_fin_concepto_pago: null,
-  id_programa_aprobado: null,
-  id_tipo_beneficiario: null,
-  monto_base: null,
-  fecha_inicio_vigencia: null,
-  fecha_fin_vigencia: null,
-  descripcion: '',
-  estado_arancel: 'ACTIVO'
-})
 
 const headers = [
   { title: 'Concepto', key: 'nombre_concepto', sortable: true },
@@ -49,7 +38,7 @@ const arancelesFormateados = computed(() => {
 const formatearVigencia = (inicio, fin) => {
   if (!inicio && !fin) return 'Sin definir'
   if (!fin) return `Desde ${formatoFecha.ddMMaaaa(inicio)}`
-  return `${formatoFecha.ddMMaaaa(inicio)} - ${formatoFecha.ddMMaaaa(fin)}`
+  return `${formatoFecha.ddMMaaaa(inicio)} Al ${formatoFecha.ddMMaaaa(fin)}`
 }
 
 const formatearMonto = (monto) => {
@@ -102,44 +91,29 @@ const obtenerProgramasAprobados = async () => {
 
 const abrirDialogNuevo = () => {
   arancelSeleccionado.value = null
-  formularioArancel.value = {
-    id_fin_concepto_pago: null,
-    id_programa_aprobado: null,
-    id_tipo_beneficiario: null,
-    monto_base: null,
-    fecha_inicio_vigencia: null,
-    fecha_fin_vigencia: null,
-    descripcion: '',
-    estado_arancel: 'ACTIVO'
-  }
   dialogFormulario.value = true
 }
 
 const abrirDialogEditar = (arancel) => {
   arancelSeleccionado.value = arancel
-  formularioArancel.value = {
-    id_fin_concepto_pago: arancel.id_fin_concepto_pago,
-    id_programa_aprobado: arancel.id_aca_programa_aprobado || null,
-    id_tipo_beneficiario: arancel.id_tipo_beneficiario,
-    monto_base: parseFloat(arancel.monto_base),
-    fecha_inicio_vigencia: arancel.fecha_inicio_vigencia,
-    fecha_fin_vigencia: arancel.fecha_fin_vigencia,
-    descripcion: arancel.descripcion_arancel || '',
-    estado_arancel: arancel.estado_vigencia === 'VIGENTE' ? 'ACTIVO' : 'INACTIVO'
-  }
   dialogFormulario.value = true
 }
 
-const guardarArancel = async () => {
+const cerrarDialogFormulario = () => {
+  dialogFormulario.value = false
+  arancelSeleccionado.value = null
+}
+
+const guardarArancel = async (datos) => {
   try {
     if (esEdicion.value) {
-      await api.put(`/api/arancel/${arancelSeleccionado.value.id_arancel}`, formularioArancel.value)
+      await api.put(`/api/arancel/${arancelSeleccionado.value.id_arancel}`, datos)
       showModificado()
     } else {
-      await api.post('/api/arancel', formularioArancel.value)
+      await api.post('/api/arancel', datos)
       showRegistrado()
     }
-    dialogFormulario.value = false
+    cerrarDialogFormulario()
     obtenerAranceles()
   } catch (error) {
     showError(error.response?.data?.message || 'Error al guardar el arancel')
@@ -147,19 +121,19 @@ const guardarArancel = async () => {
 }
 
 const eliminarArancel = async (arancel) => {
-  const confirmado = await showConfirmar(
+  const resultado = await showConfirmar(
     '¿Eliminar arancel?',
     `Se eliminará el arancel de ${arancel.nombre_concepto}`
   )
 
-  if (confirmado) {
-    try {
-      await api.delete(`/api/arancel/${arancel.id_arancel}`)
-      showModificado('Arancel eliminado')
-      obtenerAranceles()
-    } catch (error) {
-      showError(error.response?.data?.message || 'Error al eliminar arancel')
-    }
+  if (!resultado.isConfirmed) return
+
+  try {
+    await api.delete(`/api/arancel/${arancel.id_arancel}`)
+    showModificado('Arancel eliminado')
+    obtenerAranceles()
+  } catch (error) {
+    showError(error.response?.data?.message || 'Error al eliminar arancel')
   }
 }
 
@@ -218,6 +192,7 @@ onMounted(async () => {
                       <v-btn
                         color="primary"
                         prepend-icon="mdi-plus"
+                        variant="elevated"
                         @click="abrirDialogNuevo"
                       >
                         Nuevo Arancel
@@ -245,144 +220,41 @@ onMounted(async () => {
         </template>
 
         <template #[`item.acciones`]="{ item }">
-          <v-btn
-            icon="mdi-pencil"
-            size="small"
-            variant="text"
-            color="primary"
-            @click="abrirDialogEditar(item)"
-          />
-          <v-btn
-            icon="mdi-delete"
-            size="small"
-            variant="text"
-            color="error"
-            @click="eliminarArancel(item)"
-          />
+          <div class="d-flex ga-1">
+            <v-btn
+              icon="mdi-pencil"
+              size="small"
+              color="primary"
+              @click="abrirDialogEditar(item)"
+            />
+            <v-btn
+              icon="mdi-delete"
+              size="small"
+              color="error"
+              @click="eliminarArancel(item)"
+            />
+          </div>
         </template>
       </v-data-table>
     </v-card>
 
     <!-- Dialog Formulario -->
-    <v-dialog v-model="dialogFormulario" max-width="700px" persistent>
-      <v-card>
+    <v-dialog v-model="dialogFormulario" max-width="800px" persistent>
+      <v-card class="rounded-lg">
         <v-card-title class="text-h6 bg-primary text-white">
           <v-icon start>mdi-cash-multiple</v-icon>
           {{ esEdicion ? 'Editar Arancel' : 'Nuevo Arancel' }}
         </v-card-title>
 
-        <v-card-text class="pt-6">
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="formularioArancel.id_fin_concepto_pago"
-                :items="conceptosPago"
-                item-title="nombre_concepto"
-                item-value="id_fin_concepto_pago"
-                label="Concepto de Pago *"
-                variant="outlined"
-                density="comfortable"
-                :rules="[v => !!v || 'Campo requerido']"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="formularioArancel.id_tipo_beneficiario"
-                :items="tiposBeneficiario"
-                item-title="nombre_tipo"
-                item-value="id_tipo_beneficiario"
-                label="Tipo Beneficiario *"
-                variant="outlined"
-                density="comfortable"
-                :rules="[v => !!v || 'Campo requerido']"
-              />
-            </v-col>
-
-            <v-col cols="12">
-              <v-select
-                v-model="formularioArancel.id_programa_aprobado"
-                :items="programasAprobados"
-                item-title="programa_nombre"
-                item-value="id_aca_programa_aprobado"
-                label="Programa (opcional - dejar vacío para aplicar a todos)"
-                variant="outlined"
-                density="comfortable"
-                clearable
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model.number="formularioArancel.monto_base"
-                label="Monto Base (Bs.) *"
-                type="number"
-                prefix="Bs."
-                variant="outlined"
-                density="comfortable"
-                :rules="[v => !!v || 'Campo requerido', v => v > 0 || 'Debe ser mayor a 0']"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="formularioArancel.estado_arancel"
-                :items="['ACTIVO', 'INACTIVO']"
-                label="Estado"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formularioArancel.fecha_inicio_vigencia"
-                label="Fecha Inicio Vigencia *"
-                type="date"
-                variant="outlined"
-                density="comfortable"
-                :rules="[v => !!v || 'Campo requerido']"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formularioArancel.fecha_fin_vigencia"
-                label="Fecha Fin Vigencia (opcional)"
-                type="date"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12">
-              <v-textarea
-                v-model="formularioArancel.descripcion"
-                label="Descripción"
-                variant="outlined"
-                density="comfortable"
-                rows="3"
-              />
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-card-actions class="px-6 pb-4">
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="dialogFormulario = false"
-          >
-            Cancelar
-          </v-btn>
-          <v-btn
-            color="primary"
-            variant="flat"
-            @click="guardarArancel"
-          >
-            {{ esEdicion ? 'Actualizar' : 'Guardar' }}
-          </v-btn>
-        </v-card-actions>
+        <FormularioArancel
+          :arancel="arancelSeleccionado"
+          :es-edicion="esEdicion"
+          :tipos-beneficiario="tiposBeneficiario"
+          :conceptos-pago="conceptosPago"
+          :programas-aprobados="programasAprobados"
+          @guardar="guardarArancel"
+          @cancelar="cerrarDialogFormulario"
+        />
       </v-card>
     </v-dialog>
   </div>

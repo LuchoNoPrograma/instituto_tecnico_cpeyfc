@@ -397,8 +397,7 @@ COMMENT ON FUNCTION fn_obtener_aranceles_programa IS 'Obtiene aranceles vigentes
 -- =====================================================
 INSERT INTO fin_tipo_beneficiario (nombre_tipo, descripcion, estado_tipo_beneficiario, user_reg) VALUES
 ('ESTUDIANTE UAP', 'Estudiante regular de la Universidad Amazónica de Pando', 'ACTIVO', 1),
-('NACIONAL', 'Persona boliviana no estudiante de UAP', 'ACTIVO', 1),
-('EXTRANJERO', 'Persona extranjera', 'ACTIVO', 1);
+('EXTERNO', 'Persona boliviana no estudiante de UAP', 'ACTIVO', 1);
 
 -- =====================================================
 -- FIN DE MIGRACIÓN
