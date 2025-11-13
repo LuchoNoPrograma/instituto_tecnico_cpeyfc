@@ -11,6 +11,8 @@ import rutasMatriculas from '@/views/matriculas/rutasMatriculas.js';
 import rutasPlanEstudio from '@/views/plan-estudio/rutasPlanEstudio.js';
 import rutasDocente from '@/views/docente/rutasDocente.js';
 import rutasNoticias from '@/views/noticias/rutasNoticias.js';
+import rutasAranceles from '@/views/aranceles/rutasAranceles.js';
+import rutasConvenios from '@/views/convenios/rutasConvenios.js';
 
 const routes = [
   ...rutasPublicas,
@@ -23,6 +25,8 @@ const routes = [
   ...rutasPlanEstudio,
   ...rutasDocente,
   ...rutasNoticias,
+  ...rutasAranceles,
+  ...rutasConvenios,
 
   // Dashboard principal
   {

@@ -65,6 +65,18 @@ const menuItems = computed(() => [
     ruta: '/finanzas',
     mostrar: hasPermission('VER_FINANZAS')
   },
+  {
+    titulo: 'Aranceles',
+    icono: 'mdi-cash-multiple',
+    ruta: '/aranceles',
+    mostrar: hasPermission('VER_FINANZAS')
+  },
+  {
+    titulo: 'Convenios',
+    icono: 'mdi-handshake',
+    ruta: '/convenios',
+    mostrar: hasPermission('VER_FINANZAS')
+  },
   /*{
     titulo: 'Certificación',
     icono: 'mdi-certificate',
