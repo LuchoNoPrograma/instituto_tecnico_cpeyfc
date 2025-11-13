@@ -343,10 +343,7 @@ onMounted(() => {
               </v-card-title>
               <v-card-text class="pa-4">
                 <p class="text-body-1 mb-0">
-                  Actualizar conocimientos y habilidades en el área de secretariado para fortalecer las competencias
-                  en el uso de herramientas digitales y ofimáticas, gestión documental y archivo digital, y
-                  administración organizacional, con el propósito de garantizar un desempeño eficiente y eficaz en la
-                  institución educativa.
+                  {{programa.objetivo}}
                 </p>
               </v-card-text>
             </v-card>

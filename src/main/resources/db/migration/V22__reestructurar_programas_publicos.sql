@@ -4,9 +4,17 @@
 -- =====================================================
 
 -- =====================================================
--- ALTER: aca_programa
--- Agregar objetivo e imagen base
+-- PASO 1: DROP VISTAS (antes de alterar tablas)
 -- =====================================================
+DROP VIEW IF EXISTS vista_aranceles_programas_publicos CASCADE;
+DROP VIEW IF EXISTS vista_programas_publicos CASCADE;
+DROP VIEW IF EXISTS vista_programas_aprobados CASCADE;
+
+-- =====================================================
+-- PASO 2: ALTER TABLES
+-- =====================================================
+
+-- ALTER: aca_programa
 ALTER TABLE aca_programa
   ADD COLUMN IF NOT EXISTS objetivo TEXT,
   ADD COLUMN IF NOT EXISTS imagen_url VARCHAR(500);
@@ -14,43 +22,46 @@ ALTER TABLE aca_programa
 COMMENT ON COLUMN aca_programa.objetivo IS 'Objetivo general del programa académico';
 COMMENT ON COLUMN aca_programa.imagen_url IS 'URL de imagen base/genérica del programa';
 
--- =====================================================
 -- ALTER: aca_programa_aprobado
--- Agregar imagen promocional específica de la gestión
--- =====================================================
 ALTER TABLE aca_programa_aprobado
   ADD COLUMN IF NOT EXISTS imagen_programa_url VARCHAR(500);
 
 COMMENT ON COLUMN aca_programa_aprobado.imagen_programa_url IS 'URL de imagen promocional específica de la gestión/oferta';
 
--- =====================================================
--- TABLA: aca_programa_habilidad
--- Habilidades/características del programa para marketing
--- =====================================================
-CREATE TABLE aca_programa_habilidad (
-                                      id_programa_habilidad SERIAL PRIMARY KEY,
-                                      id_aca_programa INTEGER NOT NULL REFERENCES aca_programa(id_aca_programa),
-                                      nombre_habilidad VARCHAR(100) NOT NULL,
-                                      estado_programa_habilidad VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
-                                      fecha_reg TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                      user_reg INTEGER NOT NULL,
-                                      fecha_mod TIMESTAMP,
-                                      user_mod INTEGER,
+-- Hacer nullable las columnas de precios
+ALTER TABLE aca_programa_aprobado
+  ALTER COLUMN precio_matricula DROP NOT NULL;
 
-                                      CONSTRAINT uk_programa_habilidad UNIQUE (id_aca_programa, nombre_habilidad)
+ALTER TABLE aca_programa_aprobado
+  ALTER COLUMN precio_colegiatura DROP NOT NULL;
+
+-- =====================================================
+-- PASO 3: CREAR TABLA aca_programa_habilidad
+-- =====================================================
+CREATE TABLE IF NOT EXISTS aca_programa_habilidad (
+                                                    id_programa_habilidad SERIAL PRIMARY KEY,
+                                                    id_aca_programa INTEGER NOT NULL REFERENCES aca_programa(id_aca_programa),
+                                                    nombre_habilidad VARCHAR(100) NOT NULL,
+                                                    estado_programa_habilidad VARCHAR(20) NOT NULL DEFAULT 'ACTIVO',
+                                                    fecha_reg TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                    user_reg INTEGER NOT NULL,
+                                                    fecha_mod TIMESTAMP,
+                                                    user_mod INTEGER,
+
+                                                    CONSTRAINT uk_programa_habilidad UNIQUE (id_aca_programa, nombre_habilidad)
 );
 
 COMMENT ON TABLE aca_programa_habilidad IS 'Habilidades/tags del programa para visualización en frontend';
 COMMENT ON COLUMN aca_programa_habilidad.nombre_habilidad IS 'Nombre corto de la habilidad (ej: Programación, Bases de Datos)';
 COMMENT ON COLUMN aca_programa_habilidad.estado_programa_habilidad IS 'Estados: ACTIVO, ELIMINADO';
 
-CREATE INDEX idx_programa_habilidad_programa ON aca_programa_habilidad(id_aca_programa);
+CREATE INDEX IF NOT EXISTS idx_programa_habilidad_programa ON aca_programa_habilidad(id_aca_programa);
 
 -- =====================================================
+-- PASO 4: RECREAR VISTAS (sin columnas de precios)
+-- =====================================================
+
 -- VISTA: vista_aranceles_programas_publicos
--- Aranceles por programa aprobado para ofertas públicas
--- =====================================================
-
 CREATE OR REPLACE VIEW vista_aranceles_programas_publicos AS
 SELECT
   pa.id_aca_programa_aprobado,
@@ -84,18 +95,7 @@ ORDER BY p.nombre_programa, pa.gestion, g.nombre_grupo, ar.concepto, ar.tipo_ben
 
 COMMENT ON VIEW vista_aranceles_programas_publicos IS 'Aranceles detallados por programa para consulta pública';
 
--- =====================================================
--- VISTA: vista_programas_publicos (ACTUALIZADA)
--- Remover campos de precios deprecados
--- =====================================================
-alter table public.aca_programa_aprobado
-  alter column precio_matricula drop not null;
-
-alter table public.aca_programa_aprobado
-  alter column precio_colegiatura drop not null;
-
-
-
+-- VISTA: vista_programas_publicos
 CREATE OR REPLACE VIEW vista_programas_publicos AS
 SELECT
   pa.id_aca_programa_aprobado,
@@ -158,11 +158,56 @@ ORDER BY
 
 COMMENT ON VIEW vista_programas_publicos IS 'Vista para oferta pública de programas - sin precios (usar vista_aranceles_programas_publicos)';
 
+-- VISTA: vista_programas_aprobados
+CREATE OR REPLACE VIEW vista_programas_aprobados AS
+SELECT
+  pa.id_aca_programa_aprobado,
+  pa.id_aca_programa,
+  pa.id_aca_modalidad,
+  pa.id_aca_plan_estudio,
+  pa.id_aca_version,
+  p.id_aca_area,
+  p.nombre_programa AS programa_nombre,
+  p.sigla AS programa_sigla,
+  a.nombre_area AS area_nombre,
+  m.nombre_modalidad AS modalidad_nombre,
+  pe.anho AS plan_anho,
+  CASE
+    WHEN pe.vigente = true THEN CONCAT(pe.anho, ' (VIGENTE)')
+    ELSE pe.anho::VARCHAR
+    END AS plan_descripcion,
+  v.cod_version,
+  pa.gestion,
+  pa.estado_programa_aprobado,
+  pa.cod_certificado_ceub,
+  pa.fecha_inicio_vigencia,
+  pa.fecha_fin_vigencia,
+  COALESCE(pa.imagen_programa_url, p.imagen_url) AS imagen_url,
+  pa.fecha_reg,
+  pa.fecha_mod,
+  pa.user_reg,
+  pa.user_mod
+FROM aca_programa_aprobado pa
+       JOIN aca_programa p ON pa.id_aca_programa = p.id_aca_programa
+       JOIN aca_area a ON p.id_aca_area = a.id_aca_area
+       JOIN aca_modalidad m ON pa.id_aca_modalidad = m.id_aca_modalidad
+       LEFT JOIN aca_plan_estudio pe ON pa.id_aca_plan_estudio = pe.id_aca_plan_estudio
+       LEFT JOIN aca_version v ON pa.id_aca_version = v.id_aca_version
+WHERE pa.estado_programa_aprobado != 'ELIMINADO'
+  AND p.estado_programa != 'ELIMINADO'
+  AND a.estado_area != 'ELIMINADO'
+  AND m.estado_modalidad != 'ELIMINADO'
+ORDER BY pa.gestion DESC, p.nombre_programa;
+
+COMMENT ON VIEW vista_programas_aprobados IS 'Vista de programas aprobados sin precios (usar sistema de aranceles)';
+
 -- =====================================================
--- FUNCIÓN: fn_registrar_programa_aprobado (ACTUALIZADA)
--- Sin parámetros de precios, con imagen_programa_url
+-- PASO 5: FUNCIONES ACTUALIZADAS
 -- =====================================================
+
+-- fn_registrar_programa_aprobado
 DROP FUNCTION IF EXISTS fn_registrar_programa_aprobado(p_id_aca_programa integer, p_id_aca_modalidad integer, p_gestion integer, p_id_aca_plan_estudio integer, p_id_aca_version integer, p_estado_programa_aprobado character varying, p_cod_certificado_ceub character varying, p_precio_matricula numeric, p_precio_colegiatura numeric, p_precio_titulacion numeric, p_fecha_inicio_vigencia date, p_fecha_fin_vigencia date, p_user_reg integer);
+
 CREATE OR REPLACE FUNCTION fn_registrar_programa_aprobado(
   p_id_aca_programa INTEGER,
   p_id_aca_modalidad INTEGER,
@@ -287,12 +332,9 @@ $$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION fn_registrar_programa_aprobado IS 'Registra programa aprobado sin precios (usar sistema de aranceles)';
 
--- =====================================================
--- FUNCIÓN: fn_modificar_programa_aprobado (ACTUALIZADA)
--- Sin parámetros de precios, con imagen_programa_url
--- =====================================================
-DROP FUNCTION IF EXISTS fn_modificar_programa_aprobado(integer, integer, integer, integer, integer, integer, varchar,
-                                                       numeric, numeric, numeric, date, date, varchar, varchar, integer);
+-- fn_modificar_programa_aprobado
+DROP FUNCTION IF EXISTS fn_modificar_programa_aprobado(integer, integer, integer, integer, integer, integer, varchar, numeric, numeric, numeric, date, date, varchar, varchar, integer);
+
 CREATE OR REPLACE FUNCTION fn_modificar_programa_aprobado(
   p_id_aca_programa_aprobado INTEGER,
   p_id_aca_plan_estudio INTEGER,
@@ -372,6 +414,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION fn_modificar_programa_aprobado IS 'Modifica programa aprobado sin precios (usar sistema de aranceles)';
+
 
 -- =====================================================
 -- FUNCIONES: aca_programa_habilidad
@@ -612,7 +655,6 @@ COMMENT ON FUNCTION fn_asignar_habilidades_programa IS 'Asigna múltiples habili
 -- Remover campos de precios deprecados
 -- =====================================================
 DROP VIEW IF EXISTS vista_programas_aprobados CASCADE;
-
 CREATE VIEW vista_programas_aprobados AS
 SELECT
   pa.id_aca_programa_aprobado,
