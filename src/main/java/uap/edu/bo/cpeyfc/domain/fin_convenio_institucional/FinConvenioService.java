@@ -68,7 +68,6 @@ public class FinConvenioService {
       LocalDate fechaInicioConvenio,
       LocalDate fechaFinConvenio,
       String observaciones,
-      String estadoConvenio,
       Integer userMod
   ) {
     return finConvenioInstitucionalRepository.modificarConvenioInstitucional(
@@ -82,7 +81,6 @@ public class FinConvenioService {
         fechaInicioConvenio,
         fechaFinConvenio,
         observaciones,
-        estadoConvenio,
         userMod
     );
   }

@@ -42,27 +42,33 @@ public interface FinConvenioInstitucionalRepository extends JpaRepository<FinCon
       Integer user_reg
   );
 
-  @Query(nativeQuery = true, value = """
-      SELECT fn_modificar_convenio_institucional(
-          :id_convenio, :nombre_institucion, :tipo_institucion, :nit,
-          :contacto_nombre, :contacto_telefono, :contacto_email,
-          :fecha_inicio_convenio, :fecha_fin_convenio,
-          :observaciones, :estado_convenio, :user_mod
-      )
-      """)
+  @Query(value = """
+    SELECT fn_modificar_convenio_institucional(
+        :id_convenio,
+        :nombre_institucion,
+        :tipo_institucion,
+        :nit,
+        :contacto_nombre,
+        :contacto_telefono,
+        :contacto_email,
+        CAST(:fecha_inicio_convenio AS DATE),
+        CAST(:fecha_fin_convenio AS DATE),
+        :observaciones,
+        :user_mod
+    )
+    """, nativeQuery = true)
   String modificarConvenioInstitucional(
-      Integer id_convenio,
-      String nombre_institucion,
-      String tipo_institucion,
-      String nit,
-      String contacto_nombre,
-      String contacto_telefono,
-      String contacto_email,
-      LocalDate fecha_inicio_convenio,
-      LocalDate fecha_fin_convenio,
-      String observaciones,
-      String estado_convenio,
-      Integer user_mod
+    Integer id_convenio,
+    String nombre_institucion,
+    String tipo_institucion,
+    String nit,
+    String contacto_nombre,
+    String contacto_telefono,
+    String contacto_email,
+    LocalDate fecha_inicio_convenio,
+    LocalDate fecha_fin_convenio,
+    String observaciones,
+    Integer user_mod
   );
 
   @Query(nativeQuery = true, value = """

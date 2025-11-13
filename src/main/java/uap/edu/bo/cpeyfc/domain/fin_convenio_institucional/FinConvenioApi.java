@@ -72,7 +72,6 @@ public class FinConvenioApi {
         FechaUtil.toLocalDate(datos.get("fecha_inicio_convenio")),
         FechaUtil.toLocalDate(datos.get("fecha_fin_convenio")),
         (String) datos.get("observaciones"),
-        (String) datos.get("estado_convenio"),
         userDetails.getIdSegUsuario()
     );
 

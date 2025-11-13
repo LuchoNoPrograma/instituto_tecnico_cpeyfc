@@ -444,7 +444,7 @@ BEGIN
              UPPER(TRIM(p_nombre_institucion)),
              UPPER(TRIM(p_tipo_institucion)),
              TRIM(p_nit),
-             TRIM(p_contacto_nombre),
+             UPPER(TRIM(p_contacto_nombre)),
              TRIM(p_contacto_telefono),
              LOWER(TRIM(p_contacto_email)),
              p_fecha_inicio_convenio,
@@ -475,7 +475,6 @@ CREATE OR REPLACE FUNCTION fn_modificar_convenio_institucional(
   p_fecha_inicio_convenio DATE,
   p_fecha_fin_convenio DATE,
   p_observaciones TEXT,
-  p_estado_convenio VARCHAR,
   p_user_mod INTEGER
 )
   RETURNS TEXT AS $$
@@ -485,8 +484,7 @@ DECLARE
 BEGIN
   -- Validaciones obligatorias
   IF p_id_convenio IS NULL OR p_nombre_institucion IS NULL OR
-     p_tipo_institucion IS NULL OR p_fecha_inicio_convenio IS NULL OR
-     p_estado_convenio IS NULL OR p_user_mod IS NULL THEN
+     p_tipo_institucion IS NULL OR p_fecha_inicio_convenio IS NULL OR p_user_mod IS NULL THEN
     RAISE EXCEPTION 'Error! Campos obligatorios faltantes';
   END IF;
 
@@ -521,13 +519,12 @@ BEGIN
   SET nombre_institucion = UPPER(TRIM(p_nombre_institucion)),
       tipo_institucion = UPPER(TRIM(p_tipo_institucion)),
       nit = TRIM(p_nit),
-      contacto_nombre = TRIM(p_contacto_nombre),
+      contacto_nombre = UPPER(TRIM(p_contacto_nombre)),
       contacto_telefono = TRIM(p_contacto_telefono),
       contacto_email = LOWER(TRIM(p_contacto_email)),
       fecha_inicio_convenio = p_fecha_inicio_convenio,
       fecha_fin_convenio = p_fecha_fin_convenio,
       observaciones = TRIM(p_observaciones),
-      estado_convenio = UPPER(TRIM(p_estado_convenio)),
       fecha_mod = CURRENT_TIMESTAMP,
       user_mod = p_user_mod
   WHERE id_convenio = p_id_convenio;

@@ -3,6 +3,8 @@ import { onMounted, ref, computed } from 'vue'
 import { api } from '@/services/api'
 import formatoFecha from '@/helpers/formatos.js'
 import { showRegistrado, showModificado, showError, showConfirmar } from '@/utils/sweetalert.js'
+import FormularioConvenio from '@/views/convenios/FormularioConvenio.vue'
+import FormularioConvenioDescuento from '@/views/convenios/FormularioConvenioDescuento.vue'
 
 const convenios = ref([])
 const programasAprobados = ref([])
@@ -23,40 +25,12 @@ const dialogFormularioDescuento = ref(false)
 const descuentoSeleccionado = ref(null)
 const esEdicionDescuento = computed(() => !!descuentoSeleccionado.value)
 
-// Formulario convenio
-const formularioConvenio = ref({
-  nombre_institucion: '',
-  tipo_institucion: '',
-  nit: '',
-  contacto_nombre: '',
-  contacto_telefono: '',
-  contacto_email: '',
-  fecha_inicio_convenio: null,
-  fecha_fin_convenio: null,
-  observaciones: '',
-  estado_convenio: 'ACTIVO'
-})
-
-// Formulario descuento
-const formularioDescuento = ref({
-  id_convenio: null,
-  id_aca_programa_aprobado: null,
-  id_fin_concepto_pago: null,
-  tipo_descuento: 'PORCENTUAL',
-  valor_descuento: null,
-  fecha_inicio_vigencia: null,
-  fecha_fin_vigencia: null,
-  descripcion: '',
-  estado_descuento_convenio: 'ACTIVO'
-})
-
 const headersConvenios = [
   { title: 'Institución', key: 'nombre_institucion', sortable: true },
   { title: 'Tipo', key: 'tipo_institucion', sortable: true },
   { title: 'NIT', key: 'nit', sortable: true },
   { title: 'Contacto', key: 'contacto_nombre', sortable: true },
   { title: 'Vigencia', key: 'vigencia', sortable: false },
-  { title: 'Estado', key: 'estado_convenio', sortable: true },
   { title: 'Acciones', key: 'acciones', sortable: false }
 ]
 
@@ -77,25 +51,31 @@ const conveniosFormateados = computed(() => {
 })
 
 const descuentosFormateados = computed(() => {
-  return descuentosConvenio.value.map(descuento => ({
-    ...descuento,
-    programa: descuento.id_aca_programa_aprobado ? 'Específico' : 'Todos',
-    concepto: descuento.id_fin_concepto_pago ? 'Específico' : 'Todos',
-    valor_display: descuento.tipo_descuento === 'PORCENTUAL'
-      ? `${descuento.valor_descuento}%`
-      : `Bs. ${descuento.valor_descuento}`,
-    vigencia: formatearVigencia(descuento.fecha_inicio_vigencia, descuento.fecha_fin_vigencia)
-  }))
+  return descuentosConvenio.value.map(descuento => {
+    const programa = descuento.id_aca_programa_aprobado
+      ? programasAprobados.value.find(p => p.id_aca_programa_aprobado === descuento.id_aca_programa_aprobado)
+      : null
+
+    const concepto = descuento.id_fin_concepto_pago
+      ? conceptosPago.value.find(c => c.id_fin_concepto_pago === descuento.id_fin_concepto_pago)
+      : null
+    return {
+      ...descuento,
+      programa: programa ? `${programa.programa_nombre} (${programa.gestion})` : 'Todos los programas',
+      concepto: concepto ? concepto.nombre_concepto : 'Todos los conceptos',
+      valor_display: descuento.tipo_descuento === 'PORCENTUAL'
+        ? `${descuento.valor_descuento}%`
+        : `Bs. ${descuento.valor_descuento}`,
+      vigencia: formatearVigencia(descuento.fecha_inicio_vigencia, descuento.fecha_fin_vigencia)
+
+    }
+  })
 })
 
 const formatearVigencia = (inicio, fin) => {
   if (!inicio && !fin) return 'Sin definir'
   if (!fin) return `Desde ${formatoFecha.ddMMaaaa(inicio)}`
-  return `${formatoFecha.ddMMaaaa(inicio)} - ${formatoFecha.ddMMaaaa(fin)}`
-}
-
-const obtenerColorEstado = (estado) => {
-  return estado === 'ACTIVO' ? 'success' : 'error'
+  return `${formatoFecha.ddMMaaaa(inicio)} Al ${formatoFecha.ddMMaaaa(fin)}`
 }
 
 const obtenerConvenios = async () => {
@@ -129,50 +109,32 @@ const obtenerConceptosPago = async () => {
   }
 }
 
+// Funciones de convenios
 const abrirDialogNuevo = () => {
   convenioSeleccionado.value = null
-  formularioConvenio.value = {
-    nombre_institucion: '',
-    tipo_institucion: '',
-    nit: '',
-    contacto_nombre: '',
-    contacto_telefono: '',
-    contacto_email: '',
-    fecha_inicio_convenio: null,
-    fecha_fin_convenio: null,
-    observaciones: '',
-    estado_convenio: 'ACTIVO'
-  }
   dialogFormulario.value = true
 }
 
 const abrirDialogEditar = (convenio) => {
   convenioSeleccionado.value = convenio
-  formularioConvenio.value = {
-    nombre_institucion: convenio.nombre_institucion,
-    tipo_institucion: convenio.tipo_institucion,
-    nit: convenio.nit,
-    contacto_nombre: convenio.contacto_nombre,
-    contacto_telefono: convenio.contacto_telefono,
-    contacto_email: convenio.contacto_email,
-    fecha_inicio_convenio: convenio.fecha_inicio_convenio,
-    fecha_fin_convenio: convenio.fecha_fin_convenio,
-    observaciones: convenio.observaciones,
-    estado_convenio: convenio.estado_convenio
-  }
   dialogFormulario.value = true
 }
 
-const guardarConvenio = async () => {
+const cerrarDialogFormulario = () => {
+  dialogFormulario.value = false
+  convenioSeleccionado.value = null
+}
+
+const guardarConvenio = async (datos) => {
   try {
     if (esEdicion.value) {
-      await api.put(`/api/convenio/${convenioSeleccionado.value.id_convenio}`, formularioConvenio.value)
+      await api.put(`/api/convenio/${convenioSeleccionado.value.id_convenio}`, datos)
       showModificado()
     } else {
-      await api.post('/api/convenio', formularioConvenio.value)
+      await api.post('/api/convenio', datos)
       showRegistrado()
     }
-    dialogFormulario.value = false
+    cerrarDialogFormulario()
     obtenerConvenios()
   } catch (error) {
     showError(error.response?.data?.message || 'Error al guardar el convenio')
@@ -180,19 +142,19 @@ const guardarConvenio = async () => {
 }
 
 const eliminarConvenio = async (convenio) => {
-  const confirmado = await showConfirmar(
+  const resultado = await showConfirmar(
     '¿Eliminar convenio?',
     `Se eliminará el convenio con ${convenio.nombre_institucion}`
   )
 
-  if (confirmado) {
-    try {
-      await api.delete(`/api/convenio/${convenio.id_convenio}`)
-      showModificado('Convenio eliminado')
-      obtenerConvenios()
-    } catch (error) {
-      showError(error.response?.data?.message || 'Error al eliminar convenio')
-    }
+  if (!resultado.isConfirmed) return
+
+  try {
+    await api.delete(`/api/convenio/${convenio.id_convenio}`)
+    showModificado('Convenio eliminado')
+    obtenerConvenios()
+  } catch (error) {
+    showError(error.response?.data?.message || 'Error al eliminar convenio')
   }
 }
 
@@ -201,6 +163,12 @@ const abrirDescuentos = async (convenio) => {
   convenioSeleccionado.value = convenio
   dialogDescuentos.value = true
   await obtenerDescuentosConvenio(convenio.id_convenio)
+}
+
+const cerrarDescuentos = () => {
+  dialogDescuentos.value = false
+  convenioSeleccionado.value = null
+  descuentosConvenio.value = []
 }
 
 const obtenerDescuentosConvenio = async (idConvenio) => {
@@ -218,46 +186,29 @@ const obtenerDescuentosConvenio = async (idConvenio) => {
 
 const abrirDialogNuevoDescuento = () => {
   descuentoSeleccionado.value = null
-  formularioDescuento.value = {
-    id_convenio: convenioSeleccionado.value.id_convenio,
-    id_aca_programa_aprobado: null,
-    id_fin_concepto_pago: null,
-    tipo_descuento: 'PORCENTUAL',
-    valor_descuento: null,
-    fecha_inicio_vigencia: null,
-    fecha_fin_vigencia: null,
-    descripcion: '',
-    estado_descuento_convenio: 'ACTIVO'
-  }
   dialogFormularioDescuento.value = true
 }
 
 const abrirDialogEditarDescuento = (descuento) => {
   descuentoSeleccionado.value = descuento
-  formularioDescuento.value = {
-    id_convenio: convenioSeleccionado.value.id_convenio,
-    id_aca_programa_aprobado: descuento.id_aca_programa_aprobado,
-    id_fin_concepto_pago: descuento.id_fin_concepto_pago,
-    tipo_descuento: descuento.tipo_descuento,
-    valor_descuento: parseFloat(descuento.valor_descuento),
-    fecha_inicio_vigencia: descuento.fecha_inicio_vigencia,
-    fecha_fin_vigencia: descuento.fecha_fin_vigencia,
-    descripcion: descuento.descripcion,
-    estado_descuento_convenio: descuento.estado_descuento_convenio
-  }
   dialogFormularioDescuento.value = true
 }
 
-const guardarDescuento = async () => {
+const cerrarDialogFormularioDescuento = () => {
+  dialogFormularioDescuento.value = false
+  descuentoSeleccionado.value = null
+}
+
+const guardarDescuento = async (datos) => {
   try {
     if (esEdicionDescuento.value) {
-      await api.put(`/api/convenio/descuento/${descuentoSeleccionado.value.id_descuento_convenio}`, formularioDescuento.value)
+      await api.put(`/api/convenio/descuento/${descuentoSeleccionado.value.id_descuento_convenio}`, datos)
       showModificado()
     } else {
-      await api.post('/api/convenio/descuento', formularioDescuento.value)
+      await api.post('/api/convenio/descuento', datos)
       showRegistrado()
     }
-    dialogFormularioDescuento.value = false
+    cerrarDialogFormularioDescuento()
     await obtenerDescuentosConvenio(convenioSeleccionado.value.id_convenio)
   } catch (error) {
     showError(error.response?.data?.message || 'Error al guardar el descuento')
@@ -265,19 +216,19 @@ const guardarDescuento = async () => {
 }
 
 const eliminarDescuento = async (descuento) => {
-  const confirmado = await showConfirmar(
+  const resultado = await showConfirmar(
     '¿Eliminar descuento?',
     'Se eliminará este descuento del convenio'
   )
 
-  if (confirmado) {
-    try {
-      await api.delete(`/api/convenio/descuento/${descuento.id_descuento_convenio}`)
-      showModificado('Descuento eliminado')
-      await obtenerDescuentosConvenio(convenioSeleccionado.value.id_convenio)
-    } catch (error) {
-      showError(error.response?.data?.message || 'Error al eliminar descuento')
-    }
+  if (!resultado.isConfirmed) return
+
+  try {
+    await api.delete(`/api/convenio/descuento/${descuento.id_descuento_convenio}`)
+    showModificado('Descuento eliminado')
+    await obtenerDescuentosConvenio(convenioSeleccionado.value.id_convenio)
+  } catch (error) {
+    showError(error.response?.data?.message || 'Error al eliminar descuento')
   }
 }
 
@@ -310,7 +261,7 @@ onMounted(async () => {
                 <v-col cols="12" lg="auto" class="mb-3 mb-lg-0">
                   <div class="d-flex align-center">
                     <v-icon class="mr-2" color="primary">mdi-handshake</v-icon>
-                    <span class="text-h6 font-weight-bold">Gestión de Convenios</span>
+                    <span class="text-h6 font-weight-bold">Administrar Convenios</span>
                   </div>
                 </v-col>
 
@@ -335,6 +286,7 @@ onMounted(async () => {
                       <v-btn
                         color="primary"
                         prepend-icon="mdi-plus"
+                        variant="elevated"
                         @click="abrirDialogNuevo"
                       >
                         Nuevo Convenio
@@ -347,174 +299,53 @@ onMounted(async () => {
           </v-toolbar>
         </template>
 
-        <template #[`item.estado_convenio`]="{ item }">
-          <v-chip
-            :color="obtenerColorEstado(item.estado_convenio)"
-            size="small"
-            variant="flat"
-          >
-            {{ item.estado_convenio }}
-          </v-chip>
-        </template>
-
         <template #[`item.acciones`]="{ item }">
-          <v-btn
-            icon="mdi-percent"
-            size="small"
-            variant="text"
-            color="success"
-            title="Gestionar Descuentos"
-            @click="abrirDescuentos(item)"
-          />
-          <v-btn
-            icon="mdi-pencil"
-            size="small"
-            variant="text"
-            color="primary"
-            @click="abrirDialogEditar(item)"
-          />
-          <v-btn
-            icon="mdi-delete"
-            size="small"
-            variant="text"
-            color="error"
-            @click="eliminarConvenio(item)"
-          />
+          <div class="d-flex ga-1">
+            <v-btn
+              icon="mdi-percent"
+              size="small"
+              color="success"
+              title="Adm. Descuentos"
+              @click="abrirDescuentos(item)"
+            />
+            <v-btn
+              icon="mdi-pencil"
+              size="small"
+              color="primary"
+              @click="abrirDialogEditar(item)"
+            />
+            <v-btn
+              icon="mdi-delete"
+              size="small"
+              color="error"
+              @click="eliminarConvenio(item)"
+            />
+          </div>
         </template>
       </v-data-table>
     </v-card>
 
     <!-- Dialog Formulario Convenio -->
-    <v-dialog v-model="dialogFormulario" max-width="800px" persistent>
-      <v-card>
+    <v-dialog v-model="dialogFormulario" max-width="920px" persistent>
+      <v-card class="rounded-lg">
         <v-card-title class="text-h6 bg-primary text-white">
           <v-icon start>mdi-handshake</v-icon>
           {{ esEdicion ? 'Editar Convenio' : 'Nuevo Convenio' }}
         </v-card-title>
 
-        <v-card-text class="pt-6">
-          <v-row>
-            <v-col cols="12" md="8">
-              <v-text-field
-                v-model="formularioConvenio.nombre_institucion"
-                label="Nombre Institución *"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="4">
-              <v-select
-                v-model="formularioConvenio.tipo_institucion"
-                :items="['COLEGIO', 'EMPRESA', 'FUNDACION', 'ONG', 'OTRO']"
-                label="Tipo Institución *"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formularioConvenio.nit"
-                label="NIT"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="formularioConvenio.estado_convenio"
-                :items="['ACTIVO', 'INACTIVO']"
-                label="Estado"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formularioConvenio.contacto_nombre"
-                label="Nombre Contacto"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formularioConvenio.contacto_telefono"
-                label="Teléfono Contacto"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12">
-              <v-text-field
-                v-model="formularioConvenio.contacto_email"
-                label="Email Contacto"
-                type="email"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formularioConvenio.fecha_inicio_convenio"
-                label="Fecha Inicio Convenio *"
-                type="date"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formularioConvenio.fecha_fin_convenio"
-                label="Fecha Fin Convenio (opcional)"
-                type="date"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12">
-              <v-textarea
-                v-model="formularioConvenio.observaciones"
-                label="Observaciones"
-                variant="outlined"
-                density="comfortable"
-                rows="3"
-              />
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-card-actions class="px-6 pb-4">
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="dialogFormulario = false"
-          >
-            Cancelar
-          </v-btn>
-          <v-btn
-            color="primary"
-            variant="flat"
-            @click="guardarConvenio"
-          >
-            {{ esEdicion ? 'Actualizar' : 'Guardar' }}
-          </v-btn>
-        </v-card-actions>
+        <FormularioConvenio
+          :convenio="convenioSeleccionado"
+          :es-edicion="esEdicion"
+          @guardar="guardarConvenio"
+          @cancelar="cerrarDialogFormulario"
+        />
       </v-card>
     </v-dialog>
 
     <!-- Dialog Descuentos -->
     <v-dialog v-model="dialogDescuentos" max-width="1000px" persistent>
-      <v-card>
-        <v-card-title class="text-h6 bg-success text-white">
+      <v-card class="rounded-lg">
+        <v-card-title class="text-h6 bg-primary text-white">
           <v-icon start>mdi-percent</v-icon>
           Descuentos - {{ convenioSeleccionado?.nombre_institucion }}
         </v-card-title>
@@ -529,11 +360,11 @@ onMounted(async () => {
             density="compact"
           >
             <template #top>
-              <v-toolbar density="compact" class="mb-2">
+              <v-toolbar density="compact" class="py-2">
                 <v-spacer />
                 <v-btn
-                  color="success"
-                  size="small"
+                  color="primary"
+                  variant="elevated"
                   prepend-icon="mdi-plus"
                   @click="abrirDialogNuevoDescuento"
                 >
@@ -543,20 +374,20 @@ onMounted(async () => {
             </template>
 
             <template #[`item.acciones`]="{ item }">
-              <v-btn
-                icon="mdi-pencil"
-                size="x-small"
-                variant="text"
-                color="primary"
-                @click="abrirDialogEditarDescuento(item)"
-              />
-              <v-btn
-                icon="mdi-delete"
-                size="x-small"
-                variant="text"
-                color="error"
-                @click="eliminarDescuento(item)"
-              />
+              <div class="d-flex ga-1">
+                <v-btn
+                  icon="mdi-pencil"
+                  size="small"
+                  color="primary"
+                  @click="abrirDialogEditarDescuento(item)"
+                />
+                <v-btn
+                  icon="mdi-delete"
+                  size="small"
+                  color="error"
+                  @click="eliminarDescuento(item)"
+                />
+              </div>
             </template>
           </v-data-table>
         </v-card-text>
@@ -565,7 +396,7 @@ onMounted(async () => {
           <v-spacer />
           <v-btn
             variant="text"
-            @click="dialogDescuentos = false"
+            @click="cerrarDescuentos"
           >
             Cerrar
           </v-btn>
@@ -574,110 +405,22 @@ onMounted(async () => {
     </v-dialog>
 
     <!-- Dialog Formulario Descuento -->
-    <v-dialog v-model="dialogFormularioDescuento" max-width="700px" persistent>
-      <v-card>
-        <v-card-title class="text-h6 bg-success text-white">
+    <v-dialog v-model="dialogFormularioDescuento" max-width="920px" persistent>
+      <v-card class="rounded-lg">
+        <v-card-title class="text-h6 bg-primary text-white">
           <v-icon start>mdi-percent</v-icon>
           {{ esEdicionDescuento ? 'Editar Descuento' : 'Nuevo Descuento' }}
         </v-card-title>
 
-        <v-card-text class="pt-6">
-          <v-row>
-            <v-col cols="12">
-              <v-select
-                v-model="formularioDescuento.id_aca_programa_aprobado"
-                :items="programasAprobados"
-                item-title="programa_nombre"
-                item-value="id_aca_programa_aprobado"
-                label="Programa (opcional - dejar vacío para todos)"
-                variant="outlined"
-                density="comfortable"
-                clearable
-              />
-            </v-col>
-
-            <v-col cols="12">
-              <v-select
-                v-model="formularioDescuento.id_fin_concepto_pago"
-                :items="conceptosPago"
-                item-title="nombre_concepto"
-                item-value="id_fin_concepto_pago"
-                label="Concepto (opcional - dejar vacío para todos)"
-                variant="outlined"
-                density="comfortable"
-                clearable
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="formularioDescuento.tipo_descuento"
-                :items="['PORCENTUAL', 'FIJO']"
-                label="Tipo Descuento *"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model.number="formularioDescuento.valor_descuento"
-                :label="formularioDescuento.tipo_descuento === 'PORCENTUAL' ? 'Valor (%) *' : 'Valor (Bs.) *'"
-                type="number"
-                :suffix="formularioDescuento.tipo_descuento === 'PORCENTUAL' ? '%' : 'Bs.'"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formularioDescuento.fecha_inicio_vigencia"
-                label="Fecha Inicio Vigencia *"
-                type="date"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formularioDescuento.fecha_fin_vigencia"
-                label="Fecha Fin Vigencia (opcional)"
-                type="date"
-                variant="outlined"
-                density="comfortable"
-              />
-            </v-col>
-
-            <v-col cols="12">
-              <v-textarea
-                v-model="formularioDescuento.descripcion"
-                label="Descripción"
-                variant="outlined"
-                density="comfortable"
-                rows="2"
-              />
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-card-actions class="px-6 pb-4">
-          <v-spacer />
-          <v-btn
-            variant="text"
-            @click="dialogFormularioDescuento = false"
-          >
-            Cancelar
-          </v-btn>
-          <v-btn
-            color="success"
-            variant="flat"
-            @click="guardarDescuento"
-          >
-            {{ esEdicionDescuento ? 'Actualizar' : 'Guardar' }}
-          </v-btn>
-        </v-card-actions>
+        <FormularioConvenioDescuento
+          :descuento="descuentoSeleccionado"
+          :es-edicion="esEdicionDescuento"
+          :id-convenio="convenioSeleccionado?.id_convenio"
+          :programas-aprobados="programasAprobados"
+          :conceptos-pago="conceptosPago"
+          @guardar="guardarDescuento"
+          @cancelar="cerrarDialogFormularioDescuento"
+        />
       </v-card>
     </v-dialog>
   </div>
