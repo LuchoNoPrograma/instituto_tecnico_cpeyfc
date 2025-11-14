@@ -10,6 +10,21 @@ public interface FinConceptoPagoRepository extends JpaRepository<FinConceptoPago
   @Query(nativeQuery = true, value = "SELECT * FROM vista_fin_conceptos_pago_activos")
   List<Map<String, Object>> vistaConceptosPagosActivos();
 
+  // DEPRECADO - Usar obtenerConceptosConAranceles
   @Query(value = "SELECT * FROM fn_obtener_conceptos_pago_programa_aprobado(:id_programa_aprobado)", nativeQuery = true)
   List<Map<String, Object>> obtenerConceptosPagoProgramaAprobado(Integer id_programa_aprobado);
+
+  // NUEVO - Sistema de aranceles con tipos de beneficiario
+  @Query(value = """
+      SELECT * FROM fn_obtener_conceptos_pago_con_aranceles(
+          :id_programa_aprobado,
+          :id_tipo_beneficiario,
+          :id_convenio
+      )
+      """, nativeQuery = true)
+  List<Map<String, Object>> obtenerConceptosConAranceles(
+    Integer id_programa_aprobado,
+    Integer id_tipo_beneficiario,
+    Integer id_convenio
+  );
 }

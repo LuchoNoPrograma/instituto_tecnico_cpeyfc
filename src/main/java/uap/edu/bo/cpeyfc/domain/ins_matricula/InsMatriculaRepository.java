@@ -7,12 +7,41 @@
   import java.util.Map;
 
   public interface InsMatriculaRepository extends JpaRepository<InsMatricula, Integer> {
-    @Query(value = "SELECT * FROM fn_matricular_preinscrito_completo(:id_ins_preinscripcion, :id_ins_grupo, :user_reg, :p_id_parametro_descuento)", nativeQuery = true)
-    Map<String, Object> matricularPreinscritoCompleto(Integer id_ins_preinscripcion,
-                                                      Integer id_ins_grupo,
-                                                      Integer user_reg,
-                                                      Integer p_id_parametro_descuento
+    // DEPRECADO - Usar matricularPreinscritoCompletoV2
+    @Query(value = """
+      SELECT * FROM fn_matricular_preinscrito_completo(
+          :id_ins_preinscripcion, 
+          :id_ins_grupo, 
+          :user_reg, 
+          :p_id_parametro_descuento
+      )
+      """, nativeQuery = true)
+    Map<String, Object> matricularPreinscritoCompleto(
+      Integer id_ins_preinscripcion,
+      Integer id_ins_grupo,
+      Integer user_reg,
+      Integer p_id_parametro_descuento
     );
+
+    // NUEVO - Sistema de aranceles con tipos de beneficiario
+    @Query(value = """
+      SELECT * FROM fn_matricular_preinscrito_completo_v2(
+          :id_ins_preinscripcion,
+          :id_ins_grupo,
+          :id_tipo_beneficiario,
+          :user_reg,
+          :id_convenio
+      )
+      """, nativeQuery = true)
+    Map<String, Object> matricularPreinscritoCompletoV2(
+      Integer id_ins_preinscripcion,
+      Integer id_ins_grupo,
+      Integer id_tipo_beneficiario,
+      Integer user_reg,
+      Integer id_convenio
+    );
+
+
 
     @Query(value = "SELECT * FROM fn_activar_usuario_matricula(:id_usuario, :password_hash)", nativeQuery = true)
     String activarUsuarioMatricula(Integer id_usuario, String password_hash);
