@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { api } from '@/services/api'
-import { showError, showSuccess } from '@/utils/sweetalert'
+import { showError, showRegistrado, showModificado } from '@/utils/sweetalert'
 
 const props = defineProps({
   perfil: {
@@ -69,7 +69,11 @@ const guardar = async () => {
     }
 
     if (response.data.success) {
-      await showSuccess(response.data.message)
+      if (modoEdicion.value) {
+        await showModificado(response.data.message)
+      } else {
+        await showRegistrado(response.data.message)
+      }
       emit('guardado')
     } else {
       await showError(response.data.message)

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from '@/services/api'
-import { showError, showSuccess, showConfirmation } from '@/utils/sweetalert'
+import { showError, showEliminado, showConfirmar } from '@/utils/sweetalert'
 import FormularioPerfil from './FormularioPerfil.vue'
 import AsignarRequisitosModal from './AsignarRequisitosModal.vue'
 
@@ -67,16 +67,19 @@ const handleRequisitosAsignados = async () => {
 }
 
 const eliminarPerfil = async (perfil) => {
-  const confirmado = await showConfirmation(
-    '¿Está seguro?',
-    `Se eliminará el perfil "${perfil.nombre_perfil}"`
-  )
+  const result = await showConfirmar({
+    titulo: '¿Está seguro?',
+    mensaje: `Se eliminará el perfil "${perfil.nombre_perfil}"`,
+    textoConfirmar: 'Sí, eliminar',
+    textoCancelar: 'Cancelar',
+    tipo: 'delete'
+  })
 
-  if (confirmado) {
+  if (result.isConfirmed) {
     try {
       const response = await api.delete(`/api/perfil-estudiante/${perfil.id_aca_perfil_estudiante}`)
       if (response.data.success) {
-        await showSuccess(response.data.message)
+        await showEliminado(response.data.message)
         await obtenerPerfiles()
       } else {
         await showError(response.data.message)

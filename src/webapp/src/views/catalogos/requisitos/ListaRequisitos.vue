@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from '@/services/api'
-import { showError, showSuccess, showConfirmation } from '@/utils/sweetalert'
+import { showError, showEliminado, showConfirmar } from '@/utils/sweetalert'
 import FormularioRequisito from './FormularioRequisito.vue'
 
 const listaRequisitos = ref([])
@@ -51,16 +51,19 @@ const handleGuardado = async () => {
 }
 
 const eliminarRequisito = async (requisito) => {
-  const confirmado = await showConfirmation(
-    '¿Está seguro?',
-    `Se eliminará el requisito "${requisito.nombre_requisito}"`
-  )
+  const result = await showConfirmar({
+    titulo: '¿Está seguro?',
+    mensaje: `Se eliminará el requisito "${requisito.nombre_requisito}"`,
+    textoConfirmar: 'Sí, eliminar',
+    textoCancelar: 'Cancelar',
+    tipo: 'delete'
+  })
 
-  if (confirmado) {
+  if (result.isConfirmed) {
     try {
       const response = await api.delete(`/api/requisito/${requisito.id_aca_requisito}`)
       if (response.data.success) {
-        await showSuccess(response.data.message)
+        await showEliminado(response.data.message)
         await obtenerRequisitos()
       } else {
         await showError(response.data.message)
