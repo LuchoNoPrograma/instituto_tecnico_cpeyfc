@@ -18,7 +18,7 @@ CREATE TABLE aca_requisito (
 COMMENT ON TABLE aca_requisito IS 'Catálogo maestro de requisitos documentales para inscripción';
 COMMENT ON COLUMN aca_requisito.nombre_requisito IS 'Nombre del requisito (Fotocopia CI, Título bachiller, Baucher de pago, etc)';
 COMMENT ON COLUMN aca_requisito.orden_presentacion IS 'Orden de presentación en formularios';
-COMMENT ON COLUMN aca_requisito.estado_requisito IS 'Estados: ACTIVO, INACTIVO, ELIMINADO';
+COMMENT ON COLUMN aca_requisito.estado_requisito IS 'Estados: ACTIVO, ELIMINADO';
 
 -- Perfiles/tipos de estudiante
 CREATE TABLE aca_perfil_estudiante (
@@ -34,7 +34,7 @@ CREATE TABLE aca_perfil_estudiante (
 
 COMMENT ON TABLE aca_perfil_estudiante IS 'Tipos/perfiles de estudiante según su situación académica';
 COMMENT ON COLUMN aca_perfil_estudiante.nombre_perfil IS 'Nombre del perfil (Estudiante colegio, Docente, Niñ@s, Est.Universitario)';
-COMMENT ON COLUMN aca_perfil_estudiante.estado_perfil_estudiante IS 'Estados: ACTIVO, INACTIVO, ELIMINADO';
+COMMENT ON COLUMN aca_perfil_estudiante.estado_perfil_estudiante IS 'Estados: ACTIVO, ELIMINADO';
 
 -- Configuración: qué requisitos aplican a qué perfil
 CREATE TABLE aca_requisito_perfil (
@@ -49,7 +49,7 @@ CREATE TABLE aca_requisito_perfil (
 );
 
 COMMENT ON TABLE aca_requisito_perfil IS 'Matriz de requisitos: define qué requisitos aplican a cada perfil de estudiante';
-COMMENT ON COLUMN aca_requisito_perfil.estado_requisito_perfil IS 'Estados: ACTIVO, INACTIVO, ELIMINADO';
+COMMENT ON COLUMN aca_requisito_perfil.estado_requisito_perfil IS 'Estados: ACTIVO, ELIMINADO';
 
 -- Cumplimiento de requisitos por estudiante
 CREATE TABLE ins_estudiante_requisito (
@@ -71,7 +71,7 @@ COMMENT ON TABLE ins_estudiante_requisito IS 'Registro de cumplimiento de requis
 COMMENT ON COLUMN ins_estudiante_requisito.fecha_presentacion IS 'Fecha en que el estudiante presentó el requisito';
 COMMENT ON COLUMN ins_estudiante_requisito.esta_verificado IS 'Indica si el requisito fue verificado por personal administrativo';
 COMMENT ON COLUMN ins_estudiante_requisito.ruta_documento IS 'Ruta del documento digitalizado (si aplica)';
-COMMENT ON COLUMN ins_estudiante_requisito.estado_estudiante_requisito IS 'Estados: PENDIENTE, PRESENTADO, VERIFICADO, RECHAZADO, ELIMINADO';
+COMMENT ON COLUMN ins_estudiante_requisito.estado_estudiante_requisito IS 'Estados: ACTIVO, ELIMINADO';
 
 -- Elegibilidad: qué perfiles pueden inscribirse a qué programas
 CREATE TABLE aca_programa_perfil (
@@ -88,7 +88,7 @@ CREATE TABLE aca_programa_perfil (
 
 COMMENT ON TABLE aca_programa_perfil IS 'Define qué perfiles de estudiante son elegibles para inscribirse en cada programa (dirigido a)';
 COMMENT ON COLUMN aca_programa_perfil.observaciones IS 'Información adicional de elegibilidad (ej: "Dirigido a profesionales del área")';
-COMMENT ON COLUMN aca_programa_perfil.estado_programa_perfil IS 'Estados: ACTIVO, INACTIVO, ELIMINADO';
+COMMENT ON COLUMN aca_programa_perfil.estado_programa_perfil IS 'Estados: ACTIVO, ELIMINADO';
 
 -- Foreign Keys
 ALTER TABLE aca_requisito_perfil ADD CONSTRAINT fk_aca_requ_requisito_aca_requ FOREIGN KEY (id_aca_requisito) REFERENCES aca_requisito (id_aca_requisito) ON UPDATE RESTRICT ON DELETE RESTRICT;
