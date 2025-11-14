@@ -11,17 +11,17 @@ const mostrarFormulario = ref(false)
 const programaSeleccionado = ref(null)
 
 const headers = [
-  { title: 'Programa', key: 'nombre_programa', sortable: true, width: '35%' },
-  { title: 'Sigla', key: 'sigla', sortable: true, width: '10%' },
+  { title: 'Programa', key: 'nombre_programa', sortable: true, width: '30%' },
   { title: 'Área', key: 'nombre_area', sortable: true, width: '20%' },
-  { title: 'Habilidades', key: 'habilidades', sortable: false, width: '25%' },
+  { title: 'Dirigido a', key: 'perfiles_dirigidos', sortable: true, width: '25%' },
+  { title: 'Habilidades', key: 'habilidades', sortable: false, width: '15%' },
   { title: 'Acciones', key: 'acciones', sortable: false, width: '10%' }
 ]
 
 const obtenerProgramas = async () => {
   cargando.value = true
   try {
-    const response = await api.get('/api/programa/vista/programas-con-habilidades')
+    const response = await api.get('/api/programa/vista/programas-admin')
     listaProgramas.value = response.data
   } catch (error) {
     console.error('Error al obtener programas:', error)
@@ -131,7 +131,20 @@ onMounted(() => {
         <template #item.nombre_programa="{ item }">
           <div class="text-body-1 font-weight-medium">
             {{ item.nombre_programa }}
+            <span class="text-caption text-medium-emphasis d-block">
+              {{item.sigla}}
+            </span>
           </div>
+        </template>
+
+        <template #item.perfiles_dirigidos="{ item }">
+          <div v-if="item.perfiles_dirigidos">
+            <div v-for="(perfil, index) in item.perfiles_dirigidos.split(',').map(p => p.trim())"
+                 :key="index">
+              • {{ perfil }}
+            </div>
+          </div>
+          <span v-else class="text-grey">Sin perfiles asignados</span>
         </template>
 
         <!-- Habilidades -->
@@ -140,13 +153,10 @@ onMounted(() => {
             <v-chip
               v-for="(habilidad, index) in item.habilidades.split(', ').slice(0, 3)"
               :key="index"
-              size="small"
+              size="x-small"
               variant="tonal"
               color="primary"
             >
-              <template #prepend>
-                <v-icon size="18">mdi-check-circle</v-icon>
-              </template>
               <span class="ml-1">
                 {{ habilidad }}
               </span>

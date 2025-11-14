@@ -26,8 +26,13 @@ public class AcaProgramaService {
   }
 
   // ========== MÉTODOS NUEVOS ==========
+  @Deprecated
   public List<Map<String, Object>> vistaProgramasConHabilidades() {
     return acaProgramaRepository.vistaProgramasConHabilidades();
+  }
+  
+  public List<Map<String, Object>> vistaProgramasAdmin() {
+    return acaProgramaRepository.vistaProgramasAdmin();
   }
 
   @Transactional(rollbackFor = Exception.class)

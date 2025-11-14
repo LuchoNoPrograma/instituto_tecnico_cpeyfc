@@ -51,7 +51,6 @@ export function useAuth() {
     const token = localStorage.getItem('access_token')
     if (!token) return []
     const payload = parseJwt(token)
-    console.log('Tareas:', payload.tareas)
     return payload.tareas || []
   }
 

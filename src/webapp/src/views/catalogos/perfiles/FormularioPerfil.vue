@@ -19,6 +19,12 @@ const formulario = ref({
 
 const guardando = ref(false)
 const modoEdicion = computed(() => props.perfil !== null)
+const limpiarFormulario = () => {
+  formulario.value = {
+    nombre_perfil: '',
+    descripcion: ''
+  }
+}
 
 // Cargar datos si es edición
 watch(() => props.perfil, (nuevoPerfil) => {
@@ -31,13 +37,6 @@ watch(() => props.perfil, (nuevoPerfil) => {
     limpiarFormulario()
   }
 }, { immediate: true })
-
-const limpiarFormulario = () => {
-  formulario.value = {
-    nombre_perfil: '',
-    descripcion: ''
-  }
-}
 
 const validarFormulario = () => {
   if (!formulario.value.nombre_perfil || formulario.value.nombre_perfil.trim() === '') {

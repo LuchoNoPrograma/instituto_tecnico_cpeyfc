@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { api } from '@/services/api'
 import { showError, showModificado } from '@/utils/sweetalert'
 
@@ -16,13 +16,6 @@ const requisitosDisponibles = ref([])
 const requisitosSeleccionados = ref([])
 const guardando = ref(false)
 const cargando = ref(false)
-
-// Cargar requisitos disponibles y pre-seleccionar los asignados
-watch(() => props.perfil, async (nuevoPerfil) => {
-  if (nuevoPerfil) {
-    await cargarDatos()
-  }
-}, { immediate: true })
 
 const cargarDatos = async () => {
   cargando.value = true
@@ -75,21 +68,16 @@ const guardar = async () => {
   }
 }
 
+// Cargar requisitos disponibles y pre-seleccionar los asignados
+watch(() => props.perfil, async (nuevoPerfil) => {
+  if (nuevoPerfil) {
+    await cargarDatos()
+  }
+}, { immediate: true })
+
+
 const cancelar = () => {
   emit('cerrar')
-}
-
-const toggleRequisito = (idRequisito) => {
-  const index = requisitosSeleccionados.value.indexOf(idRequisito)
-  if (index > -1) {
-    requisitosSeleccionados.value.splice(index, 1)
-  } else {
-    requisitosSeleccionados.value.push(idRequisito)
-  }
-}
-
-const estaSeleccionado = (idRequisito) => {
-  return requisitosSeleccionados.value.includes(idRequisito)
 }
 </script>
 
@@ -102,53 +90,82 @@ const estaSeleccionado = (idRequisito) => {
 
     <v-divider></v-divider>
 
-    <v-card-text class="pa-4" style="max-height: 500px; overflow-y: auto;">
+    <v-card-text class="pa-4">
       <v-alert type="info" variant="tonal" class="mb-4" density="compact">
         Selecciona los requisitos que debe cumplir este perfil de estudiante
       </v-alert>
 
-      <v-progress-linear v-if="cargando" indeterminate color="primary" class="mb-4"></v-progress-linear>
+      <v-progress-linear
+        v-if="cargando"
+        indeterminate
+        color="primary"
+        class="mb-4"
+      ></v-progress-linear>
 
-      <v-list v-else>
-        <v-list-item
-          v-for="requisito in requisitosDisponibles"
-          :key="requisito.id_aca_requisito"
-          @click="toggleRequisito(requisito.id_aca_requisito)"
-          class="mb-2 rounded border"
-          :class="estaSeleccionado(requisito.id_aca_requisito) ? 'bg-blue-lighten-5' : ''"
-        >
-          <template #prepend>
-            <v-checkbox
-              :model-value="estaSeleccionado(requisito.id_aca_requisito)"
-              hide-details
-              color="primary"
-              @click.stop="toggleRequisito(requisito.id_aca_requisito)"
-            ></v-checkbox>
-          </template>
+      <v-autocomplete
+        v-model="requisitosSeleccionados"
+        :items="requisitosDisponibles"
+        item-title="nombre_requisito"
+        item-value="id_aca_requisito"
+        label="Seleccionar requisitos"
+        placeholder="Buscar y seleccionar requisitos..."
+        multiple
+        chips
+        closable-chips
+        clearable
+        :loading="cargando"
+        :disabled="cargando"
+        variant="outlined"
+        density="comfortable"
+        color="primary"
+      >
+        <template #chip="{ item, props }">
+          <v-chip
+            v-bind="props"
+            color="primary"
+            closable
+          >
+            {{ item.title }}
+          </v-chip>
+        </template>
 
-          <v-list-item-title class="font-weight-medium">
-            {{ requisito.nombre_requisito }}
-          </v-list-item-title>
+        <template #item="{ item, props }">
+          <v-list-item v-bind="props">
+            <template #prepend>
+              <v-icon
+                :color="requisitosSeleccionados.includes(item.value) ? 'primary' : 'grey'"
+              >
+                {{ requisitosSeleccionados.includes(item.value) ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline' }}
+              </v-icon>
+            </template>
+          </v-list-item>
+        </template>
 
-          <v-list-item-subtitle v-if="requisito.descripcion" class="mt-1">
-            {{ requisito.descripcion }}
-          </v-list-item-subtitle>
+        <template #selection="{ item, index }">
+          <v-chip
+            v-if="index < 3"
+            closable
+            color="primary"
+            @click:close="requisitosSeleccionados.splice(index, 1)"
+          >
+            {{ item.title }}
+          </v-chip>
+          <span
+            v-if="index === 3"
+            class="text-grey text-caption align-self-center"
+          >
+            (+{{ requisitosSeleccionados.length - 3 }} más)
+          </span>
+        </template>
+      </v-autocomplete>
 
-          <template #append>
-            <v-chip size="small" color="secondary" variant="tonal">
-              Orden: {{ requisito.orden_presentacion }}
-            </v-chip>
-          </template>
-        </v-list-item>
-
-        <v-list-item v-if="requisitosDisponibles.length === 0" class="text-center">
-          <v-list-item-title class="text-grey">
-            No hay requisitos disponibles
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-
-      <v-alert v-if="requisitosSeleccionados.length > 0" type="success" variant="tonal" class="mt-4" density="compact">
+      <v-alert
+        v-if="requisitosSeleccionados.length > 0"
+        type="success"
+        variant="tonal"
+        class="mt-4"
+        density="compact"
+      >
         {{ requisitosSeleccionados.length }} requisito(s) seleccionado(s)
       </v-alert>
     </v-card-text>

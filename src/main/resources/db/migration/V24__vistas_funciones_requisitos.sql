@@ -411,50 +411,72 @@ COMMENT ON FUNCTION fn_eliminar_requisito IS 'Elimina (lógicamente) un requisit
 -- FUNCIONES DE ASIGNACIÓN - REQUISITOS A PERFIL
 -- ============================================
 
--- Asignar requisitos a un perfil (array)
 CREATE OR REPLACE FUNCTION fn_asignar_requisitos_perfil(
   p_id_perfil INTEGER,
   p_requisitos INTEGER[],
   p_user_reg INTEGER
 )
-RETURNS TABLE(
-  id_aca_requisito_perfil INTEGER,
-  id_aca_requisito INTEGER,
-  mensaje TEXT
-)
-LANGUAGE plpgsql
+  RETURNS TABLE(
+                 resultado_id_requisito_perfil INTEGER,
+                 resultado_id_requisito INTEGER,
+                 resultado_mensaje TEXT
+               )
+  LANGUAGE plpgsql
 AS $$
 DECLARE
   v_requisito INTEGER;
   v_id_asignacion INTEGER;
+  v_existe_registro INTEGER;
 BEGIN
-  -- Eliminar asignaciones previas
+  -- Eliminar asignaciones previas (marcar como ELIMINADO los que no están en la nueva lista)
   UPDATE aca_requisito_perfil
   SET estado_requisito_perfil = 'ELIMINADO',
       fecha_mod = CURRENT_TIMESTAMP,
       user_mod = p_user_reg
   WHERE id_aca_perfil_estudiante = p_id_perfil
-    AND estado_requisito_perfil = 'ACTIVO';
+    AND estado_requisito_perfil = 'ACTIVO'
+    AND id_aca_requisito != ALL(p_requisitos);
 
-  -- Insertar nuevas asignaciones
+  -- Insertar o reactivar asignaciones
   FOREACH v_requisito IN ARRAY p_requisitos
-  LOOP
-    INSERT INTO aca_requisito_perfil (
-      id_aca_requisito,
-      id_aca_perfil_estudiante,
-      estado_requisito_perfil,
-      fecha_reg,
-      user_reg
-    ) VALUES (
-      v_requisito,
-      p_id_perfil,
-      'ACTIVO',
-      CURRENT_TIMESTAMP,
-      p_user_reg
-    ) RETURNING id_aca_requisito_perfil INTO v_id_asignacion;
+    LOOP
+      -- Verificar si ya existe el registro (activo o eliminado)
+      SELECT id_aca_requisito_perfil INTO v_existe_registro
+      FROM aca_requisito_perfil
+      WHERE id_aca_perfil_estudiante = p_id_perfil
+        AND id_aca_requisito = v_requisito;
 
-    RETURN QUERY SELECT v_id_asignacion, v_requisito, 'Asignado correctamente'::TEXT;
-  END LOOP;
+      IF v_existe_registro IS NOT NULL THEN
+        -- Si existe, reactivarlo
+        UPDATE aca_requisito_perfil
+        SET estado_requisito_perfil = 'ACTIVO',
+            fecha_mod = CURRENT_TIMESTAMP,
+            user_mod = p_user_reg
+        WHERE id_aca_requisito_perfil = v_existe_registro;
+
+        v_id_asignacion := v_existe_registro;
+      ELSE
+        -- Si no existe, crear nuevo
+        INSERT INTO aca_requisito_perfil (
+          id_aca_requisito,
+          id_aca_perfil_estudiante,
+          estado_requisito_perfil,
+          fecha_reg,
+          user_reg
+        ) VALUES (
+                   v_requisito,
+                   p_id_perfil,
+                   'ACTIVO',
+                   CURRENT_TIMESTAMP,
+                   p_user_reg
+                 ) RETURNING aca_requisito_perfil.id_aca_requisito_perfil INTO v_id_asignacion;
+      END IF;
+
+      resultado_id_requisito_perfil := v_id_asignacion;
+      resultado_id_requisito := v_requisito;
+      resultado_mensaje := 'Asignado correctamente';
+      RETURN NEXT;
+    END LOOP;
 END;
 $$;
 
@@ -464,51 +486,131 @@ COMMENT ON FUNCTION fn_asignar_requisitos_perfil IS 'Asigna un array de requisit
 -- FUNCIONES DE ASIGNACIÓN - PERFILES A PROGRAMA
 -- ============================================
 
--- Asignar perfiles a un programa (array)
 CREATE OR REPLACE FUNCTION fn_asignar_perfiles_programa(
   p_id_programa INTEGER,
   p_perfiles INTEGER[],
   p_user_reg INTEGER
 )
-RETURNS TABLE(
-  id_aca_programa_perfil INTEGER,
-  id_aca_perfil_estudiante INTEGER,
-  mensaje TEXT
-)
-LANGUAGE plpgsql
+  RETURNS TABLE(
+                 resultado_id_programa_perfil INTEGER,
+                 resultado_id_perfil INTEGER,
+                 resultado_mensaje TEXT
+               )
+  LANGUAGE plpgsql
 AS $$
 DECLARE
   v_perfil INTEGER;
   v_id_asignacion INTEGER;
+  v_existe_registro INTEGER;
 BEGIN
-  -- Eliminar asignaciones previas
+  -- Eliminar asignaciones previas (marcar como ELIMINADO los que no están en la nueva lista)
   UPDATE aca_programa_perfil
   SET estado_programa_perfil = 'ELIMINADO',
       fecha_mod = CURRENT_TIMESTAMP,
       user_mod = p_user_reg
   WHERE id_aca_programa = p_id_programa
-    AND estado_programa_perfil = 'ACTIVO';
+    AND estado_programa_perfil = 'ACTIVO'
+    AND id_aca_perfil_estudiante != ALL(p_perfiles);
 
-  -- Insertar nuevas asignaciones
+  -- Insertar o reactivar asignaciones
   FOREACH v_perfil IN ARRAY p_perfiles
-  LOOP
-    INSERT INTO aca_programa_perfil (
-      id_aca_programa,
-      id_aca_perfil_estudiante,
-      estado_programa_perfil,
-      fecha_reg,
-      user_reg
-    ) VALUES (
-      p_id_programa,
-      v_perfil,
-      'ACTIVO',
-      CURRENT_TIMESTAMP,
-      p_user_reg
-    ) RETURNING id_aca_programa_perfil INTO v_id_asignacion;
+    LOOP
+      -- Verificar si ya existe el registro (activo o eliminado)
+      SELECT id_aca_programa_perfil INTO v_existe_registro
+      FROM aca_programa_perfil
+      WHERE id_aca_programa = p_id_programa
+        AND id_aca_perfil_estudiante = v_perfil;
 
-    RETURN QUERY SELECT v_id_asignacion, v_perfil, 'Asignado correctamente'::TEXT;
-  END LOOP;
+      IF v_existe_registro IS NOT NULL THEN
+        -- Si existe, reactivarlo
+        UPDATE aca_programa_perfil
+        SET estado_programa_perfil = 'ACTIVO',
+            fecha_mod = CURRENT_TIMESTAMP,
+            user_mod = p_user_reg
+        WHERE id_aca_programa_perfil = v_existe_registro;
+
+        v_id_asignacion := v_existe_registro;
+      ELSE
+        -- Si no existe, crear nuevo
+        INSERT INTO aca_programa_perfil (
+          id_aca_programa,
+          id_aca_perfil_estudiante,
+          estado_programa_perfil,
+          fecha_reg,
+          user_reg
+        ) VALUES (
+                   p_id_programa,
+                   v_perfil,
+                   'ACTIVO',
+                   CURRENT_TIMESTAMP,
+                   p_user_reg
+                 ) RETURNING aca_programa_perfil.id_aca_programa_perfil INTO v_id_asignacion;
+      END IF;
+
+      resultado_id_programa_perfil := v_id_asignacion;
+      resultado_id_perfil := v_perfil;
+      resultado_mensaje := 'Asignado correctamente';
+      RETURN NEXT;
+    END LOOP;
 END;
 $$;
 
+
 COMMENT ON FUNCTION fn_asignar_perfiles_programa IS 'Asigna un array de perfiles elegibles a un programa (reemplaza asignaciones previas)';
+
+-- ============================================
+-- MIGRACIÓN: Actualizar vista de programas con perfiles
+-- ============================================
+
+-- Deprecar vista anterior (comentar para referencia)
+COMMENT ON VIEW vista_programas_con_habilidades IS 'DEPRECADA - Usar vista_programas_admin';
+
+-- Nueva vista completa para administración
+CREATE OR REPLACE VIEW vista_programas_admin AS
+SELECT
+  p.id_aca_programa,
+  p.id_aca_area,
+  a.nombre_area,
+  p.nombre_programa,
+  p.sigla,
+  p.objetivo,
+  p.imagen_url,
+  p.estado_programa,
+  p.fecha_reg,
+  p.fecha_mod,
+  p.user_reg,
+  COALESCE(
+      (SELECT string_agg(h.nombre_habilidad::TEXT, ', ' ORDER BY h.nombre_habilidad)
+       FROM aca_programa_habilidad h
+       WHERE h.id_aca_programa = p.id_aca_programa
+         AND h.estado_programa_habilidad = 'ACTIVO'
+      ), ''
+  ) AS habilidades,
+  COALESCE(
+      (SELECT string_agg(pe.nombre_perfil::TEXT, ', ' ORDER BY pe.nombre_perfil)
+       FROM aca_programa_perfil pp
+              INNER JOIN aca_perfil_estudiante pe ON pp.id_aca_perfil_estudiante = pe.id_aca_perfil_estudiante
+       WHERE pp.id_aca_programa = p.id_aca_programa
+         AND pp.estado_programa_perfil = 'ACTIVO'
+         AND pe.estado_perfil_estudiante = 'ACTIVO'
+      ), ''
+  ) AS perfiles_dirigidos,
+  COALESCE(
+      (SELECT string_agg(pe.id_aca_perfil_estudiante::TEXT, ',' ORDER BY pe.nombre_perfil)
+       FROM aca_programa_perfil pp
+              INNER JOIN aca_perfil_estudiante pe ON pp.id_aca_perfil_estudiante = pe.id_aca_perfil_estudiante
+       WHERE pp.id_aca_programa = p.id_aca_programa
+         AND pp.estado_programa_perfil = 'ACTIVO'
+         AND pe.estado_perfil_estudiante = 'ACTIVO'
+      ), ''
+  ) AS perfiles_ids
+FROM aca_programa p
+       INNER JOIN aca_area a ON p.id_aca_area = a.id_aca_area
+WHERE p.estado_programa != 'ELIMINADO'
+  AND a.estado_area != 'ELIMINADO'
+ORDER BY p.nombre_programa;
+
+COMMENT ON VIEW vista_programas_admin IS 'Vista administrativa de programas con habilidades y perfiles elegibles concatenados';
+COMMENT ON COLUMN vista_programas_admin.habilidades IS 'Habilidades del programa separadas por coma';
+COMMENT ON COLUMN vista_programas_admin.perfiles_dirigidos IS 'Nombres de perfiles separados por coma (para mostrar)';
+COMMENT ON COLUMN vista_programas_admin.perfiles_ids IS 'IDs de perfiles separados por coma (para edición)';

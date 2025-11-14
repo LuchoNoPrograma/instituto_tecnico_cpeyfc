@@ -21,6 +21,14 @@ const formulario = ref({
 const guardando = ref(false)
 const modoEdicion = computed(() => props.requisito !== null)
 
+const limpiarFormulario = () => {
+  formulario.value = {
+    nombre_requisito: '',
+    descripcion: '',
+    orden_presentacion: 100
+  }
+}
+
 // Cargar datos si es edición
 watch(() => props.requisito, (nuevoRequisito) => {
   if (nuevoRequisito) {
@@ -33,14 +41,6 @@ watch(() => props.requisito, (nuevoRequisito) => {
     limpiarFormulario()
   }
 }, { immediate: true })
-
-const limpiarFormulario = () => {
-  formulario.value = {
-    nombre_requisito: '',
-    descripcion: '',
-    orden_presentacion: 100
-  }
-}
 
 const validarFormulario = () => {
   if (!formulario.value.nombre_requisito || formulario.value.nombre_requisito.trim() === '') {

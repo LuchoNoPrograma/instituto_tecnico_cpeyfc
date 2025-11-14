@@ -13,8 +13,12 @@ public interface AcaProgramaRepository extends JpaRepository<AcaPrograma, Intege
   List<Map<String, Object>> vistaProgramasActivos();
 
   // ========== MÉTODOS NUEVOS ==========
+  @Deprecated
   @Query(nativeQuery = true, value = "SELECT * FROM vista_programas_con_habilidades")
   List<Map<String, Object>> vistaProgramasConHabilidades();
+
+  @Query(nativeQuery = true, value = "SELECT * FROM vista_programas_admin")
+  List<Map<String, Object>> vistaProgramasAdmin();
 
   @Query(value = """
       SELECT fn_registrar_programa(

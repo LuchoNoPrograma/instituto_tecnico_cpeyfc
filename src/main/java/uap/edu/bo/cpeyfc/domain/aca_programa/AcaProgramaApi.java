@@ -24,9 +24,15 @@ public class AcaProgramaApi {
   }
 
   // ========== ENDPOINTS NUEVOS ==========
+  @Deprecated
   @GetMapping("/api/programa/vista/programas-con-habilidades")
   public ResponseEntity<?> vistaProgramasConHabilidades() {
     return ResponseEntity.ok(acaProgramaService.vistaProgramasConHabilidades());
+  }
+
+  @GetMapping("/api/programa/vista/programas-admin")
+  public ResponseEntity<?> vistaProgramasAdmin() {
+    return ResponseEntity.ok(acaProgramaService.vistaProgramasAdmin());
   }
 
   @PostMapping("/api/programa")

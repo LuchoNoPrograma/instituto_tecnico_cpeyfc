@@ -188,6 +188,14 @@ const eliminarHabilidad = (index) => {
   formulario.habilidades = formulario.habilidades.filter((_, i) => i !== index)
 }
 
+const toggleTodosPerfiles = () => {
+  if (formulario.perfiles.length === listaPerfiles.value.length) {
+    formulario.perfiles = []
+  } else {
+    formulario.perfiles = listaPerfiles.value.map(p => p.id_aca_perfil_estudiante)
+  }
+}
+
 const handleKeyDownHabilidad = (event) => {
   if (event.key === 'Enter') {
     event.preventDefault()
@@ -260,7 +268,10 @@ watch(() => props.programa, (nuevo) => {
       sigla: nuevo.sigla,
       objetivo: nuevo.objetivo || '',
       imagen_url: nuevo.imagen_url || null,
-      habilidades: nuevo.habilidades ? nuevo.habilidades.split(', ') : []
+      habilidades: nuevo.habilidades ? nuevo.habilidades.split(', ') : [],
+      perfiles: nuevo.perfiles_ids
+        ? nuevo.perfiles_ids.split(',').map(id => parseInt(id.trim()))
+        : []
     })
 
     if (nuevo.imagen_url) {
@@ -329,8 +340,8 @@ onMounted(() => {
 
           <v-stepper-item
             :value="4"
-            title="Perfiles Elegibles"
-            subtitle="Dirigido a"
+            title="Dirigido a"
+            subtitle="Perfiles"
           ></v-stepper-item>
         </v-stepper-header>
       </v-stepper>
@@ -510,6 +521,7 @@ onMounted(() => {
       </div>
 
       <!-- PASO 4: Perfiles Elegibles -->
+      <!-- PASO 4: Perfiles Elegibles -->
       <div v-if="pasoActual === 4">
         <h3 class="text-h6 mb-4">Perfiles Elegibles (Dirigido a)</h3>
 
@@ -518,32 +530,65 @@ onMounted(() => {
         </v-alert>
 
         <v-row>
-          <v-col
-            v-for="perfil in listaPerfiles"
-            :key="perfil.id_aca_perfil_estudiante"
-            cols="12" sm="6" md="4"
-          >
-            <v-checkbox
+          <v-col cols="12">
+            <v-autocomplete
               v-model="formulario.perfiles"
-              :value="perfil.id_aca_perfil_estudiante"
-              hide-details
-              color="primary"
+              :items="listaPerfiles"
+              item-title="nombre_perfil"
+              item-value="id_aca_perfil_estudiante"
+              label="Seleccionar perfiles dirigidos"
+              variant="outlined"
+              density="comfortable"
+              prepend-inner-icon="mdi-account-group"
+              placeholder="Busca y selecciona perfiles..."
+              multiple
+              chips
+              closable-chips
+              clearable
+              :no-data-text="listaPerfiles.length === 0 ? 'No hay perfiles configurados' : 'No se encontraron resultados'"
             >
-              <template #label>
-                <div>
-                  <div class="font-weight-medium">{{ perfil.nombre_perfil }}</div>
-                  <div class="text-caption text-grey" v-if="perfil.descripcion">
-                    {{ perfil.descripcion }}
-                  </div>
-                </div>
+              <template #chip="{ item, props }">
+                <v-chip
+                  v-bind="props"
+                  color="primary"
+                  closable
+                >
+                  {{ item.title }}
+                </v-chip>
               </template>
-            </v-checkbox>
-          </v-col>
 
-          <v-col v-if="listaPerfiles.length === 0" cols="12">
-            <v-alert type="warning" variant="tonal" density="compact">
-              No hay perfiles de estudiante configurados
-            </v-alert>
+              <template #item="{ item, props }">
+                <v-list-item v-bind="props">
+                  <template #prepend>
+                    <v-icon
+                      :color="formulario.perfiles.includes(item.value) ? 'primary' : 'grey'"
+                    >
+                      {{ formulario.perfiles.includes(item.value) ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline' }}
+                    </v-icon>
+                  </template>
+                  <v-list-item-subtitle v-if="item.raw.descripcion">
+                    {{ item.raw.descripcion }}
+                  </v-list-item-subtitle>
+                </v-list-item>
+              </template>
+
+              <template #prepend-item>
+                <v-list-item>
+                  <template #prepend>
+                    <v-icon
+                      :color="formulario.perfiles.length === listaPerfiles.length ? 'primary' : 'grey'"
+                      @click="toggleTodosPerfiles"
+                    >
+                      {{ formulario.perfiles.length === listaPerfiles.length ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline' }}
+                    </v-icon>
+                  </template>
+                  <v-list-item-title @click="toggleTodosPerfiles" style="cursor: pointer;">
+                    Seleccionar todos
+                  </v-list-item-title>
+                </v-list-item>
+                <v-divider class="mt-2"></v-divider>
+              </template>
+            </v-autocomplete>
           </v-col>
         </v-row>
       </div>
