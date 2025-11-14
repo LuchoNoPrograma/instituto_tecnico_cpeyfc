@@ -131,14 +131,14 @@
             </div>
           </template>
 
-          <template v-slot:item.matricula="{ item }">
+<!--          <template v-slot:item.matricula="{ item }">
             <div>
               <div>{{ item.cod_ins_matricula }}</div>
               <v-chip size="x-small" :color="getColorMatricula(item.estado_matricula)">
                 {{ item.estado_matricula }}
               </v-chip>
             </div>
-          </template>
+          </template>-->
 
           <template v-slot:item.concepto="{ item }">
             <div>
@@ -174,22 +174,22 @@
             {{ formatearFecha(item.fecha_obligacion) }}
           </template>
 
-          <template v-slot:item.acciones="{ item }">
+<!--          <template v-slot:item.acciones="{ item }">
             <div class="d-flex flex-column ga-1">
-              <v-btn @click="verDetalle(item)" size="x-small" color="blue" variant="tonal">
+              <v-btn @click="verDetalle(item)" icon color="blue" variant="tonal">
                 <v-icon>mdi-eye</v-icon>
               </v-btn>
               <v-btn
                 v-if="item.saldo_pendiente > 0"
+                icon
                 @click="registrarPago(item)"
-                size="x-small"
                 color="green"
                 variant="tonal"
               >
                 <v-icon>mdi-cash</v-icon>
               </v-btn>
             </div>
-          </template>
+          </template>-->
         </v-data-table>
       </v-card-text>
     </v-card>
@@ -218,14 +218,14 @@ export default {
         { title: 'Estudiante', key: 'estudiante', sortable: false },
         { title: 'CI', key: 'ci' },
         { title: 'Contacto', key: 'contacto', sortable: false },
-        { title: 'Matrícula', key: 'matricula', sortable: false },
+        /*{ title: 'Matrícula', key: 'matricula', sortable: false },*/
         { title: 'Concepto', key: 'concepto', sortable: false },
         { title: 'Deuda Original', key: 'deuda_sin_descuento', align: 'end' },
         { title: 'Con Descuento', key: 'deuda_con_descuento', align: 'end' },
         { title: 'Saldo Pendiente', key: 'saldo_pendiente', align: 'end' },
         { title: 'Estado', key: 'estado_pago' },
         { title: 'Fecha', key: 'fecha_obligacion' },
-        { title: 'Acciones', key: 'acciones', sortable: false }
+        /*{ title: 'Acciones', key: 'acciones', sortable: false }*/
       ],
       estadosPago: [
         { title: 'Pendiente', value: 'PENDIENTE' },
