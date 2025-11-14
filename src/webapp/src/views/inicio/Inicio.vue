@@ -26,9 +26,8 @@ const whatsappLink = `https://web.whatsapp.com/send?phone=${phone}&text=${encode
 
 <template>
   <v-layout class="bg-containerBg">
-    <inicio-header></inicio-header>
-
     <v-main class="ma-0">
+      <inicio-header></inicio-header>
       <inicio-banner></inicio-banner>
 
       <div id="sobre-nosotros"></div>

@@ -21,7 +21,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="programas-section">
+  <section class="programas-section" id="programas">
     <v-container>
       <div class="section-header" data-aos="fade-up">
         <h2 class="section-title">Nuestros Programas</h2>

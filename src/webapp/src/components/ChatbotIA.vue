@@ -616,7 +616,7 @@ const procesarMarkdown = (texto) => {
 
   .chatbot-card {
     width: calc(100vw - 2rem);
-    height: calc(100vh - 2rem);
+    height: calc(95vh - 2rem);
     max-width: none;
     max-height: none;
   }
