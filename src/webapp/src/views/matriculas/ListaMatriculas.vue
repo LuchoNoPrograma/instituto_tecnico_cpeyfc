@@ -31,9 +31,9 @@ const opcionesEstadoFinanciero = [
 // Headers de la tabla
 const headers = [
   { title: 'Estudiante', key: 'estudiante', sortable: true, width: '250px' },
-  { title: 'Estado', key: 'estado_matricula', sortable: true },
+  /*{ title: 'Estado', key: 'estado_matricula', sortable: true },*/
   { title: 'Situación Financiera', key: 'estado_financiero', sortable: true },
-  { title: 'Deuda', key: 'deuda_total', sortable: true },
+  { title: 'Deuda', key: 'deuda_total',sortable: true },
   { title: 'Contacto', key: 'contacto', sortable: false },
   { title: 'Acciones', key: 'acciones', sortable: false, width: '120px' }
 ]
@@ -302,7 +302,7 @@ onMounted(() => {
         </template>
 
         <!-- Estado Matrícula -->
-        <template v-slot:item.estado_matricula="{ item }">
+<!--        <template v-slot:item.estado_matricula="{ item }">
           <v-chip
             :color="getColorEstadoMatricula(item.estado_matricula)"
             variant="flat"
@@ -310,7 +310,7 @@ onMounted(() => {
           >
             {{ item.estado_matricula }}
           </v-chip>
-        </template>
+        </template>-->
 
         <!-- Estado Financiero -->
         <template v-slot:item.estado_financiero="{ item }">
@@ -325,7 +325,7 @@ onMounted(() => {
 
         <!-- Deuda -->
         <template v-slot:item.deuda_total="{ item }">
-          <div class="text-right">
+          <div>
             <span :class="item.deuda_total > 0 ? 'text-error font-weight-bold' : 'text-success'">
               Bs. {{ formatearMonto(item.deuda_total) }}
             </span>
@@ -348,7 +348,7 @@ onMounted(() => {
         <!-- Acciones -->
         <template v-slot:item.acciones="{ item }">
           <div class="d-flex ga-1">
-            <v-tooltip text="Ver perfil completo">
+<!--            <v-tooltip text="Ver perfil completo">
               <template v-slot:activator="{ props }">
                 <v-btn
                   v-bind="props"
@@ -359,7 +359,7 @@ onMounted(() => {
                   color="primary"
                 />
               </template>
-            </v-tooltip>
+            </v-tooltip>-->
             <v-tooltip text="Contactar">
               <template v-slot:activator="{ props }">
                 <v-btn
@@ -372,7 +372,7 @@ onMounted(() => {
                 />
               </template>
             </v-tooltip>
-            <v-tooltip text="Ver pagos">
+<!--            <v-tooltip text="Ver pagos">
               <template v-slot:activator="{ props }">
                 <v-btn
                   v-bind="props"
@@ -383,7 +383,7 @@ onMounted(() => {
                   color="warning"
                 />
               </template>
-            </v-tooltip>
+            </v-tooltip>-->
           </div>
         </template>
       </v-data-table>
