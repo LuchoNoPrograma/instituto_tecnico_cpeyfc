@@ -10,92 +10,81 @@ const { logout, getCurrentUser, hasPermission } = useAuth()
 const drawer = ref(true)
 const usuario = computed(() => getCurrentUser())
 
-const menuItems = computed(() => [
-  {
-    titulo: 'Panel Principal',
-    icono: 'mdi-view-dashboard',
-    ruta: '/dashboard',
-    mostrar: true
-  },
-  {
-    titulo: 'Personas',
-    icono: 'mdi-account-group',
-    ruta: '/personas',
-    mostrar: hasPermission('VER_PERSONAS')
-  },
-  {
-    titulo: 'Programas aprobados',
-    icono: 'mdi-school',
-    ruta: '/programas',
-    mostrar: hasPermission('VER_PROGRAMAS')
-  },
-  {
-    titulo: 'Grupos con módulos',
-    icono: 'mdi-account-group',
-    ruta: '/grupos',
-    mostrar: hasPermission('VER_PROGRAMAS')
-  },
-  {
-    titulo: 'Noticias',
-    icono: 'mdi-newspaper',
-    ruta: '/noticias',
-    mostrar: hasPermission('VER_PROGRAMAS')
-  },
-  /*{
-    titulo: 'Matrículas',
-    icono: 'mdi-account-school',
-    ruta: '/matriculas',
-    mostrar: hasPermission('VER_MATRICULAS')
-  },*/
-  {
-    titulo: 'Ver perfil',
-    icono: 'mdi-account-school',
-    ruta: '/perfil-estudiante',
-    mostrar: hasPermission('VER_MATRICULAS')
-  },
-  /*{
-    titulo: 'Ejecución Académica',
-    icono: 'mdi-clipboard-play',
-    ruta: '/ejecucion',
-    mostrar: hasPermission('VER_EJECUCION')
-  },*/
-  {
-    titulo: 'Finanzas',
-    icono: 'mdi-currency-usd',
-    ruta: '/finanzas',
-    mostrar: hasPermission('VER_FINANZAS')
-  },
-  {
-    titulo: 'Aranceles',
-    icono: 'mdi-cash-multiple',
-    ruta: '/aranceles',
-    mostrar: hasPermission('VER_FINANZAS')
-  },
-  {
-    titulo: 'Convenios',
-    icono: 'mdi-handshake',
-    ruta: '/convenios',
-    mostrar: hasPermission('VER_FINANZAS')
-  },
-  /*{
-    titulo: 'Certificación',
-    icono: 'mdi-certificate',
-    ruta: '/certificados',
-    mostrar: hasPermission('VER_CERTIFICADOS')
-  },
-  {
-    titulo: 'Trabajo de Grado',
-    icono: 'mdi-book-open-page-variant',
-    ruta: '/trabajos-grado',
-    mostrar: hasPermission('VER_TRABAJOS_GRADO')
-  },
-  {
-    titulo: 'Administración',
-    icono: 'mdi-cog',
-    ruta: '/admin',
-    mostrar: hasPermission('ADMIN')
-  }*/
-]/*.filter(item => item.mostrar)*/)
+const menuItems = computed(() => {
+  const items = [
+    {
+      titulo: 'Panel Principal',
+      icono: 'mdi-view-dashboard',
+      ruta: '/dashboard',
+      mostrar: true
+    },
+    {
+      titulo: 'Personas',
+      icono: 'mdi-account-group',
+      ruta: '/personas',
+      mostrar: hasPermission('ADMINISTRAR_SISTEMA')
+    },
+    {
+      titulo: 'Catálogos',
+      icono: 'mdi-bookshelf',
+      esGrupo: true,
+      mostrar: hasPermission('ADMINISTRAR_CONFIGURACION'),
+      items: [
+        {
+          titulo: 'Programas',
+          icono: 'mdi-school-outline',
+          ruta: '/catalogos/programas',
+          mostrar: hasPermission('ADMINISTRAR_CONFIGURACION')
+        }
+      ]
+    },
+    {
+      titulo: 'Programas aprobados',
+      icono: 'mdi-school',
+      ruta: '/programas',
+      mostrar: hasPermission('ADMINISTRAR_PROGRAMAS')
+    },
+    {
+      titulo: 'Grupos con módulos',
+      icono: 'mdi-account-group',
+      ruta: '/grupos',
+      mostrar: hasPermission('ADMINISTRAR_PROGRAMAS')
+    },
+    {
+      titulo: 'Noticias',
+      icono: 'mdi-newspaper',
+      ruta: '/noticias',
+      mostrar: hasPermission('ADMINISTRAR_PROGRAMAS')
+    },
+    {
+      titulo: 'Ver perfil',
+      icono: 'mdi-account-school',
+      ruta: '/perfil-estudiante',
+      mostrar: hasPermission('ADMINISTRAR_PROGRAMAS')
+    },
+    {
+      titulo: 'Finanzas',
+      icono: 'mdi-currency-usd',
+      ruta: '/finanzas',
+      mostrar: hasPermission('ADMINISTRAR_PAGOS')
+    },
+    {
+      titulo: 'Aranceles',
+      icono: 'mdi-cash-multiple',
+      ruta: '/aranceles',
+      mostrar: hasPermission('ADMINISTRAR_PAGOS')
+    },
+    {
+      titulo: 'Convenios',
+      icono: 'mdi-handshake',
+      ruta: '/convenios',
+      mostrar: hasPermission('ADMINISTRAR_PAGOS')
+    }
+  ]
+
+  // Filtrar items que se deben mostrar
+  return items.filter(item => item.mostrar)
+})
 
 const cerrarSesion = async () => {
   logout()
@@ -137,15 +126,41 @@ const verProgramasEjecucion = () => {
 
       <!-- Items del menú -->
       <v-list nav density="comfortable">
-        <v-list-item
-          v-for="item in menuItems"
-          :key="item.titulo"
-          :to="item.ruta"
-          :prepend-icon="item.icono"
-          :title="item.titulo"
-          class="menu-item"
-          color="white"
-        ></v-list-item>
+        <template v-for="item in menuItems" :key="item.titulo">
+          <!-- Menu item con submenú (grupo) -->
+          <v-list-group v-if="item.esGrupo">
+            <template v-slot:activator="{ props }">
+              <v-list-item
+                v-bind="props"
+                :prepend-icon="item.icono"
+                :title="item.titulo"
+                class="menu-item"
+                color="white"
+              ></v-list-item>
+            </template>
+
+            <!-- Subitems del grupo -->
+            <v-list-item
+              v-for="subitem in item.items"
+              :key="subitem.titulo"
+              :to="subitem.ruta"
+              :prepend-icon="subitem.icono"
+              :title="subitem.titulo"
+              class="menu-item menu-subitem"
+              color="white"
+            ></v-list-item>
+          </v-list-group>
+
+          <!-- Menu item normal -->
+          <v-list-item
+            v-else
+            :to="item.ruta"
+            :prepend-icon="item.icono"
+            :title="item.titulo"
+            class="menu-item"
+            color="white"
+          ></v-list-item>
+        </template>
       </v-list>
 
       <!-- Footer del menú -->
@@ -256,7 +271,6 @@ const verProgramasEjecucion = () => {
 
     <!-- Contenido principal -->
     <v-main class="main-content">
-      <!-- Loading scoped solo al contenido -->
       <GlobalLoading scoped />
 
       <v-container fluid class="pa-4">
@@ -295,7 +309,6 @@ const verProgramasEjecucion = () => {
     }
   }
 
-  // Asegurar que el texto sea blanco
   .v-list-item-title {
     color: white !important;
   }
@@ -303,11 +316,29 @@ const verProgramasEjecucion = () => {
   .v-icon {
     color: rgba(255, 255, 255, 0.9) !important;
   }
+
+  &.menu-subitem {
+    padding-left: 56px !important;
+
+    .v-icon {
+      font-size: 18px !important;
+    }
+  }
+}
+
+.v-list-group {
+  .v-list-item {
+    color: white !important;
+  }
+
+  &--active {
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
 }
 
 .main-content {
   background-color: rgb(var(--v-theme-background));
-  position: relative; // Necesario para que el loading scoped funcione
+  position: relative;
 }
 
 .user-avatar {
@@ -318,7 +349,6 @@ const verProgramasEjecucion = () => {
   }
 }
 
-// Responsive
 @media (max-width: 960px) {
   .header-bar .v-toolbar-title {
     font-size: 0.9rem !important;

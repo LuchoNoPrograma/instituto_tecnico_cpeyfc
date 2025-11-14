@@ -355,7 +355,12 @@ const guardar = async () => {
   cargandoFormulario.value = true
 
   try {
-    const datos = { ...formularioPrograma }
+    const datos = {
+      ...formularioPrograma,
+      imagen_programa_url_antigua: formularioPrograma.imagen_programa_url
+        ? formularioPrograma.imagen_programa_url.replace('/api', '')
+        : null
+    }
     delete datos.programaNuevo
     delete datos.planNuevo
 
@@ -367,6 +372,7 @@ const guardar = async () => {
       if (props.esEdicion && props.programa?.imagen_programa_url) {
         formData.append('imagen_url_antigua', props.programa.imagen_programa_url)
       }
+
 
       await emit('guardar', formData)
     } else {
@@ -426,8 +432,9 @@ const cargarDatosPrograma = (programa) => {
   formularioPrograma.fecha_inicio_vigencia = programa.fecha_inicio_vigencia
   formularioPrograma.fecha_fin_vigencia = programa.fecha_fin_vigencia
 
-  if (programa.imagen_programa_url) {
-    previewImagen.value = programa.imagen_programa_url
+  formularioPrograma.imagen_programa_url = programa.imagen_url || ''
+  if (programa.imagen_url) {
+    previewImagen.value = '/api' + programa.imagen_url
   }
 
   busquedaPrograma.value = programa.programa_nombre || ''
@@ -603,6 +610,9 @@ onMounted(() => {
                         Vigente
                       </v-chip>
                     </div>
+                  </template>
+                  <template #subtitle>
+                    {{ item.raw.descripcion_plan }}
                   </template>
                 </v-list-item>
               </template>

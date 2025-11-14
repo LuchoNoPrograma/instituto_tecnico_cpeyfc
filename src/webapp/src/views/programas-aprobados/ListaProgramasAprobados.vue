@@ -2,7 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/services/api'
-import FormularioPrograma from '@/views/programas/FormularioPrograma.vue'
+import FormularioProgramaAprobado from '@/views/programas-aprobados/FormularioProgramaAprobado.vue'
 import formatoFecha from '@/helpers/formatos.js'
 import ExcelJS from 'exceljs'
 import { showRegistrado, showModificado, showError, showConfirmar, showCargando, cerrarCargando } from '@/utils/sweetalert.js'
@@ -356,13 +356,9 @@ const guardarPrograma = async (datos) => {
 
   try {
     if (esEdicion.value) {
-      if (datos instanceof FormData) {
-        await api.post('/api/programa-aprobado/' + programaSeleccionado.value.id_aca_programa_aprobado, datos, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-      } else {
-        await api.put('/api/programa-aprobado/' + programaSeleccionado.value.id_aca_programa_aprobado, datos)
-      }
+      await api.post('/api/programa-aprobado/' + programaSeleccionado.value.id_aca_programa_aprobado, datos, {
+        headers: datos instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {}
+      })
       cerrarCargando()
       await showModificado('Programa actualizado correctamente')
     } else {
@@ -641,7 +637,7 @@ onMounted(() => {
           {{ esEdicion ? 'Editar Programa' : 'Nuevo Programa' }}
         </v-card-title>
 
-        <FormularioPrograma
+        <FormularioProgramaAprobado
           :programa="programaSeleccionado"
           :es-edicion="esEdicion"
           @cancelar="cerrarDialog"

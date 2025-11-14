@@ -74,7 +74,8 @@ public class AcaProgramaAprobadoApi {
     }
   }
 
-  @PutMapping("/api/programa-aprobado/{id}")
+
+  @PostMapping("/api/programa-aprobado/{id}")
   public ResponseEntity<?> modificarProgramaAprobado(
     @PathVariable Integer id,
     @RequestParam(value = "file", required = false) MultipartFile file,
@@ -87,11 +88,13 @@ public class AcaProgramaAprobadoApi {
       String resultado = acaProgramaAprobadoService.modificarProgramaAprobado(
         file,
         id,
+        (Integer) datos.get("id_aca_programa"),
+        (Integer) datos.get("id_aca_modalidad"),
+        (Integer) datos.get("gestion"),
         (Integer) datos.get("id_aca_plan_estudio"),
         (Integer) datos.get("id_aca_version"),
         (String) datos.get("estado_programa_aprobado"),
-        (String) datos.get("cod_certificado_ceub"),
-        (String) datos.get("imagen_uri_antigua"),
+        (String) datos.get("imagen_programa_url"),
         FechaUtil.toLocalDate(datos.get("fecha_inicio_vigencia")),
         FechaUtil.toLocalDate(datos.get("fecha_fin_vigencia")),
         userDetails.getIdSegUsuario()

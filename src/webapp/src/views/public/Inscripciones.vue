@@ -107,13 +107,19 @@ const requisitosPrograma = ref([
   }
 ])
 
-const competenciasPrograma = ref([
-  'Gestión Documental',
-  'Herramientas Digitales',
-  'Administración',
-  'Archivo Digital',
-  'Atención al Cliente'
-])
+const habilidadesPrograma = ref([])
+
+const obtenerHabilidadesPrograma = async () => {
+  if (!programaId.value) return
+
+  try {
+    const response = await api.get(`/api/programa-habilidad/programa/${programaId.value}`)
+    habilidadesPrograma.value = response.data
+  } catch (error) {
+    console.error('Error al obtener habilidades:', error)
+    habilidadesPrograma.value = []
+  }
+}
 
 const obtenerDetallePrograma = async () => {
   if (!programaId.value) {
@@ -128,7 +134,8 @@ const obtenerDetallePrograma = async () => {
     programa.value = programas.find(p => p.id_aca_programa_aprobado == programaId.value)
 
     if (programa.value) {
-      await obtenerPlanEstudios()
+      await obtenerPlanEstudios();
+      await obtenerHabilidadesPrograma();
     }
   } catch (error) {
     console.error('Error al obtener programa:', error)
@@ -321,17 +328,22 @@ onMounted(() => {
                 ¿Qué aprenderás?
               </v-card-title>
               <v-card-text class="pa-4">
-                <v-chip-group column>
+                <v-chip-group v-if="habilidadesPrograma.length > 0" column>
                   <v-chip
-                    v-for="competencia in competenciasPrograma"
-                    :key="competencia"
+                    v-for="habilidad in habilidadesPrograma"
+                    :key="habilidad.id_programa_habilidad"
                     variant="tonal"
                     color="primary"
                     prepend-icon="mdi-check-circle"
                   >
-                    {{ competencia }}
+                    {{ habilidad.nombre_habilidad }}
                   </v-chip>
                 </v-chip-group>
+
+                <div v-else class="text-center py-4 text-grey">
+                  <v-icon size="48" color="grey-lighten-1">mdi-information-outline</v-icon>
+                  <p class="mt-2">No hay habilidades registradas para este programa</p>
+                </div>
               </v-card-text>
             </v-card>
 

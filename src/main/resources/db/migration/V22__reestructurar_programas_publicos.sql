@@ -577,19 +577,30 @@ $$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION fn_eliminar_habilidad_programa IS 'Elimina lógicamente una habilidad de programa';
 
--- -----------------------------------------------------
--- FUNCIÓN: fn_asignar_habilidades_programa
--- Asigna múltiples habilidades a un programa
--- -----------------------------------------------------
+-- =====================================================
+-- FUNCIÓN CORREGIDA: fn_asignar_habilidades_programa
+-- Elimina ambigüedad en nombre_habilidad
+-- =====================================================
+
+DROP FUNCTION IF EXISTS fn_asignar_habilidades_programa(integer, text[], integer);
+
+-- =====================================================
+-- FUNCIÓN CORREGIDA: fn_asignar_habilidades_programa
+-- Elimina TODA ambigüedad renombrando campos de retorno
+-- =====================================================
+
+
+DROP FUNCTION IF EXISTS fn_asignar_habilidades_programa(integer, text[], integer);
+
 CREATE OR REPLACE FUNCTION fn_asignar_habilidades_programa(
   p_id_aca_programa INTEGER,
   p_habilidades TEXT[],
   p_user_reg INTEGER
 )
   RETURNS TABLE (
-                  id_programa_habilidad INTEGER,
-                  nombre_habilidad VARCHAR,
-                  mensaje TEXT
+                  resultado_id_habilidad INTEGER,
+                  resultado_nombre_habilidad VARCHAR,
+                  resultado_mensaje TEXT
                 ) AS $$
 DECLARE
   v_habilidad TEXT;
@@ -607,15 +618,25 @@ BEGIN
     RAISE EXCEPTION 'Error! El programa no existe';
   END IF;
 
-  -- Procesar cada habilidad
+  -- Eliminar habilidades que ya NO están en el array enviado
+  UPDATE aca_programa_habilidad
+  SET estado_programa_habilidad = 'ELIMINADO',
+      fecha_mod = CURRENT_TIMESTAMP,
+      user_mod = p_user_reg
+  WHERE id_aca_programa = p_id_aca_programa
+    AND estado_programa_habilidad = 'ACTIVO'
+    AND UPPER(TRIM(nombre_habilidad)) != ALL(
+    SELECT UPPER(TRIM(unnest(p_habilidades)))
+  );
+
+  -- Procesar cada habilidad del array
   FOREACH v_habilidad IN ARRAY p_habilidades
     LOOP
-      -- Verificar si ya existe
+      -- Verificar si ya existe (activa o eliminada)
       SELECT COUNT(*) INTO v_duplicado
-      FROM aca_programa_habilidad
-      WHERE id_aca_programa = p_id_aca_programa
-        AND UPPER(TRIM(nombre_habilidad)) = UPPER(TRIM(v_habilidad))
-        AND estado_programa_habilidad != 'ELIMINADO';
+      FROM aca_programa_habilidad h
+      WHERE h.id_aca_programa = p_id_aca_programa
+        AND UPPER(TRIM(h.nombre_habilidad)) = UPPER(TRIM(v_habilidad));
 
       IF v_duplicado = 0 THEN
         -- Insertar nueva habilidad
@@ -638,16 +659,25 @@ BEGIN
                        UPPER(TRIM(v_habilidad))::VARCHAR,
                        'Habilidad creada'::TEXT;
       ELSE
+        -- Reactivar si estaba eliminada
+        UPDATE aca_programa_habilidad h
+        SET estado_programa_habilidad = 'ACTIVO',
+            fecha_mod = CURRENT_TIMESTAMP,
+            user_mod = p_user_reg
+        WHERE h.id_aca_programa = p_id_aca_programa
+          AND UPPER(TRIM(h.nombre_habilidad)) = UPPER(TRIM(v_habilidad))
+          AND h.estado_programa_habilidad = 'ELIMINADO';
+
         RETURN QUERY SELECT
                        NULL::INTEGER,
                        UPPER(TRIM(v_habilidad))::VARCHAR,
-                       'Habilidad ya existe'::TEXT;
+                       'Habilidad reactivada'::TEXT;
       END IF;
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION fn_asignar_habilidades_programa IS 'Asigna múltiples habilidades a un programa en una sola operación';
+COMMENT ON FUNCTION fn_asignar_habilidades_programa IS 'Asigna habilidades eliminando las que no están en el array';
 
 
 -- =====================================================
@@ -697,6 +727,163 @@ ORDER BY pa.gestion DESC, p.nombre_programa;
 
 COMMENT ON VIEW vista_programas_aprobados IS 'Vista de programas aprobados sin precios (usar sistema de aranceles)';
 
+
+DROP FUNCTION IF EXISTS fn_registrar_programa(integer, varchar, varchar, integer);
+CREATE OR REPLACE FUNCTION fn_registrar_programa(
+  p_id_aca_area INTEGER,
+  p_nombre_programa VARCHAR,
+  p_sigla VARCHAR,
+  p_objetivo TEXT,
+  p_imagen_url VARCHAR,
+  p_user_reg INTEGER
+)
+  RETURNS INTEGER AS $$
+DECLARE
+  v_id_programa INTEGER;
+  v_existe_area INTEGER;
+  v_duplicado_nombre INTEGER;
+  v_duplicado_sigla INTEGER;
+BEGIN
+  -- Validaciones obligatorias
+  IF p_id_aca_area IS NULL OR p_nombre_programa IS NULL OR
+     p_sigla IS NULL OR p_user_reg IS NULL THEN
+    RAISE EXCEPTION 'Error! Campos obligatorios faltantes';
+  END IF;
+
+  -- Validar existencia de área
+  SELECT COUNT(*) INTO v_existe_area
+  FROM aca_area
+  WHERE id_aca_area = p_id_aca_area
+    AND estado_area != 'ELIMINADO';
+
+  IF v_existe_area = 0 THEN
+    RAISE EXCEPTION 'Error! El área no existe';
+  END IF;
+
+  -- Validar duplicado por nombre
+  SELECT COUNT(*) INTO v_duplicado_nombre
+  FROM aca_programa
+  WHERE UPPER(TRIM(nombre_programa)) = UPPER(TRIM(p_nombre_programa))
+    AND estado_programa != 'ELIMINADO';
+
+  IF v_duplicado_nombre > 0 THEN
+    RAISE EXCEPTION 'Error! Ya existe un programa con este nombre';
+  END IF;
+
+  -- Validar duplicado por sigla
+  SELECT COUNT(*) INTO v_duplicado_sigla
+  FROM aca_programa
+  WHERE UPPER(TRIM(sigla)) = UPPER(TRIM(p_sigla))
+    AND estado_programa != 'ELIMINADO';
+
+  IF v_duplicado_sigla > 0 THEN
+    RAISE EXCEPTION 'Error! Ya existe un programa con esta sigla';
+  END IF;
+
+  -- Inserción
+  INSERT INTO aca_programa(
+    id_aca_area,
+    nombre_programa,
+    sigla,
+    objetivo,
+    imagen_url,
+    estado_programa,
+    fecha_reg,
+    user_reg
+  ) VALUES (
+             p_id_aca_area,
+             UPPER(TRIM(p_nombre_programa)),
+             UPPER(TRIM(p_sigla)),
+             TRIM(p_objetivo),
+             TRIM(p_imagen_url),
+             'ACTIVO',
+             CURRENT_TIMESTAMP,
+             p_user_reg
+           ) RETURNING id_aca_programa INTO v_id_programa;
+
+  RETURN v_id_programa;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION fn_registrar_programa IS 'Registra programa con objetivo e imagen';
+
+DROP FUNCTION IF EXISTS fn_modificar_programa_aprobado(p_id_aca_programa_aprobado INTEGER, p_id_aca_plan_estudio INTEGER, p_id_aca_version INTEGER, p_estado_programa_aprobado VARCHAR, p_cod_certificado_ceub VARCHAR, p_imagen_programa_url VARCHAR, p_fecha_inicio_vigencia DATE, p_fecha_fin_vigencia DATE, p_user_mod INTEGER);
+CREATE OR REPLACE FUNCTION fn_modificar_programa_aprobado(
+  p_id_aca_programa_aprobado INTEGER,
+  p_id_aca_programa INTEGER,
+  p_id_aca_modalidad INTEGER,
+  p_gestion INTEGER,
+  p_id_aca_plan_estudio INTEGER,
+  p_id_aca_version INTEGER,
+  p_estado_programa_aprobado VARCHAR,
+  p_imagen_programa_url VARCHAR,
+  p_fecha_inicio_vigencia DATE,
+  p_fecha_fin_vigencia DATE,
+  p_user_mod INTEGER
+)
+  RETURNS TEXT AS $$
+DECLARE
+  v_existe INTEGER;
+BEGIN
+  -- Validaciones...
+  SELECT COUNT(*) INTO v_existe
+  FROM aca_programa_aprobado
+  WHERE id_aca_programa_aprobado = p_id_aca_programa_aprobado;
+
+  IF v_existe = 0 THEN
+    RAISE EXCEPTION 'Error! El programa aprobado no existe';
+  END IF;
+
+  -- Actualización
+  UPDATE aca_programa_aprobado
+  SET id_aca_programa = p_id_aca_programa,
+      id_aca_modalidad = p_id_aca_modalidad,
+      gestion = p_gestion,
+      id_aca_plan_estudio = p_id_aca_plan_estudio,
+      id_aca_version = p_id_aca_version,
+      estado_programa_aprobado = p_estado_programa_aprobado,
+      imagen_programa_url = p_imagen_programa_url,
+      fecha_inicio_vigencia = p_fecha_inicio_vigencia,
+      fecha_fin_vigencia = p_fecha_fin_vigencia,
+      fecha_mod = CURRENT_TIMESTAMP,
+      user_mod = p_user_mod
+  WHERE id_aca_programa_aprobado = p_id_aca_programa_aprobado;
+
+  RETURN 'Programa aprobado modificado exitosamente';
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION fn_modificar_programa IS 'Modifica programa con objetivo e imagen';
+
+CREATE OR REPLACE VIEW vista_programas_con_habilidades AS
+SELECT
+  p.id_aca_programa,
+  p.id_aca_area,
+  a.nombre_area,
+  p.nombre_programa,
+  p.sigla,
+  p.objetivo,
+  p.imagen_url,
+  p.estado_programa,
+  p.fecha_reg,
+  p.fecha_mod,
+  COALESCE(
+      (SELECT string_agg(h.nombre_habilidad, ', ' ORDER BY h.nombre_habilidad)
+       FROM aca_programa_habilidad h
+       WHERE h.id_aca_programa = p.id_aca_programa
+         AND h.estado_programa_habilidad = 'ACTIVO'),
+      ''
+  ) AS habilidades
+FROM aca_programa p
+       JOIN aca_area a ON p.id_aca_area = a.id_aca_area
+WHERE p.estado_programa != 'ELIMINADO'
+  AND a.estado_area != 'ELIMINADO'
+ORDER BY p.nombre_programa;
+
+COMMENT ON VIEW vista_programas_con_habilidades IS 'Vista de programas con habilidades separadas por coma';
+
 -- =====================================================
 -- FIN DE MIGRACIÓN
 -- =====================================================
+
+
