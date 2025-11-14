@@ -35,6 +35,18 @@ const menuItems = computed(() => {
           icono: 'mdi-school-outline',
           ruta: '/catalogos/programas',
           mostrar: hasPermission('ADMINISTRAR_CONFIGURACION')
+        },
+        {
+          titulo: 'Perfiles',
+          icono: 'mdi-account-group',
+          ruta: '/catalogos/perfiles',
+          mostrar: hasPermission('ADMINISTRAR_CONFIGURACION')
+        },
+        {
+          titulo: 'Requisitos',
+          icono: 'mdi-file-document',
+          ruta: '/catalogos/requisitos',
+          mostrar: hasPermission('ADMINISTRAR_CONFIGURACION')
         }
       ]
     },

@@ -44,6 +44,12 @@ public class AcaProgramaApi {
         ? habilidadesList.toArray(new String[0])
         : new String[0];
 
+      // Obtener perfiles del JSON
+      List<Integer> perfilesList = (List<Integer>) datos.get("perfiles");
+      Integer[] perfiles = perfilesList != null
+        ? perfilesList.toArray(new Integer[0])
+        : new Integer[0];
+
       Integer idPrograma = acaProgramaService.registrarPrograma(
         file,
         (Integer) datos.get("id_aca_area"),
@@ -51,6 +57,7 @@ public class AcaProgramaApi {
         (String) datos.get("sigla"),
         (String) datos.get("objetivo"),
         habilidades,
+        perfiles,
         userDetails.getIdSegUsuario()
       );
 
@@ -83,6 +90,12 @@ public class AcaProgramaApi {
         ? habilidadesList.toArray(new String[0])
         : new String[0];
 
+      // Obtener perfiles del JSON
+      List<Integer> perfilesList = (List<Integer>) datos.get("perfiles");
+      Integer[] perfiles = perfilesList != null
+        ? perfilesList.toArray(new Integer[0])
+        : new Integer[0];
+
       String resultado = acaProgramaService.modificarPrograma(
         file,
         id,
@@ -92,6 +105,7 @@ public class AcaProgramaApi {
         (String) datos.get("objetivo"),
         (String) datos.get("imagen_url_antigua"),
         habilidades,
+        perfiles,
         userDetails.getIdSegUsuario()
       );
 

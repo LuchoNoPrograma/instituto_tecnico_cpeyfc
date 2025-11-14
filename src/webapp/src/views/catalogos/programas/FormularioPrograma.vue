@@ -23,9 +23,10 @@ const props = defineProps({
 const emit = defineEmits(['cerrar', 'guardado'])
 
 const pasoActual = ref(1)
-const totalPasos = 3
+const totalPasos = 4
 const cargando = ref(false)
 const listaAreas = ref([])
+const listaPerfiles = ref([])
 
 // Estados de imagen
 const imagenPreview = ref(null)
@@ -44,7 +45,8 @@ const formulario = reactive({
   sigla: '',
   objetivo: '',
   imagen_url: null,
-  habilidades: []
+  habilidades: [],
+  perfiles: []
 })
 
 // Validaciones por paso
@@ -87,6 +89,15 @@ const obtenerAreas = async () => {
     listaAreas.value = response.data
   } catch (error) {
     console.error('Error al obtener áreas:', error)
+  }
+}
+
+const obtenerPerfiles = async () => {
+  try {
+    const response = await api.get('/api/perfiles-estudiante')
+    listaPerfiles.value = response.data
+  } catch (error) {
+    console.error('Error al obtener perfiles:', error)
   }
 }
 
@@ -202,6 +213,7 @@ const guardarPrograma = async () => {
       sigla: formulario.sigla,
       objetivo: formulario.objetivo || null,
       habilidades: formulario.habilidades,
+      perfiles: formulario.perfiles,
       imagen_url_antigua: formulario.imagen_url || null
     }
 
@@ -262,7 +274,8 @@ watch(() => props.programa, (nuevo) => {
       sigla: '',
       objetivo: '',
       imagen_url: null,
-      habilidades: []
+      habilidades: [],
+      perfiles: []
     })
     imagenPreview.value = null
     imagenFile.value = null
@@ -272,6 +285,7 @@ watch(() => props.programa, (nuevo) => {
 
 onMounted(() => {
   obtenerAreas()
+  obtenerPerfiles()
 })
 </script>
 
@@ -305,9 +319,18 @@ onMounted(() => {
           <v-divider></v-divider>
 
           <v-stepper-item
+            :complete="pasoActual > 3"
             :value="3"
             title="Habilidades"
             subtitle="Tags del programa"
+          ></v-stepper-item>
+
+          <v-divider></v-divider>
+
+          <v-stepper-item
+            :value="4"
+            title="Perfiles Elegibles"
+            subtitle="Dirigido a"
           ></v-stepper-item>
         </v-stepper-header>
       </v-stepper>
@@ -482,6 +505,45 @@ onMounted(() => {
                 </div>
               </v-card-text>
             </v-card>
+          </v-col>
+        </v-row>
+      </div>
+
+      <!-- PASO 4: Perfiles Elegibles -->
+      <div v-if="pasoActual === 4">
+        <h3 class="text-h6 mb-4">Perfiles Elegibles (Dirigido a)</h3>
+
+        <v-alert type="info" variant="tonal" class="mb-4" density="compact">
+          Selecciona qué tipos de estudiantes pueden inscribirse a este programa
+        </v-alert>
+
+        <v-row>
+          <v-col
+            v-for="perfil in listaPerfiles"
+            :key="perfil.id_aca_perfil_estudiante"
+            cols="12" sm="6" md="4"
+          >
+            <v-checkbox
+              v-model="formulario.perfiles"
+              :value="perfil.id_aca_perfil_estudiante"
+              hide-details
+              color="primary"
+            >
+              <template #label>
+                <div>
+                  <div class="font-weight-medium">{{ perfil.nombre_perfil }}</div>
+                  <div class="text-caption text-grey" v-if="perfil.descripcion">
+                    {{ perfil.descripcion }}
+                  </div>
+                </div>
+              </template>
+            </v-checkbox>
+          </v-col>
+
+          <v-col v-if="listaPerfiles.length === 0" cols="12">
+            <v-alert type="warning" variant="tonal" density="compact">
+              No hay perfiles de estudiante configurados
+            </v-alert>
           </v-col>
         </v-row>
       </div>

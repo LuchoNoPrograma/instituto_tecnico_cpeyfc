@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import uap.edu.bo.cpeyfc.domain.aca_programa_habilidad.AcaProgramaHabilidadRepository;
+import uap.edu.bo.cpeyfc.domain.aca_programa_perfil.AcaProgramaPerfilRepository;
 import uap.edu.bo.cpeyfc.domain.archivo.ArchivoService;
 
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class AcaProgramaService {
   private final AcaProgramaRepository acaProgramaRepository;
   private final AcaProgramaHabilidadRepository acaProgramaHabilidadRepository;
+  private final AcaProgramaPerfilRepository acaProgramaPerfilRepository;
   private final ArchivoService archivoService;
 
   // ========== MÉTODO ANTIGUO (mantener compatibilidad) ==========
@@ -36,6 +38,7 @@ public class AcaProgramaService {
     String sigla,
     String objetivo,
     String[] habilidades,
+    Integer[] perfiles,
     Integer user_reg) throws IOException {
 
     String imagenUrl = null;
@@ -61,6 +64,15 @@ public class AcaProgramaService {
       );
     }
 
+    // Asignar perfiles elegibles si existen
+    if (perfiles != null && perfiles.length > 0) {
+      acaProgramaPerfilRepository.asignarPerfiles(
+        idPrograma,
+        perfiles,
+        user_reg
+      );
+    }
+
     return idPrograma;
   }
 
@@ -74,6 +86,7 @@ public class AcaProgramaService {
     String objetivo,
     String imagen_url_antigua,
     String[] habilidades,
+    Integer[] perfiles,
     Integer user_mod) throws IOException {
 
     String imagenUrl = imagen_url_antigua;
@@ -101,6 +114,15 @@ public class AcaProgramaService {
       acaProgramaHabilidadRepository.asignarHabilidadesPrograma(
         id_aca_programa,
         habilidades,
+        user_mod
+      );
+    }
+
+    // Actualizar perfiles elegibles
+    if (perfiles != null && perfiles.length > 0) {
+      acaProgramaPerfilRepository.asignarPerfiles(
+        id_aca_programa,
+        perfiles,
         user_mod
       );
     }
