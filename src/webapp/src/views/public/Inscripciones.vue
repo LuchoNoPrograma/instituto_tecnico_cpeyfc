@@ -113,7 +113,7 @@ const obtenerHabilidadesPrograma = async () => {
   if (!programaId.value) return
 
   try {
-    const response = await api.get(`/api/programa-habilidad/programa/${programaId.value}`)
+    const response = await api.get(`/api/publico/programa-habilidad/programa/${programaId.value}`)
     habilidadesPrograma.value = response.data
   } catch (error) {
     console.error('Error al obtener habilidades:', error)

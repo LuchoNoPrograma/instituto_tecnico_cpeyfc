@@ -18,7 +18,7 @@ public class AcaProgramaHabilidadApi {
     return ResponseEntity.ok(acaProgramaHabilidadService.listarHabilidadesPorPrograma(idPrograma));
   }
 
-  @GetMapping("/api/programa-habilidad/programa/{idPrograma}")
+  @GetMapping("/api/publico/programa-habilidad/programa/{idPrograma}")
   public ResponseEntity<?> listarHabilidadesPorProgramaPublico(@PathVariable Integer idPrograma) {
     return ResponseEntity.ok(acaProgramaHabilidadService.listarHabilidadesPorPrograma(idPrograma));
   }

@@ -45,7 +45,7 @@ const menuItems = computed(() => {
       mostrar: hasPermission('ADMINISTRAR_PROGRAMAS')
     },
     {
-      titulo: 'Grupos con módulos',
+      titulo: 'Grupos',
       icono: 'mdi-account-group',
       ruta: '/grupos',
       mostrar: hasPermission('ADMINISTRAR_PROGRAMAS')
