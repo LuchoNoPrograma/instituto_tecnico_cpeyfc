@@ -3,7 +3,7 @@ import { showError } from '@/utils/sweetalert'
 
 const api = axios.create({
   baseURL: '/api',
-  timeout: 10000,
+  timeout: 35000,
   headers: {
     'Content-Type': 'application/json'
   }

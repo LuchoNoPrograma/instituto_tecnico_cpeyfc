@@ -25,6 +25,11 @@ public class ChatbotRepository {
     return jdbcTemplate.queryForMap(sql);
   }
 
+  public List<Map<String, Object>> vistaChatbotDescuentosVigentes() {
+    String sql = "SELECT * FROM vista_chatbot_descuentos_vigentes";
+    return jdbcTemplate.queryForList(sql);
+  }
+
   public List<Map<String, Object>> vistaChatbotNivelesPrograma(Integer idPrograma) {
     String sql = """
       SELECT * FROM vista_chatbot_niveles_programa 
