@@ -3,6 +3,7 @@ package uap.edu.bo.cpeyfc.chatbot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uap.edu.bo.cpeyfc.domain.aca_perfil_estudiante.AcaPerfilEstudianteRepository;
 import uap.edu.bo.cpeyfc.domain.fin_arancel.FinArancelRepository;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class ChatbotService {
   private final GeminiService geminiService;
   private final ChatbotRepository chatbotRepository;
   private final FinArancelRepository finArancelRepository;
+  private final AcaPerfilEstudianteRepository acaPerfilRepository;
 
   public ChatbotResponse procesarMensaje(ChatbotRequest request) {
     try {
@@ -48,6 +50,7 @@ public class ChatbotService {
 
         List<Map<String, Object>> aranceles = finArancelRepository.obtenerArancelesPrograma(idProgramaAprobado);
         String costosTexto = construirTextoAranceles(aranceles);
+        String requisitosTexto = construirTextoRequisitos(idProgramaAprobado);
 
         contexto.append(String.format("""
           📚 PROGRAMA: %s (%s)
@@ -55,16 +58,17 @@ public class ChatbotService {
              Modalidad: %s
              Grupo: %s - Gestión %s
              Plan de estudios: %s
-             
+
              📅 INSCRIPCIONES:
              Estado: %s
              Fecha inicio: %s
              Fecha fin: %s
              %s
-             
+
              💰 PRECIOS:
              %s
-             
+             %s
+
              📊 INFORMACIÓN ACADÉMICA:
              Total módulos: %d
              Carga horaria total: %d horas
@@ -89,6 +93,7 @@ public class ChatbotService {
           diasRestantes > 0 ? String.format("⏰ Quedan %d días para inscribirse", diasRestantes) : "",
 
           costosTexto,
+          requisitosTexto,
 
           getInteger(programa, "total_modulos"),
           getInteger(programa, "total_horas"),
@@ -163,6 +168,46 @@ public class ChatbotService {
     texto.append("\nNOTA: Los aranceles pueden variar si aplica un convenio institucional.");
 
     return texto.toString();
+  }
+
+  private String construirTextoRequisitos(Integer idPrograma) {
+    try {
+      List<Map<String, Object>> requisitos = acaPerfilRepository.obtenerRequisitosPrograma(idPrograma);
+
+      if (requisitos.isEmpty()) {
+        return "No hay información de requisitos disponible - contactar con CPEyFP";
+      }
+
+      StringBuilder texto = new StringBuilder();
+      texto.append("\n📋 REQUISITOS DE INSCRIPCIÓN:\n\n");
+
+      String perfilActual = "";
+
+      for (Map<String, Object> req : requisitos) {
+        String perfil = getString(req, "nombre_perfil");
+
+        if (!perfil.equals(perfilActual)) {
+          if (!perfilActual.isEmpty()) {
+            texto.append("\n");
+          }
+          texto.append(String.format("Para %s:\n", perfil));
+          perfilActual = perfil;
+        }
+
+        texto.append(String.format("   ✓ %s", getString(req, "nombre_requisito")));
+        String desc = getString(req, "descripcion_requisito");
+        if (!desc.isEmpty()) {
+          texto.append(String.format(" (%s)", desc));
+        }
+        texto.append("\n");
+      }
+
+      return texto.toString();
+
+    } catch (Exception e) {
+      log.error("Error al construir texto de requisitos para programa " + idPrograma, e);
+      return "Información de requisitos temporalmente no disponible - contactar con CPEyFP";
+    }
   }
 
   // Métodos helper para manejo seguro de tipos
