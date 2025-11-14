@@ -1,8 +1,9 @@
 <script setup>
-import imgDefault from '@/assets/images/img_default.png'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import formatoFecha from '@/helpers/formatos.js';
+import formatoFecha from '@/helpers/formatos.js'
+import imagenDefault from '@/assets/images/img_default.png';
+import {useInicioStore} from '@/stores/inicio.js';
 
 const props = defineProps({
   programa: {
@@ -14,33 +15,32 @@ const props = defineProps({
 const router = useRouter()
 
 // Configuración de WhatsApp
-const numeroWhatsApp = '59174771457'
+const numeroWhatsapp = '59174771457'
 
-// Computed properties
-const programaTieneImagen = computed(() => !!props.programa.imagen)
-
-const imagenPrograma = computed(() => {
-  if (!programaTieneImagen.value) return imgDefault
-  if (props.programa.imagen.startsWith('http')) return props.programa.imagen
-  return `/api/publico/programas/${props.programa.imagen}/imagen`
+const obtenerImagen = computed(() => {
+  if (props.programa.imagen_url) {
+    return '/api' + props.programa.imagen_url
+  }
+  return imagenDefault
 })
-
 const inscripcionesCerradas = computed(() =>
-  props.programa.estado !== 'INSCRIPCIONES ABIERTAS'
+  props.programa.estado_inscripcion !== 'INSCRIPCIONES ABIERTAS'
 )
 
-const mensajeWhatsApp = computed(() =>
-  `Hola, me interesa información sobre el programa: ${props.programa.nombre}`
+const mensajeWhatsapp = computed(() =>
+  `Hola, me interesa información sobre el programa: ${props.programa.nombre_programa}`
 )
 
 // Métodos
-const abrirWhatsApp = () => {
-  const url = `https://api.whatsapp.com/send/?phone=${numeroWhatsApp}&text=${encodeURIComponent(mensajeWhatsApp.value)}&type=phone_number&app_absent=0`
+const abrirWhatsapp = () => {
+  const url = `https://api.whatsapp.com/send/?phone=${numeroWhatsapp}&text=${encodeURIComponent(mensajeWhatsapp.value)}&type=phone_number&app_absent=0`
   window.open(url, '_blank')
 }
 
+const inicioStore = useInicioStore()
 const inscribirme = () => {
-  router.push(`/inscripciones?programa=${props.programa.id}`)
+  inicioStore.programa = props.programa;
+  router.push(`/inscripciones?programa=${props.programa.id_aca_programa_aprobado}`)
 }
 </script>
 
@@ -49,8 +49,9 @@ const inscribirme = () => {
     <!-- Imagen del programa -->
     <div class="programa-card__imagen-container">
       <v-img
-        :src="imagenPrograma"
-        height="280"
+        :src="obtenerImagen"
+        min-height="250"
+        aspect-ratio="16/9"
         cover
         class="programa-card__imagen"
       >
@@ -68,7 +69,7 @@ const inscribirme = () => {
         variant="elevated"
       >
         <v-icon icon="mdi-book-open-variant" start size="small"></v-icon>
-        {{ programa.area }}
+        {{ programa.nombre_area }}
       </v-chip>
 
       <!-- Chip de estado inscripciones cerradas - lado izquierdo superior -->
@@ -85,28 +86,44 @@ const inscribirme = () => {
 
     <!-- Contenido -->
     <v-card-text class="pa-4">
-      <!-- Título del programa (sin margin) -->
+      <!-- Título del programa -->
       <h3 class="text-h6 font-weight-bold programa-card__titulo">
-        {{ programa.nombre }}
+        {{ programa.nombre_programa }}
       </h3>
 
       <v-divider class="mb-2"></v-divider>
 
-      <!-- Modalidad -->
-      <div class="d-flex align-center mb-2">
-        <v-icon icon="mdi-school" size="small" class="mr-2 text-grey-darken-1"></v-icon>
-        <span class="text-body-2 text-grey-darken-2">
-          <span class="font-weight-medium">Modalidad:</span> {{ programa.modalidad }}
-        </span>
+      <!-- Área -->
+      <div class="meta-item d-flex align-center mb-2">
+        <v-icon size="18" color="grey-darken-1" class="mr-2">mdi-domain</v-icon>
+        <span class="text-body-2">{{ programa.nombre_area }}</span>
       </div>
 
-      <!-- Precio -->
-      <div class="d-flex align-center mb-3">
-        <v-icon icon="mdi-currency-usd" size="small" class="mr-2 text-grey-darken-1"></v-icon>
-        <span class="text-h6 font-weight-bold text-primary">
-          {{ programa.precioColegiatura ? `${programa.precioColegiatura} Bs.` : 'Consultar' }}
-        </span>
+      <!-- Modalidad -->
+      <div class="meta-item d-flex align-center mb-2">
+        <v-icon size="18" color="grey-darken-1" class="mr-2">mdi-laptop</v-icon>
+        <span class="text-body-2">{{ programa.nombre_modalidad }}</span>
       </div>
+
+      <!-- Duración -->
+      <div v-if="programa.duracion" class="meta-item d-flex align-center mb-2">
+        <v-icon size="18" color="grey-darken-1" class="mr-2">mdi-clock-outline</v-icon>
+        <span class="text-body-2">{{ programa.duracion }}</span>
+      </div>
+
+      <!-- Carga horaria -->
+      <div v-if="programa.carga_horaria" class="meta-item d-flex align-center mb-2">
+        <v-icon size="18" color="grey-darken-1" class="mr-2">mdi-book-open</v-icon>
+        <span class="text-body-2">{{ programa.carga_horaria }} horas</span>
+      </div>
+
+      <!-- Duración/Plan -->
+<!--      <div class="d-flex align-center mb-3">
+        <v-icon icon="mdi-clock-outline" size="small" class="mr-2 text-grey-darken-1"></v-icon>
+        <span class="text-body-2 text-grey-darken-2">
+          <span class="font-weight-medium">Plan:</span> {{ programa.plan_anho || 'Consultar' }}
+        </span>
+      </div>-->
 
       <v-divider class="mb-2"></v-divider>
 
@@ -116,15 +133,15 @@ const inscribirme = () => {
           Inscripciones abiertas hasta:
         </p>
         <p class="text-body-1 font-weight-bold text-primary">
-          {{ formatoFecha.literario(programa.fechaInscripcion) }}
+          {{ formatoFecha.literario(programa.fecha_fin_inscripcion) }}
         </p>
       </div>
 
       <!-- Días restantes -->
-      <div v-if="!inscripcionesCerradas && programa.diasRestantes > 0" class="d-flex align-center">
+      <div v-if="!inscripcionesCerradas && programa.dias_restantes_inscripcion > 0" class="d-flex align-center">
         <v-icon icon="mdi-timer-sand" size="small" class="mr-2 text-warning"></v-icon>
         <span class="text-body-2 text-warning font-weight-medium">
-          {{ programa.diasRestantes }} días restantes
+          {{ programa.dias_restantes_inscripcion }} días restantes
         </span>
       </div>
     </v-card-text>
@@ -133,13 +150,13 @@ const inscribirme = () => {
     <v-card-actions class="pa-4 pt-0">
       <v-row dense>
         <v-col cols="12">
-          <div class="d-flex ga-2">
+          <div class="d-flex flex-wrap ga-2">
             <!-- Botón WhatsApp -->
             <v-btn
               variant="outlined"
               color="success"
               size="default"
-              @click="abrirWhatsApp"
+              @click="abrir_whatsapp"
               class="flex-grow-0"
             >
               <v-icon icon="mdi-whatsapp" start></v-icon>
@@ -151,9 +168,7 @@ const inscribirme = () => {
               v-if="!inscripcionesCerradas"
               variant="elevated"
               color="primary"
-              size="default"
               @click="inscribirme"
-              class="flex-grow-1"
             >
               INSCRIBIRME
               <v-icon icon="mdi-arrow-right" end></v-icon>

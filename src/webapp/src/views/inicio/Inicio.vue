@@ -6,7 +6,7 @@ import InicioBanner from '@/views/inicio/InicioBanner.vue';
 import InicioHeader from '@/views/inicio/InicioHeader.vue';
 import InicioInfo from '@/views/inicio/InicioInfo.vue';
 import InicioNoticia from '@/views/inicio/InicioNoticia.vue';
-import InicioCursos from '@/views/inicio/InicioCursos.vue';
+import InicioProgramas from '@/views/inicio/InicioProgramas.vue';
 import InicioFooter from '@/views/inicio/InicioFooter.vue';
 
 onMounted(() => {
@@ -26,16 +26,15 @@ const whatsappLink = `https://web.whatsapp.com/send?phone=${phone}&text=${encode
 
 <template>
   <v-layout class="bg-containerBg">
-    <inicio-header></inicio-header>
-
     <v-main class="ma-0">
+      <inicio-header></inicio-header>
       <inicio-banner></inicio-banner>
 
       <div id="sobre-nosotros"></div>
 
       <inicio-info></inicio-info>
 
-      <inicio-cursos></inicio-cursos>
+      <inicio-programas></inicio-programas>
 
       <inicio-noticia></inicio-noticia>
 

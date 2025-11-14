@@ -29,6 +29,7 @@ const leerMas = () => {
     <v-img
       :src="obtenerImagen()"
       aspect-ratio="16/9"
+      min-height="250"
       cover
       class="noticia-imagen"
     >

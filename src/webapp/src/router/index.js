@@ -5,17 +5,21 @@ import rutasPublicas from './rutasPublicas'
 import rutasAuth from './rutasAutenticacion.js'
 import rutasAdmin from './rutasAutenticacion.js'
 import rutasPersonas from '@/views/personas/rutasPersonas.js'
-import rutasProgramas from '@/views/programas/rutasProgramas.js';
+import rutasProgramas from '@/views/programas-aprobados/rutasProgramas.js';
 import rutasGrupos from '@/views/grupos/rutasGrupos.js';
 import rutasMatriculas from '@/views/matriculas/rutasMatriculas.js';
 import rutasPlanEstudio from '@/views/plan-estudio/rutasPlanEstudio.js';
 import rutasDocente from '@/views/docente/rutasDocente.js';
 import rutasNoticias from '@/views/noticias/rutasNoticias.js';
+import rutasAranceles from '@/views/aranceles/rutasAranceles.js';
+import rutasConvenios from '@/views/convenios/rutasConvenios.js';
+import rutasCatalogos from '@/views/catalogos/rutasCatalogos.js';
 
 const routes = [
   ...rutasPublicas,
   ...rutasAuth,
   ...rutasAdmin,
+  ...rutasCatalogos,
   ...rutasPersonas,
   ...rutasProgramas,
   ...rutasGrupos,
@@ -23,6 +27,8 @@ const routes = [
   ...rutasPlanEstudio,
   ...rutasDocente,
   ...rutasNoticias,
+  ...rutasAranceles,
+  ...rutasConvenios,
 
   // Dashboard principal
   {

@@ -161,10 +161,89 @@ onMounted(async () => {
   <div class="noticia-detalle">
     <!-- Main Content -->
     <v-container class="noticia-container">
-      <!-- Loading State -->
-      <div v-if="cargandoNoticia" class="text-center my-12">
-        <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-        <p class="mt-4 text-h6">Cargando noticia...</p>
+      <!-- Loading State con Skeleton -->
+      <div v-if="cargandoNoticia">
+        <v-row>
+          <!-- Skeleton Main Article -->
+          <v-col cols="12" lg="8">
+            <article class="article-wrapper">
+              <!-- Skeleton Portada - ANCHO COMPLETO -->
+              <div class="article-portada">
+                <v-skeleton-loader
+                  type="image"
+                  height="450"
+                  width="100%"
+                  class="portada-imagen"
+                ></v-skeleton-loader>
+              </div>
+
+              <!-- Skeleton Título - ANCHO COMPLETO -->
+              <div class="mt-4 mb-4">
+                <v-skeleton-loader type="heading" height="40" width="100%" class="mb-3"></v-skeleton-loader>
+                <v-skeleton-loader type="heading" height="40" width="85%"></v-skeleton-loader>
+              </div>
+
+              <!-- Skeleton Metadata -->
+              <div class="article-meta mb-4">
+                <div class="d-flex align-center ga-3 flex-wrap">
+                  <v-skeleton-loader type="chip" width="200" height="28"></v-skeleton-loader>
+                  <v-skeleton-loader type="chip" width="200" height="28"></v-skeleton-loader>
+                </div>
+              </div>
+
+              <v-divider class="my-6"></v-divider>
+
+              <!-- Skeleton Contenido - ANCHO COMPLETO -->
+              <div class="article-body">
+                <v-skeleton-loader type="paragraph" width="100%" class="mb-4"></v-skeleton-loader>
+                <v-skeleton-loader type="paragraph" width="100%" class="mb-4"></v-skeleton-loader>
+                <v-skeleton-loader type="paragraph" width="95%" class="mb-6"></v-skeleton-loader>
+
+                <v-skeleton-loader type="image" height="350" width="100%" class="my-6"></v-skeleton-loader>
+
+                <v-skeleton-loader type="paragraph" width="100%" class="mb-4"></v-skeleton-loader>
+                <v-skeleton-loader type="paragraph" width="100%" class="mb-4"></v-skeleton-loader>
+                <v-skeleton-loader type="paragraph" width="90%"></v-skeleton-loader>
+              </div>
+
+              <v-divider class="my-8"></v-divider>
+
+              <!-- Skeleton Footer -->
+              <div class="article-footer">
+                <div class="d-flex align-center justify-space-between flex-wrap ga-4 mb-6">
+                  <v-skeleton-loader type="image" width="120" height="50"></v-skeleton-loader>
+                  <div class="d-flex ga-2">
+                    <v-skeleton-loader type="button" width="40" height="40"></v-skeleton-loader>
+                  </div>
+                </div>
+                <v-skeleton-loader type="button" width="200" height="44"></v-skeleton-loader>
+              </div>
+            </article>
+          </v-col>
+
+          <!-- Skeleton Sidebar -->
+          <v-col cols="12" lg="4">
+            <aside class="sidebar-content">
+              <div class="sidebar-sticky">
+                <div class="d-flex align-center mb-6">
+                  <v-skeleton-loader type="heading" width="220" height="32"></v-skeleton-loader>
+                </div>
+
+                <!-- Skeleton Noticias Recientes -->
+                <div class="noticias-recientes-list">
+                  <v-card
+                    v-for="i in 3"
+                    :key="`skeleton-${i}`"
+                    class="noticia-reciente-card mb-4"
+                    elevation="2"
+                  >
+                    <v-skeleton-loader type="card-avatar" height="180" width="100%"></v-skeleton-loader>
+                  </v-card>
+                </div>
+              </div>
+            </aside>
+          </v-col>
+        </v-row>
       </div>
 
       <!-- Error State -->
@@ -283,9 +362,20 @@ onMounted(async () => {
                   Noticias Recientes
                 </h3>
 
-                <!-- Loading recientes -->
-                <div v-if="cargandoRecientes" class="text-center my-4">
-                  <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
+                <!-- Loading recientes con skeleton -->
+                <div v-if="cargandoRecientes" class="noticias-recientes-list">
+                  <v-card
+                    v-for="i in 3"
+                    :key="`skeleton-${i}`"
+                    class="noticia-reciente-card mb-4"
+                    elevation="2"
+                  >
+                    <v-skeleton-loader type="image" height="150"></v-skeleton-loader>
+                    <v-card-text class="pa-3">
+                      <v-skeleton-loader type="heading" class="mb-2"></v-skeleton-loader>
+                      <v-skeleton-loader type="text" width="120"></v-skeleton-loader>
+                    </v-card-text>
+                  </v-card>
                 </div>
 
                 <!-- Lista de noticias recientes -->
@@ -337,6 +427,7 @@ onMounted(async () => {
     </v-container>
   </div>
 </template>
+
 
 <style scoped lang="scss">
 .noticia-detalle {

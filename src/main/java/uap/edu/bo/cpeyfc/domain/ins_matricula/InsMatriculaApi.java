@@ -16,15 +16,40 @@ public class InsMatriculaApi {
   private final InsMatriculaRepository insMatriculaRepository;
   private final InsMatriculaService insMatriculaService;
 
+  // DEPRECADO - Mantener para compatibilidad con código existente
+  @Deprecated
   @PostMapping("/api/matricula/matricular-preinscrito")
-  public ResponseEntity<String> matricularPreinscrito(@RequestBody HashMap<String, Object> datos, @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails) {
+  public ResponseEntity<String> matricularPreinscrito(
+    @RequestBody HashMap<String, Object> datos,
+    @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails
+  ) {
     String resultado = insMatriculaService.matricularPreinscrito(
-            (Integer) datos.get("id_ins_preinscripcion"),
-            (Integer) datos.get("id_ins_grupo"),
-            userDetails.getIdSegUsuario(),
-            (Integer) datos.get("id_parametro_descuento")
+      (Integer) datos.get("id_ins_preinscripcion"),
+      (Integer) datos.get("id_ins_grupo"),
+      userDetails.getIdSegUsuario(),
+      (Integer) datos.get("id_parametro_descuento")
     );
     return ResponseEntity.ok(resultado);
+  }
+
+  // NUEVO - Sistema de aranceles con tipos de beneficiario
+  @PostMapping("/api/matricula/matricular-preinscrito-v2")
+  public ResponseEntity<?> matricularPreinscritoV2(
+    @RequestBody HashMap<String, Object> datos,
+    @AuthenticationPrincipal JwtSecurityConfigUserDetails userDetails
+  ) {
+    String resultado = insMatriculaService.matricularPreinscritoV2(
+      (Integer) datos.get("id_ins_preinscripcion"),
+      (Integer) datos.get("id_ins_grupo"),
+      (Integer) datos.get("id_tipo_beneficiario"),  // NUEVO - obligatorio
+      userDetails.getIdSegUsuario(),
+      (Integer) datos.get("id_convenio")             // NUEVO - opcional
+    );
+
+    return ResponseEntity.ok(Map.of(
+      "mensaje", resultado,
+      "tipo", "success"
+    ));
   }
 
   @GetMapping("/api/matricula/vista/estudiantes-grupo")

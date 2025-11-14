@@ -109,6 +109,12 @@ export default createVuetify({
       itemsPerPage: [100]
     },
 
+    VDateInput:{
+      density: 'comfortable',
+      color: 'primary',
+      variant: 'outlined'
+    },
+
     // Campos de texto
     VTextField: {
       variant: 'outlined',
@@ -141,6 +147,11 @@ export default createVuetify({
 
     VIcon: {
       size: 24,
+    },
+
+    VTextarea: {
+      variant: 'outlined',
+      color: 'primary'
     },
 
     // Tooltips

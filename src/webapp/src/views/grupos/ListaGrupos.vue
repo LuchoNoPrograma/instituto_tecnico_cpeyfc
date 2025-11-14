@@ -657,7 +657,7 @@ onMounted(cargarDatos)
                     :to="`/inscripciones?programa=${item.items[0].raw.id_aca_programa_aprobado}`"
                   >
                     <v-icon>mdi-account-plus</v-icon>
-                    <v-tooltip activator="parent" location="top">Gestionar inscripciones</v-tooltip>
+                    <v-tooltip activator="parent" location="top">Registrar preinscripcion</v-tooltip>
                   </v-btn>
                 </div>
               </div>
@@ -676,14 +676,9 @@ onMounted(cargarDatos)
         <template #item.docente_nombre_completo="{ item }">
           <div>
             <div class="text-body-2">{{ item.docente_nombre_completo }}</div>
-            <v-chip
-              v-if="!item.id_eje_docente"
-              color="warning"
-              size="small"
-              variant="flat"
-            >
+            <div v-if="!item.id_eje_docente" class="text-medium-emphasis">
               SIN DOCENTE ASIGNADO
-            </v-chip>
+            </div>
           </div>
         </template>
 
