@@ -2,7 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/services/api'
-import FormularioPrograma from '@/views/programas/FormularioPrograma.vue'
+import FormularioProgramaAprobado from '@/views/programas-aprobados/FormularioProgramaAprobado.vue'
 import formatoFecha from '@/helpers/formatos.js'
 import ExcelJS from 'exceljs'
 import { showRegistrado, showModificado, showError, showConfirmar, showCargando, cerrarCargando } from '@/utils/sweetalert.js'
@@ -34,12 +34,12 @@ const formularioParametro = ref({
   orden: 1
 })
 
-// Headers actualizados
+// Headers actualizados (sin precios)
 const headers = [
   { title: 'Programa', key: 'programa_nombre', sortable: true, width: '25%' },
-  { title: 'Plan', key: 'plan_anho', sortable: true, width: '15%' },
-  { title: 'Versión', key: 'cod_version', sortable: true, width: '10%' },
   { title: 'Modalidad', key: 'modalidad_nombre', sortable: true, width: '15%' },
+  { title: 'Área', key: 'area_nombre', sortable: true, width: '15%' },
+  { title: 'Plan', key: 'plan_anho', sortable: true, width: '10%' },
   { title: 'Gestión', key: 'gestion', sortable: true, width: '8%' },
   { title: 'Estado', key: 'estado_programa_aprobado', sortable: true, width: '12%' },
   { title: 'Acciones', key: 'acciones', sortable: false, width: '10%' }
@@ -110,8 +110,7 @@ const tarjetasEstadisticas = computed(() => [
 const programasFormateados = computed(() => {
   return programas.value.map(programa => ({
     ...programa,
-    plan_descripcion: programa.plan_anho || 'Sin plan',
-    version_codigo: programa.cod_version || 'Sin versión'
+    plan_descripcion: programa.plan_anho || 'Sin plan'
   }))
 })
 
@@ -175,15 +174,6 @@ const obtenerColorEstado = (estado) => {
   return colores[estado] || 'grey'
 }
 
-const duplicarPrograma = (programa) => {
-  const programaDuplicado = {
-    ...programa,
-    gestion: new Date().getFullYear(),
-    estado_programa_aprobado: 'SIN INICIAR'
-  }
-  abrirDialogEditar(programaDuplicado)
-}
-
 // Funciones de parámetros
 const abrirParametros = async (programa) => {
   programaSeleccionado.value = programa
@@ -215,7 +205,6 @@ const abrirFormularioParametro = (parametro = null) => {
 }
 
 const guardarParametro = async () => {
-  // Mostrar indicador de carga
   showCargando(
     esEdicionParametro.value ? 'Actualizando parámetro...' : 'Guardando parámetro...',
     'Por favor espere'
@@ -256,7 +245,6 @@ const eliminarParametro = async (parametro) => {
 
   if (!resultado.isConfirmed) return
 
-  // Mostrar indicador de carga
   showCargando('Eliminando parámetro...', 'Por favor espere')
 
   try {
@@ -292,15 +280,12 @@ const exportarExcel = async () => {
       { header: 'Programa', key: 'programa', width: 40 },
       { header: 'Modalidad', key: 'modalidad', width: 15 },
       { header: 'Área', key: 'area', width: 20 },
+      { header: 'Plan', key: 'plan', width: 10 },
       { header: 'Versión', key: 'version', width: 12 },
       { header: 'Gestión', key: 'gestion', width: 10 },
       { header: 'Estado', key: 'estado', width: 15 },
-      { header: 'Precio Matrícula', key: 'matricula', width: 15 },
-      { header: 'Precio Colegiatura', key: 'colegiatura', width: 15 },
-      { header: 'Precio Titulación', key: 'titulacion', width: 15 },
       { header: 'Fecha Inicio Vigencia', key: 'inicio', width: 18 },
-      { header: 'Fecha Fin Vigencia', key: 'fin', width: 18 },
-      { header: 'Certificado CEUB', key: 'certificado', width: 18 }
+      { header: 'Fecha Fin Vigencia', key: 'fin', width: 18 }
     ]
 
     worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFF' } }
@@ -315,21 +300,14 @@ const exportarExcel = async () => {
         programa: programa.programa_nombre,
         modalidad: programa.modalidad_nombre,
         area: programa.area_nombre,
-        version: programa.version_codigo || 'Sin versión',
+        plan: programa.plan_anho || 'Sin plan',
+        version: programa.cod_version || 'Sin versión',
         gestion: programa.gestion,
         estado: programa.estado_programa_aprobado,
-        matricula: programa.precio_matricula,
-        colegiatura: programa.precio_colegiatura,
-        titulacion: programa.precio_titulacion || 0,
         inicio: programa.fecha_inicio_vigencia ? formatoFecha.ddMMaaaa(programa.fecha_inicio_vigencia) : 'No definida',
-        fin: programa.fecha_fin_vigencia ? formatoFecha.ddMMaaaa(programa.fecha_fin_vigencia) : 'No definida',
-        certificado: programa.cod_certificado_ceub || 'No definido'
+        fin: programa.fecha_fin_vigencia ? formatoFecha.ddMMaaaa(programa.fecha_fin_vigencia) : 'No definida'
       })
     })
-
-    worksheet.getColumn('matricula').numFmt = '"Bs" #,##0.00'
-    worksheet.getColumn('colegiatura').numFmt = '"Bs" #,##0.00'
-    worksheet.getColumn('titulacion').numFmt = '"Bs" #,##0.00'
 
     worksheet.eachRow({ includeEmpty: false }, (row) => {
       row.height = 20
@@ -337,7 +315,7 @@ const exportarExcel = async () => {
 
     worksheet.autoFilter = {
       from: 'A1',
-      to: 'L1'
+      to: 'I1'
     }
 
     const buffer = await workbook.xlsx.writeBuffer()
@@ -371,21 +349,26 @@ const cerrarDialog = () => {
 }
 
 const guardarPrograma = async (datos) => {
-  // Mostrar indicador de carga
   showCargando(
     esEdicion.value ? 'Actualizando programa...' : 'Guardando programa...',
     'Por favor espere'
   )
 
   try {
-    datos.cod_certificado_ceub = datos.cod_certificado_ceub ? datos.cod_certificado_ceub : null
-
-    if(esEdicion.value) {
-      await api.put('/api/programa-aprobado/'+datos.id_aca_programa_aprobado, datos)
+    if (esEdicion.value) {
+      await api.post('/api/programa-aprobado/' + programaSeleccionado.value.id_aca_programa_aprobado, datos, {
+        headers: datos instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {}
+      })
       cerrarCargando()
       await showModificado('Programa actualizado correctamente')
-    }else{
-      await api.post('/api/programa-aprobado', datos)
+    } else {
+      if (datos instanceof FormData) {
+        await api.post('/api/programa-aprobado', datos, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+      } else {
+        await api.post('/api/programa-aprobado', datos)
+      }
       cerrarCargando()
       await showRegistrado('Programa creado exitosamente')
     }
@@ -567,18 +550,14 @@ onMounted(() => {
               {{ item.programa_nombre }}
             </div>
             <div class="text-caption text-medium-emphasis">
-              <v-icon size="12" class="mr-1">mdi-domain</v-icon>
-              {{ item.area_nombre }}
+              <v-icon size="12" class="mr-1">mdi-tag</v-icon>
+              {{ item.programa_sigla }}
             </div>
           </div>
         </template>
 
-        <template #item.plan_descripcion="{ item }">
-          <span class="text-body-2">{{ item.plan_descripcion }}</span>
-        </template>
-
-        <template #item.version_codigo="{ item }">
-          <span class="text-body-2">{{ item.version_codigo }}</span>
+        <template #item.plan_anho="{ item }">
+          <span class="text-body-2">{{ item.plan_anho || 'Sin plan' }}</span>
         </template>
 
         <template #item.estado_programa_aprobado="{ item }">
@@ -593,17 +572,6 @@ onMounted(() => {
 
         <template #item.acciones="{ item }">
           <div class="d-flex ga-1">
-<!--            <v-btn
-              icon="mdi-eye"
-              size="small"
-              color="info"
-              variant="elevated"
-              @click="verDetalle(item)"
-            >
-              <v-icon>mdi-eye</v-icon>
-              <v-tooltip activator="parent" location="top">Ver detalle</v-tooltip>
-            </v-btn>-->
-
             <v-btn
               icon="mdi-pencil"
               size="small"
@@ -649,13 +617,6 @@ onMounted(() => {
                   </template>
                   <v-list-item-title>Configurar Descuentos</v-list-item-title>
                 </v-list-item>
-
-<!--                <v-list-item @click="duplicarPrograma(item)">
-                  <template #prepend>
-                    <v-icon>mdi-content-copy</v-icon>
-                  </template>
-                  <v-list-item-title>Duplicar Programa</v-list-item-title>
-                </v-list-item>-->
               </v-list>
             </v-menu>
           </div>
@@ -676,7 +637,7 @@ onMounted(() => {
           {{ esEdicion ? 'Editar Programa' : 'Nuevo Programa' }}
         </v-card-title>
 
-        <FormularioPrograma
+        <FormularioProgramaAprobado
           :programa="programaSeleccionado"
           :es-edicion="esEdicion"
           @cancelar="cerrarDialog"

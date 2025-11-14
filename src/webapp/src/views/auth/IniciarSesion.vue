@@ -117,12 +117,6 @@
                     </v-col>
                     <v-col cols="auto">
                       <v-card class="feature-card pa-3" color="white" variant="outlined">
-                        <v-icon class="mb-2" color="#1976D2" size="24">mdi-certificate</v-icon>
-                        <div class="feature-text">Certificación Digital</div>
-                      </v-card>
-                    </v-col>
-                    <v-col cols="auto">
-                      <v-card class="feature-card pa-3" color="white" variant="outlined">
                         <v-icon class="mb-2" color="#1976D2" size="24">mdi-security</v-icon>
                         <div class="feature-text">Plataforma Segura</div>
                       </v-card>
@@ -142,7 +136,7 @@
             <div class="login-form-container">
               <!-- Header del formulario -->
               <div class="login-form-header text-center mb-8">
-                <v-icon class="mb-3" color="#1976D2" size="48">mdi-login-variant</v-icon>
+                <v-icon class="mb-3" size="48">mdi-login-variant</v-icon>
                 <h2 class="login-form-title mb-2">Acceso al Sistema</h2>
                 <p class="login-form-subtitle">
                   Ingrese sus credenciales para continuar
@@ -243,7 +237,7 @@
               <!-- Footer -->
               <div class="login-footer text-center mt-6">
                 <p class="text-caption text-medium-emphasis">
-                  © 2025 Universidad Amazónica de Pando - CPEYFC
+                  © 2025 Universidad Amazónica de Pando - CPEYFP
                 </p>
                 <p class="text-caption text-medium-emphasis">
                   Sistema de Gestión Académica v1.0
@@ -417,10 +411,7 @@
       color: rgba(255,255,255,0.8);
     }
   }
-
-  .login-footer {
-    color: rgba(255,255,255,0.8);
-  }
+  
 }
 
 @media (max-width: 600px) {

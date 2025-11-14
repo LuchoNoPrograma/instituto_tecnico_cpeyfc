@@ -3,7 +3,7 @@ import { showError } from '@/utils/sweetalert'
 
 const api = axios.create({
   baseURL: '/api',
-  timeout: 10000,
+  timeout: 35000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -24,7 +24,6 @@ api.interceptors.response.use(
   error => {
     console.error('🔥 Error capturado por interceptor:', error)
 
-    // Si no hay respuesta (problemas de red)
     if (!error.response) {
       console.log('🌐 Error de red detectado')
       showError(
@@ -37,18 +36,28 @@ api.interceptors.response.use(
     const { status, data } = error.response
     console.log(`📊 Status: ${status}, Data:`, data)
 
-    // Manejo específico por código de estado
     switch (status) {
       case 401:
-        console.log('🔐 Error 401 - No autorizado')
-        localStorage.removeItem('access_token')
-        window.location.href = '/login'
+        console.log('🔐 Error 401 - Token expirado o no autorizado')
+
+        // Verificar si es token expirado específicamente
+        if (data?.token_expired || data?.message?.includes('caducado') || data?.message?.includes('expirado')) {
+          showError(
+            'Tu sesión ha caducado. Por favor, inicia sesión nuevamente.',
+            'Sesión Caducada'
+          ).then(() => {
+            localStorage.removeItem('access_token')
+            window.location.href = '/login'
+          })
+        } else {
+          localStorage.removeItem('access_token')
+          window.location.href = '/login'
+        }
         break
 
       case 409:
         console.log('⚠️ Error 409 - Conflicto de DB')
         if (data?.message) {
-          console.log('💬 Mostrando mensaje:', data.message)
           showError(data.message, data.error || 'Error de Base de Datos')
         } else {
           showError('Ya existe un registro con estos datos.', 'Registro Duplicado')

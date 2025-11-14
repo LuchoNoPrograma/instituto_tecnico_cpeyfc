@@ -92,18 +92,41 @@ const formatearHora = (timestamp) => {
   })
 }
 
-// NUEVA FUNCIÓN: Procesar markdown links a HTML
 const procesarMarkdown = (texto) => {
   if (!texto) return ''
 
-  // Convertir links markdown [texto](url) a HTML
-  let html = texto.replace(
+  let html = texto
+
+  // 1. Convertir **negrita** a <strong>
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+
+  // 2. Convertir listas con * a <ul><li>
+  // Buscar bloques de líneas que empiezan con *
+  html = html.replace(/(?:^|\n)((?:\s*\* .+(?:\n|$))+)/gm, (match, listBlock) => {
+    const items = listBlock
+      .split('\n')
+      .filter(line => line.trim().startsWith('*'))
+      .map(line => {
+        let content = line.trim().substring(1).trim()
+        // Procesar negritas dentro de items
+        content = content.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        return `<li>${content}</li>`
+      })
+      .join('')
+
+    return `<ul class="chatbot-list">${items}</ul>`
+  })
+
+  // 3. Convertir links markdown [texto](url) a HTML
+  html = html.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer" class="chatbot-link">$1</a>'
   )
 
-  // Convertir saltos de línea a <br>
-  html = html.replace(/\n/g, '<br>')
+  // 4. Convertir saltos de línea a <br> (excepto alrededor de listas)
+  html = html.replace(/\n(?!<ul|<\/ul>)/g, '<br>')
+  html = html.replace(/<\/ul><br>/g, '</ul>')
+  html = html.replace(/<br><ul/g, '<ul')
 
   return html
 }
@@ -452,6 +475,40 @@ const procesarMarkdown = (texto) => {
     line-height: 1.5;
     margin-bottom: 0.25rem;
 
+    // Negritas
+    :deep(strong) {
+      font-weight: 700;
+      color: rgb(var(--v-theme-primary));
+    }
+
+    // Listas
+    :deep(.chatbot-list) {
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+      list-style: none;
+
+      li {
+        position: relative;
+        padding-left: 0.5rem;
+        margin-bottom: 0.5rem;
+        line-height: 1.6;
+
+        &::before {
+          content: '•';
+          position: absolute;
+          left: -1.2rem;
+          color: rgb(var(--v-theme-primary));
+          font-weight: bold;
+          font-size: 1.3em;
+        }
+
+        strong {
+          font-weight: 700;
+        }
+      }
+    }
+
+    // Enlaces
     :deep(.chatbot-link) {
       color: rgb(var(--v-theme-primary));
       text-decoration: none;
@@ -490,12 +547,23 @@ const procesarMarkdown = (texto) => {
 }
 
 .mensaje-wrapper.usuario {
-  .mensaje-texto :deep(.chatbot-link) {
-    color: white;
-    border-bottom-color: white;
+  .mensaje-texto {
+    :deep(strong) {
+      color: white;
+      font-weight: 800;
+    }
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.2);
+    :deep(.chatbot-list li::before) {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    :deep(.chatbot-link) {
+      color: white;
+      border-bottom-color: white;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
     }
   }
 }
@@ -616,7 +684,7 @@ const procesarMarkdown = (texto) => {
 
   .chatbot-card {
     width: calc(100vw - 2rem);
-    height: calc(100vh - 2rem);
+    height: calc(95vh - 2rem);
     max-width: none;
     max-height: none;
   }

@@ -17,8 +17,47 @@ public class InsMatriculaService {
     private final InsMatriculaRepository insMatriculaRepository;
     private final PasswordEncoder passwordEncoder;
 
+    // DEPRECADO - Usar matricularPreinscritoV2
+    @Deprecated
     public String matricularPreinscrito(Integer idPreinscripcion, Integer idGrupo, Integer userReg, Integer idParametroDescuento) {
-        Map<String, Object> resultado = insMatriculaRepository.matricularPreinscritoCompleto(idPreinscripcion, idGrupo, userReg, idParametroDescuento);
+        Map<String, Object> resultado = insMatriculaRepository.matricularPreinscritoCompleto(
+          idPreinscripcion,
+          idGrupo,
+          userReg,
+          idParametroDescuento
+        );
+
+        Boolean usuarioExistia = (Boolean) resultado.get("usuario_existia");
+        String mensaje = (String) resultado.get("mensaje");
+
+        if (!usuarioExistia) {
+            String passwordTemporal = (String) resultado.get("password_temporal");
+            Integer idUsuario = (Integer) resultado.get("id_usuario");
+
+            String passwordHash = passwordEncoder.encode(passwordTemporal);
+            String confirmado = insMatriculaRepository.activarUsuarioMatricula(idUsuario, passwordHash);
+            log.info(confirmado);
+            return mensaje + " - Password temporal: " + passwordTemporal;
+        }
+
+        return mensaje + " - Usuario existente utilizado";
+    }
+
+    // NUEVO - Sistema de aranceles con tipos de beneficiario
+    public String matricularPreinscritoV2(
+      Integer idPreinscripcion,
+      Integer idGrupo,
+      Integer idTipoBeneficiario,
+      Integer userReg,
+      Integer idConvenio
+    ) {
+        Map<String, Object> resultado = insMatriculaRepository.matricularPreinscritoCompletoV2(
+          idPreinscripcion,
+          idGrupo,
+          idTipoBeneficiario,
+          userReg,
+          idConvenio
+        );
 
         Boolean usuarioExistia = (Boolean) resultado.get("usuario_existia");
         String mensaje = (String) resultado.get("mensaje");

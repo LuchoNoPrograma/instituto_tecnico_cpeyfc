@@ -67,7 +67,7 @@ const accesosRapidos = computed(() => [
     descripcion: 'Revisar cronogramas y programación actual',
     icono: 'mdi-clipboard-play',
     color: 'primary',
-    ruta: '/ejecucion/cronogramas',
+    ruta: '/grupos',
     permiso: 'VER_EJECUCION'
   },
   {
