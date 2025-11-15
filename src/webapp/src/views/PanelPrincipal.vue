@@ -70,7 +70,7 @@ const accesosRapidos = computed(() => [
     ruta: '/grupos',
     permiso: 'VER_EJECUCION'
   },
-  {
+  /*{
     titulo: 'Nueva Matrícula',
     descripcion: 'Registrar nueva matrícula',
     icono: 'mdi-school-plus',
@@ -93,7 +93,7 @@ const accesosRapidos = computed(() => [
     color: 'warning',
     ruta: '/certificados/nuevo',
     permiso: 'EMITIR_CERTIFICADOS'
-  }
+  }*/
 ]/*.filter(acceso => hasPermission(acceso.permiso))*/)
 
 // Cargar datos del dashboard

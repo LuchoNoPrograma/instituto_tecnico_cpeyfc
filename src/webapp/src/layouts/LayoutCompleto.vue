@@ -72,7 +72,8 @@ const menuItems = computed(() => {
       titulo: 'Ver perfil',
       icono: 'mdi-account-school',
       ruta: '/perfil-estudiante',
-      mostrar: hasPermission('ADMINISTRAR_PROGRAMAS')
+      /*mostrar: hasPermission('ADMINISTRAR_PROGRAMAS')*/
+      mostrar: false
     },
     {
       titulo: 'Finanzas',
