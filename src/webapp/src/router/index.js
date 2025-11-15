@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { nextTick } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useLoadingStore } from '@/stores/loading'
 import rutasPublicas from './rutasPublicas'
@@ -56,13 +57,18 @@ const router = createRouter({
 })
 
 // Guard de navegación
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const { isLoggedIn, hasAnyRole, hasAnyPermission } = useAuth()
   const loadingStore = useLoadingStore()
 
-  // Mostrar loading solo si no es la carga inicial y las rutas son diferentes
-  if (from.name !== undefined && to.name !== from.name) {
+  // Mostrar loading ANTES de cualquier renderizado
+  // Solo si no es la carga inicial y las rutas son diferentes
+  const shouldShowLoading = from.name !== undefined && to.name !== from.name
+
+  if (shouldShowLoading) {
     loadingStore.show('Cargando página...')
+    // Esperar al siguiente tick para asegurar que el loading sea visible ANTES del componente
+    await nextTick()
   }
 
   if (to.meta.requiresAuth && !isLoggedIn()) {
@@ -93,12 +99,14 @@ router.beforeEach((to, from, next) => {
 })
 
 // Ocultar loading después de que la navegación se complete
-router.afterEach(() => {
+router.afterEach(async () => {
   const loadingStore = useLoadingStore()
-  // Usar setTimeout para dar tiempo a que el componente se monte
+  // Esperar al siguiente tick para asegurar que el componente esté completamente montado
+  await nextTick()
+  // Pequeño delay adicional para permitir animaciones de entrada del componente
   setTimeout(() => {
     loadingStore.hide()
-  }, 100)
+  }, 50)
 })
 
 export default router
