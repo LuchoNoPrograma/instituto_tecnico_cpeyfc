@@ -83,7 +83,7 @@ const cancelar = () => {
 
 <template>
   <v-card>
-    <v-card-title class="d-flex align-center pa-4 bg-secondary">
+    <v-card-title class="d-flex align-center pa-4 bg-primary">
       <v-icon class="mr-2">mdi-file-document-multiple</v-icon>
       <span>Asignar Requisitos - {{ perfil?.nombre_perfil }}</span>
     </v-card-title>

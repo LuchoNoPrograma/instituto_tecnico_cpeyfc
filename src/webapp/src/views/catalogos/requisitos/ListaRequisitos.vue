@@ -11,9 +11,9 @@ const mostrarFormulario = ref(false)
 const requisitoSeleccionado = ref(null)
 
 const headers = [
+  { title: 'Orden', key: 'orden_presentacion', sortable: true, width: '5%' },
   { title: 'Requisito', key: 'nombre_requisito', sortable: true, width: '30%' },
   { title: 'Descripción', key: 'descripcion', sortable: false, width: '45%' },
-  { title: 'Orden', key: 'orden_presentacion', sortable: true, width: '10%' },
   { title: 'Acciones', key: 'acciones', sortable: false, width: '15%' }
 ]
 
@@ -142,6 +142,13 @@ onMounted(() => {
           </v-toolbar>
         </template>
 
+        <!-- Orden -->
+        <template #item.orden_presentacion="{ item }">
+          <v-chip size="small" color="primary" variant="tonal" class="font-weight-bold">
+            {{ item.orden_presentacion }}
+          </v-chip>
+        </template>
+
         <!-- Nombre del requisito -->
         <template #item.nombre_requisito="{ item }">
           <div class="text-body-1 font-weight-medium">
@@ -154,13 +161,6 @@ onMounted(() => {
           <div class="text-body-2">
             {{ item.descripcion || 'Sin descripción' }}
           </div>
-        </template>
-
-        <!-- Orden -->
-        <template #item.orden_presentacion="{ item }">
-          <v-chip size="small" color="secondary" variant="tonal">
-            {{ item.orden_presentacion }}
-          </v-chip>
         </template>
 
         <!-- Acciones -->
