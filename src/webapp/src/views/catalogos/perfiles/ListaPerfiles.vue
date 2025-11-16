@@ -178,22 +178,23 @@ onMounted(() => {
             icon
             size="small"
             color="primary"
-            class="mr-1"
-            @click="abrirFormularioEditar(item)"
-          >
-            <v-icon>mdi-pencil</v-icon>
-            <v-tooltip activator="parent" location="top">Editar</v-tooltip>
-          </v-btn>
-
-          <v-btn
-            icon
-            size="small"
-            color="secondary"
+            variant="tonal"
             class="mr-1"
             @click="abrirAsignarRequisitos(item)"
           >
             <v-icon>mdi-file-document-multiple</v-icon>
             <v-tooltip activator="parent" location="top">Asignar Requisitos</v-tooltip>
+          </v-btn>
+
+          <v-btn
+            icon
+            size="small"
+            color="primary"
+            class="mr-1"
+            @click="abrirFormularioEditar(item)"
+          >
+            <v-icon>mdi-pencil</v-icon>
+            <v-tooltip activator="parent" location="top">Editar</v-tooltip>
           </v-btn>
 
           <v-btn
