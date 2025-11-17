@@ -10,7 +10,6 @@ const idGrupo = computed(() => parseInt(route.query.grupo))
 
 const loading = ref(false)
 const busqueda = ref('')
-const filtroEstadoMatricula = ref(null)
 const filtroEstadoFinanciero = ref(null)
 const mostrarTodos = ref(false)
 
@@ -32,7 +31,6 @@ const opcionesEstadoFinanciero = [
 // Headers de la tabla
 const headers = [
   { title: 'Estudiante', key: 'estudiante', sortable: true, width: '280px' },
-  { title: 'Estado', key: 'estado_matricula', sortable: true, width: '150px' },
   { title: 'Situación Financiera', key: 'estado_financiero', sortable: true, width: '180px' },
   { title: 'Deuda', key: 'deuda_total', sortable: true, width: '150px' },
   { title: 'Contacto', key: 'contacto', sortable: false, width: '180px' },
@@ -42,10 +40,6 @@ const headers = [
 // Computed properties
 const matriculadosFiltrados = computed(() => {
   let resultado = matriculados.value
-
-  if (filtroEstadoMatricula.value) {
-    resultado = resultado.filter(m => m.estado_matricula === filtroEstadoMatricula.value)
-  }
 
   if (filtroEstadoFinanciero.value) {
     resultado = resultado.filter(m => m.estado_financiero === filtroEstadoFinanciero.value)
@@ -90,15 +84,6 @@ const getIniciales = (nombre) => {
     .toUpperCase()
 }
 
-const getColorEstadoMatricula = (estado) => {
-  const colores = {
-    'EN EJECUCION': 'success',
-    'EGRESADO': 'info',
-    'SUSPENDIDO': 'error'
-  }
-  return colores[estado] || 'grey'
-}
-
 const getIconEstadoMatricula = (estado) => {
   const iconos = {
     'EN EJECUCION': 'mdi-school',
@@ -132,10 +117,6 @@ const limpiarFiltros = () => {
 // Acciones
 const verPerfil = (estudiante) => {
   router.push(`/estudiantes/${estudiante.cod_ins_matricula}`)
-}
-
-const contactarTelefono = (estudiante) => {
-  window.open(`tel:${estudiante.nro_celular}`)
 }
 
 const contactarWhatsApp = (estudiante) => {
@@ -444,17 +425,6 @@ onMounted(() => {
           </v-col>
           <v-col cols="12" sm="6" md="2">
             <v-select
-              v-model="filtroEstadoMatricula"
-              :items="opcionesEstadoMatricula"
-              label="Estado"
-              clearable
-              variant="outlined"
-              density="comfortable"
-              hide-details
-            />
-          </v-col>
-          <v-col cols="12" sm="6" md="2">
-            <v-select
               v-model="filtroEstadoFinanciero"
               :items="opcionesEstadoFinanciero"
               label="Situación"
@@ -464,7 +434,7 @@ onMounted(() => {
               hide-details
             />
           </v-col>
-          <v-col cols="12" md="3" class="d-flex gap-2">
+          <v-col cols="12" md="2" class="d-flex ga-2">
             <v-btn
               @click="limpiarFiltros"
               variant="outlined"
@@ -480,7 +450,7 @@ onMounted(() => {
               block
               @click="router.push(`/matriculas/preinscrito?programa=${grupoInfo.id_aca_programa_aprobado}`)"
             >
-              Nueva Matrícula
+              Matrícular
             </v-btn>
           </v-col>
         </v-row>
@@ -528,7 +498,7 @@ onMounted(() => {
         </template>
 
         <!-- Estado Matrícula -->
-        <template v-slot:item.estado_matricula="{ item }">
+<!--        <template v-slot:item.estado_matricula="{ item }">
           <v-chip
             :color="getColorEstadoMatricula(item.estado_matricula)"
             :prepend-icon="getIconEstadoMatricula(item.estado_matricula)"
@@ -537,7 +507,7 @@ onMounted(() => {
           >
             {{ item.estado_matricula }}
           </v-chip>
-        </template>
+        </template>-->
 
         <!-- Estado Financiero -->
         <template v-slot:item.estado_financiero="{ item }">
@@ -583,18 +553,6 @@ onMounted(() => {
         <!-- Acciones -->
         <template v-slot:item.acciones="{ item }">
           <div class="d-flex gap-1">
-            <v-tooltip text="Llamar">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  @click="contactarTelefono(item)"
-                  icon="mdi-phone"
-                  size="small"
-                  variant="tonal"
-                  color="success"
-                />
-              </template>
-            </v-tooltip>
 
             <v-tooltip text="WhatsApp">
               <template v-slot:activator="{ props }">
@@ -628,7 +586,7 @@ onMounted(() => {
   </v-container>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .metric-card {
   transition: transform 0.2s, box-shadow 0.2s;
 }
