@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from "@/services/api.js"
+import RegistrarPagoModal from './RegistrarPagoModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -15,6 +16,10 @@ const mostrarTodos = ref(false)
 
 const grupoInfo = ref({})
 const matriculados = ref([])
+
+// Estado del modal de pago
+const mostrarModalPago = ref(false)
+const estudianteSeleccionado = ref(null)
 
 // Opciones para filtros
 const opcionesEstadoMatricula = [
@@ -132,8 +137,19 @@ const enviarEmail = (estudiante) => {
 }
 
 const registrarPago = (estudiante) => {
-  // TODO: Abrir modal de registro de pago
-  console.log('Registrar pago para:', estudiante)
+  estudianteSeleccionado.value = estudiante
+  mostrarModalPago.value = true
+}
+
+const cerrarModalPago = () => {
+  mostrarModalPago.value = false
+  estudianteSeleccionado.value = null
+}
+
+const onPagoGuardado = () => {
+  cerrarModalPago()
+  // Recargar datos para reflejar los cambios
+  cargarDatos()
 }
 
 const verPagos = (estudiante) => {
@@ -583,6 +599,16 @@ onMounted(() => {
         </template>
       </v-data-table>
     </v-card>
+
+    <!-- Modal de Registro de Pago -->
+    <v-dialog v-model="mostrarModalPago" max-width="700px" persistent>
+      <RegistrarPagoModal
+        v-if="estudianteSeleccionado"
+        :estudiante="estudianteSeleccionado"
+        @cerrar="cerrarModalPago"
+        @guardado="onPagoGuardado"
+      />
+    </v-dialog>
   </v-container>
 </template>
 
