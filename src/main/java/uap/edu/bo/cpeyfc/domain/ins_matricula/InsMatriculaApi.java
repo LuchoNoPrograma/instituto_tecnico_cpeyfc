@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import uap.edu.bo.cpeyfc.domain.fin_obligacion_pago.FinObligacionPagoRepository;
 import uap.edu.bo.cpeyfc.security.JwtSecurityConfigUserDetails;
 
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class InsMatriculaApi {
   private final InsMatriculaRepository insMatriculaRepository;
   private final InsMatriculaService insMatriculaService;
+  private final FinObligacionPagoRepository finObligacionPagoRepository;
 
   // DEPRECADO - Mantener para compatibilidad con código existente
   @Deprecated
@@ -66,5 +68,10 @@ public class InsMatriculaApi {
   @GetMapping("/api/matricula/vista/obligaciones-pago")
   public ResponseEntity<?> vistaObligacionesPago(){
     return ResponseEntity.ok(insMatriculaRepository.vistaObligacionesPago());
+  }
+
+  @GetMapping("/api/matricula/{codMatricula}/obligaciones")
+  public ResponseEntity<?> obligacionesPorMatricula(@PathVariable Integer codMatricula) {
+    return ResponseEntity.ok(finObligacionPagoRepository.obtenerObligacionesPorMatricula(codMatricula));
   }
 }
